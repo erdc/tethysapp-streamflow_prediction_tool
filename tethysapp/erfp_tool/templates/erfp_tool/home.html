@@ -1,0 +1,56 @@
+{% extends "erfp_tool/base.html" %}
+
+{% load tethys_gizmos %}
+
+{% block app_content %}
+    {% if user.is_superuser or user.is_staff %}
+        {% if redirect %}
+            <p id="redirect" class="hidden">Redirecting...</p>
+        {% endif %}
+    {% endif %}
+    {% if watersheds_length > 0 %}
+        <h4>Either...</h4>
+        <h1>Select a Watershed</h1>
+        <form action="{% url 'erfp_tool:map' %}" method="get">
+            <p id="too-many-watersheds-alert" class="alert alert-warning hidden" role="alert"><em>Warning: Selecting too many watersheds can make the operation of the app slow.</em></p>
+            {% gizmo select_input watershed_select %}
+            <div class="btn-group ">
+                <a name="submit-go-to-map" class="btn btn-success" role="button" onclick="document.forms[0].submit();" id="submit-go-to-map">
+                <span class="glyphicon glyphicon-play"></span>View Watershed(s)
+              </a>
+            </div>
+        </form>
+        {% if user.is_superuser or user.is_staff %}
+            <p class="help-block">Don't see the watershed you want? Add one
+            <a href="{% url 'erfp_tool:add-watershed' %}">here</a>.</p>
+        {% endif %}
+        <h4>Or...</h4>
+        <h1>Select a Watershed Group</h1>
+        {% if watershed_group_length > 0 %}
+            <form action="{% url 'erfp_tool:map' %}" method="get">
+                {% gizmo select_input watershed_group_select %}
+                <div class="btn-group ">
+                    <a name="submit-go-to-map" class="btn btn-success" role="button" onclick="document.forms[1].submit();" id="submit-go-to-map">
+                    <span class="glyphicon glyphicon-play"></span>View Watershed Group
+                  </a>
+                </div>
+            </form>
+        {% else %}
+            <h4> No watershed groups found ...</h4>
+        {% endif %}
+        {% if user.is_superuser or user.is_staff %}
+        <p class="help-block">Don't see the watershed group you want? Add one
+        <a href="{% url 'erfp_tool:add-watershed-group' %}">here</a>.</p>
+        {% endif %}
+    {% else %}
+        {% if user.is_superuser or user.is_staff %}
+            <h2>There appear to be no watersheds in the database at this time.
+                <br>
+                To add one click <a href="{% url 'erfp_tool:add-watershed' %}">here</a></h2>
+            <br>Forgot how? Refresh yourself on the steps <a href="{% url 'erfp_tool:getting-started' %}">here</a>.
+        {% else %}
+            <h2>Sorry. There appear to be no watersheds in the database at this time.</h2>
+        {% endif %}
+    {% endif %}
+
+{% endblock %}

@@ -1,0 +1,49 @@
+{% load tethys_gizmos %}
+
+<div class="table-overflow">
+    <table class="table table-striped">
+        <thead>
+            <th>Update</th>
+            <th>Delete</th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>URL</th>
+            <th>Username</th>
+            <th>Password</th>
+        </thead>
+    <tbody>
+    {% for geoserver in geoservers %}
+        <tr>
+            <td class="table-button"><div class=" btn-group "><a name="submit-update-geoserver" class="btn btn-warning submit-update-geoserver" role="button">
+                <span class="glyphicon glyphicon-floppy-disk"></span> Update </a>
+                </div>
+            </td>
+            <td class="table-button"><div class=" btn-group "><a name="submit-delete-geoserver" class="btn btn-danger submit-delete-geoserver" role="button">
+                <span class="glyphicon glyphicon-remove"></span> Delete </a>
+                </div>
+            </td>
+            <td class="geoserver-id">{{geoserver.id}}</td>
+            <td class="geoserver-name" contenteditable>{{geoserver.name}}</td>
+            <td class="geoserver-url" contenteditable>{{geoserver.url}}</td>
+            <td class="geoserver-username" contenteditable>{{geoserver.username}}</td>
+            <td class="geoserver-password">
+                <div class="form-group">
+                    <div class="input-group">
+                        <input class="geoserver-password-input" class="form-control" name="geoserver-password-input" type="password" value="{{geoserver.password}}" placeholder="e.g.: geoserver">
+                        <div class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></div>
+                    </div>
+                    <p class="help-block hidden">No geoserver password specified.</p>
+                </div>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+</div>
+<div class="row" style="margin: auto; padding: 15px">
+    <div style="margin-left: auto;margin-right: auto">
+        <div class="col-md-4" style="text-align:right">{% gizmo button_group prev_button %}</div>
+        <div class="col-md-3" id="display-info" style="text-align: center"></div>
+        <div class="col-md-5" style="text-align:left">{% gizmo button_group next_button %}</div>
+    </div>
+</div>

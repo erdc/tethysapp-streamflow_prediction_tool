@@ -1,0 +1,18 @@
+{% extends "erfp_tool/base.html" %}
+
+{% load staticfiles %}
+
+{% load tethys_gizmos %}
+
+{% block app_content %}
+    <div id="message" class="alert alert-danger hidden" role="alert"></div>
+    <h1>Add a Watershed Group</h1>
+    {% gizmo text_input watershed_group_name_input %}
+    {% gizmo select_input watershed_select %}
+    {% gizmo button_group add_button %}
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'erfp_tool/js/add_watershed_group.js' %}" type="text/javascript"></script>
+{% endblock %}

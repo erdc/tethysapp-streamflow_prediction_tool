@@ -1,0 +1,47 @@
+{% load tethys_gizmos %}
+
+<div>
+    <table class="table table-striped table-condensed">
+        <thead>
+            <th>Update</th>
+            <th>Delete</th>
+            <th>ID</th>
+            <th>Watershed Group Name</th>
+            <th>Watershed List</th>
+        </thead>
+    <tbody>
+    {% for watershed_group in watershed_groups %}
+        <tr>
+            <td class="table-button"><div class=" btn-group "><a name="submit-update-watershed-group" class="btn btn-warning submit-update-watershed-group" role="button">
+                <span class="glyphicon glyphicon-floppy-disk"></span> Update </a>
+                </div>
+            </td>
+            <td class="table-button"><div class=" btn-group "><a name="submit-delete-watershed-group" class="btn btn-danger submit-delete-watershed-group" role="button">
+                <span class="glyphicon glyphicon-remove"></span> Delete </a>
+                </div>
+            </td>
+            <td class="watershed-group-id">{{watershed_group.id}}</td>
+            <td class="watershed-group-name" contenteditable>{{watershed_group.name}}</td>
+            <td class="watershed">
+                <select class="watershed-select" multiple="multiple">
+                {% for watershed in watersheds %}
+                    <option value="{{watershed.id}}"
+                    {% if watershed in watershed_group.watersheds %}
+                    selected="selected"
+                    {% endif %}
+                    >{{ watershed.watershed_name }} ({{watershed.subbasin_name}})</option>
+                {% endfor %}
+                </select>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+</div>
+<div class="row" style="margin: auto; padding: 15px">
+    <div style="margin-left: auto;margin-right: auto">
+        <div class="col-md-4" style="text-align:right">{% gizmo button_group prev_button %}</div>
+        <div class="col-md-3" id="display-info" style="text-align: center"></div>
+        <div class="col-md-5" style="text-align:left">{% gizmo button_group next_button %}</div>
+    </div>
+</div>

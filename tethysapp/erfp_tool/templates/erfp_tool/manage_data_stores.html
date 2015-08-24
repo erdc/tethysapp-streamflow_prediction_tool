@@ -1,0 +1,18 @@
+{% extends "erfp_tool/base.html" %}
+
+{% load staticfiles %}
+
+{% block styles %}
+  {{ block.super }}
+{% endblock %}
+
+{% block app_content %}
+    <div id="message" class="alert alert-danger hidden" role="alert"></div>
+    <h3>Manage Data Stores</h3>
+    <div id="manage_data_stores_table" data-page="{{ initial_page }}" data-num_data_stores="{{ num_data_stores }}"></div>
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'erfp_tool/js/manage_data_stores.js' %}" type="text/javascript"></script>
+{% endblock %}

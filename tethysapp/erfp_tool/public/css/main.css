@@ -1,0 +1,30 @@
+
+#app-navigation li {
+    list-style-type: none;
+}
+
+.nav_button{
+    margin: auto;
+}
+
+.table-overflow {
+    overflow-x:scroll;
+}
+
+.table-button {
+    width: 60px;
+}
+.screenshots {    
+    width: 90%;    
+    border: 2px solid black;
+}
+.t-o-c:hover {
+    text-decoration: none;
+}
+.t-o-c {
+    font-weight: bold;
+}
+.how-to-steps {
+    font-size: 36px;
+    color: #666666;
+}
