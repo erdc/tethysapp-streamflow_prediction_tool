@@ -5,10 +5,10 @@ from shutil import rmtree
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tethys_apps.settings")
 #local imports
 from tethys_apps.tethysapp.erfp_tool.model import (MainSettings, 
-                                                   SettingsSessionMaker, 
+                                                   mainSessionMaker, 
                                                    Watershed)
                                                    
-from sfpt_dataset_manager.dataset_manager import (ECMWFRAPIDDatasetManager,
+from spt_dataset_manager.dataset_manager import (ECMWFRAPIDDatasetManager,
                                                   GeoServerDatasetManager,
                                                   WRFHydroHRRRDatasetManager)
                                                   
@@ -108,7 +108,7 @@ def load_datasets():
     """
     Loads ECMWF prediction datasets from data store for all watersheds
     """
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
 
     ecmwf_rapid_prediction_directory = main_settings.ecmwf_rapid_prediction_directory
@@ -133,7 +133,7 @@ def load_watershed(watershed):
     """
     Loads prediction datasets from data store for one watershed
     """
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
 
     if main_settings.ecmwf_rapid_prediction_directory and \

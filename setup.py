@@ -1,24 +1,23 @@
 import os
-import sys
 from setuptools import setup, find_packages
 from tethys_apps.app_installation import custom_develop_command, custom_install_command
 
 ### Apps Definition ###
-app_package = 'erfp_tool'
+app_package = 'streamflow_prediction_tool'
 release_package = 'tethysapp-' + app_package
-app_class = 'erfp_tool.app:ECMWFRAPIDFloodPredictionTool'
+app_class = 'streamflow_prediction_tool.app:StreamflowPredictionTool'
 app_package_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tethysapp', app_package)
 ### Python Dependencies ###
-dependencies = ['netCDF4', 'numpy', 'python-crontab', 'requests','sqlalchemy']
+dependencies = ['netCDF4', 'numpy', 'python-crontab', 'requests', 'sqlalchemy']
 
 setup(
     name=release_package,
-    version='0.0.1',
-    description='ECMWF-RAPID Flood Prediction Tool',
+    version='1.0.0',
+    description='Display streamflow from ECMWF predicted runoff routed with RAPID. Also, floodmaping with AutoRoute is available.',
     long_description='',
     keywords='',
     author='Alan Snow',
-    author_email='alan.d.snow@byu.edu',
+    author_email='alan.d.snow@usace.army.mil',
     url='127.0.0.1',
     license='MIT',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),

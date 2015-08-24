@@ -1,8 +1,8 @@
 /*****************************************************************************
- * FILE:    ECMWF-RAPID Map Tool
- * DATE:    12/22/2014
+ * FILE:    Streamflow Prediciton Map Tool
+ * DATE:    08/24/2015
  * AUTHOR:  Alan Snow
- * COPYRIGHT: (c) 2014 Brigham Young University
+ * COPYRIGHT: (c) 2015 US Army Corps of Engineers ERDC
  * LICENSE: BSD 2-Clause
  *****************************************************************************/
 

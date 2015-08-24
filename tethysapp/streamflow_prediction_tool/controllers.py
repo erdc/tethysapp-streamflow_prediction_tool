@@ -9,9 +9,9 @@ from django.shortcuts import redirect, render
 #from endless_pagination import utils
 
 #local imports
-from sfpt_dataset_manager.dataset_manager import GeoServerDatasetManager
+from spt_dataset_manager.dataset_manager import GeoServerDatasetManager
 from .model import (BaseLayer, DataStore, DataStoreType, Geoserver, MainSettings,
-                    SettingsSessionMaker, Watershed, WatershedGroup)
+                    mainSessionMaker, Watershed, WatershedGroup)
 from .functions import (format_name, format_watershed_title, 
                         user_permission_test)
 
@@ -37,7 +37,7 @@ def home(request):
             redirect_getting_started = True
 
     #get the base layer information
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     #Query DB for settings
     watersheds  = session.query(Watershed) \
                             .order_by(Watershed.watershed_name,
@@ -74,7 +74,7 @@ def home(request):
                 "redirect": redirect_getting_started
               }
 
-    return render(request, 'erfp_tool/home.html', context)
+    return render(request, 'streamflow_prediction_tool/home.html', context)
 
 def map(request):
     """
@@ -88,7 +88,7 @@ def map(request):
         if not watershed_ids and not group_id:
             return redirect('/apps/erfp-tool/')
         #get the base layer information
-        session = SettingsSessionMaker()
+        session = mainSessionMaker()
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
 
         if watershed_ids:
@@ -132,19 +132,19 @@ def map(request):
                 drainage_line_kml = os.path.join(file_path, watershed.kml_drainage_line_layer)
                 if os.path.exists(drainage_line_kml) and watershed.kml_drainage_line_layer:
                     drainage_line_kml = os.path.basename(drainage_line_kml)
-                    kml_info['drainage_line'] = '/static/erfp_tool/kml/%s/%s' \
+                    kml_info['drainage_line'] = '/static/streamflow_prediction_tool/kml/%s/%s' \
                                 % (watershed.folder_name, 
                                    watershed.kml_drainage_line_layer)
                 catchment_kml = os.path.join(file_path, watershed.kml_catchment_layer)
                 if os.path.exists(catchment_kml) and watershed.kml_catchment_layer:
                     catchment_kml = os.path.basename(catchment_kml)
-                    kml_info['catchment'] = '/static/erfp_tool/kml/%s/%s' \
+                    kml_info['catchment'] = '/static/streamflow_prediction_tool/kml/%s/%s' \
                                             % (watershed.folder_name,
                                                watershed.kml_catchment_layer)
                 gage_kml = os.path.join(file_path, watershed.kml_gage_layer)
                 if os.path.exists(gage_kml) and watershed.kml_gage_layer:
                     catchment_kml = os.path.basename(gage_kml)
-                    kml_info['gage'] = '/static/erfp_tool/kml/%s/%s' \
+                    kml_info['gage'] = '/static/streamflow_prediction_tool/kml/%s/%s' \
                                             % (watershed.folder_name,
                                                watershed.kml_gage_layer)
         
@@ -426,7 +426,7 @@ def map(request):
                     'flood_map_date_selectors_len' : len(flood_map_date_selectors)
                   }
     
-        return render(request, 'erfp_tool/map.html', context)
+        return render(request, 'streamflow_prediction_tool/map.html', context)
     #send them home
     return redirect('/apps/erfp-tool/')
 
@@ -437,7 +437,7 @@ def settings(request):
     Controller for the app settings page.
     """
     
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     # Query DB for base layers
     base_layers = session.query(BaseLayer).all()
     base_layer_list = []
@@ -510,7 +510,7 @@ def settings(request):
               }
     session.close()
     
-    return render(request, 'erfp_tool/settings.html', context)
+    return render(request, 'streamflow_prediction_tool/settings.html', context)
 
 
 @user_passes_test(user_permission_test)
@@ -519,7 +519,7 @@ def add_watershed(request):
     Controller for the app add_watershed page.
     """
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
 
     watershed_name_input = {
                 'display_text': 'Watershed Display Name',
@@ -667,7 +667,7 @@ def add_watershed(request):
                 'add_button': add_button,
               }
 
-    return render(request, 'erfp_tool/add_watershed.html', context)
+    return render(request, 'streamflow_prediction_tool/add_watershed.html', context)
 
 
 @user_passes_test(user_permission_test)
@@ -676,7 +676,7 @@ def manage_watersheds(request):
     Controller for the app manage_watersheds page.
     """
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     num_watersheds = session.query(Watershed).count()
     session.close()
     edit_modal = {'name': 'edit_watershed_modal',
@@ -691,7 +691,7 @@ def manage_watersheds(request):
         'edit_modal' : edit_modal
     }
 
-    return render(request, 'erfp_tool/manage_watersheds.html', context)
+    return render(request, 'streamflow_prediction_tool/manage_watersheds.html', context)
 
 @user_passes_test(user_permission_test)
 def manage_watersheds_table(request):
@@ -699,7 +699,7 @@ def manage_watersheds_table(request):
     Controller for the app manage_watersheds page.
     """
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
 
     # Query DB for watersheds
     RESULTS_PER_PAGE = 5
@@ -741,7 +741,7 @@ def manage_watersheds_table(request):
                 'next_button': next_button,
               }
 
-    return render(request, 'erfp_tool/manage_watersheds_table.html', context)
+    return render(request, 'streamflow_prediction_tool/manage_watersheds_table.html', context)
 
 @user_passes_test(user_permission_test)
 def edit_watershed(request):
@@ -754,7 +754,7 @@ def edit_watershed(request):
         watershed_id = get_info.get('watershed_id')
 
         #initialize session
-        session = SettingsSessionMaker()
+        session = mainSessionMaker()
         #get desired watershed
         #try:
         watershed  = session.query(Watershed).get(watershed_id)
@@ -916,7 +916,7 @@ def edit_watershed(request):
                     'add_button': add_button,
                     'watershed' : watershed,
                   }
-        page_html = render(request, 'erfp_tool/edit_watershed.html', context)
+        page_html = render(request, 'streamflow_prediction_tool/edit_watershed.html', context)
         session.close()
 
         return page_html
@@ -927,7 +927,7 @@ def add_data_store(request):
     Controller for the app add_data_store page.
     """
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
 
     data_store_name_input = {
                 'display_text': 'Data Store Server Name',
@@ -984,7 +984,7 @@ def add_data_store(request):
                 'data_store_api_key_input': data_store_api_key_input,
                 'add_button': add_button,
               }
-    return render(request, 'erfp_tool/add_data_store.html', context)
+    return render(request, 'streamflow_prediction_tool/add_data_store.html', context)
 
 @user_passes_test(user_permission_test)
 def manage_data_stores(request):        
@@ -992,7 +992,7 @@ def manage_data_stores(request):
     Controller for the app manage_data_stores page.
     """
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     num_data_stores = session.query(DataStore).count() - 1
     session.close()
     context = {
@@ -1000,7 +1000,7 @@ def manage_data_stores(request):
                 'num_data_stores': num_data_stores,
               }
               
-    return render(request, 'erfp_tool/manage_data_stores.html', context)
+    return render(request, 'streamflow_prediction_tool/manage_data_stores.html', context)
 
 @user_passes_test(user_permission_test)
 def manage_data_stores_table(request):
@@ -1008,7 +1008,7 @@ def manage_data_stores_table(request):
     Controller for the app manage_data_stores page.
     """
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     RESULTS_PER_PAGE = 5
     page = int(request.GET.get('page'))
 
@@ -1038,7 +1038,7 @@ def manage_data_stores_table(request):
                 'data_stores': data_stores,
               }
 
-    table_html = render(request, 'erfp_tool/manage_data_stores_table.html', context)
+    table_html = render(request, 'streamflow_prediction_tool/manage_data_stores_table.html', context)
     #in order to close the session, the request needed to be rendered first
     session.close()
 
@@ -1088,7 +1088,7 @@ def add_geoserver(request):
                 'add_button': add_button,
               }
               
-    return render(request, 'erfp_tool/add_geoserver.html', context)
+    return render(request, 'streamflow_prediction_tool/add_geoserver.html', context)
  
 @user_passes_test(user_permission_test)
 def manage_geoservers(request):        
@@ -1096,7 +1096,7 @@ def manage_geoservers(request):
     Controller for the app manage_geoservers page.
     """
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     num_geoservers = session.query(Geoserver).count() - 1
     session.close()
 
@@ -1105,7 +1105,7 @@ def manage_geoservers(request):
                 'num_geoservers': num_geoservers,
               }
 
-    return render(request, 'erfp_tool/manage_geoservers.html', context)
+    return render(request, 'streamflow_prediction_tool/manage_geoservers.html', context)
 
 @user_passes_test(user_permission_test)
 def manage_geoservers_table(request):
@@ -1113,7 +1113,7 @@ def manage_geoservers_table(request):
     Controller for the app manage_geoservers page.
     """
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     RESULTS_PER_PAGE = 5
     page = int(request.GET.get('page'))
 
@@ -1145,7 +1145,7 @@ def manage_geoservers_table(request):
 
     session.close()
 
-    return render(request, 'erfp_tool/manage_geoservers_table.html', context)
+    return render(request, 'streamflow_prediction_tool/manage_geoservers_table.html', context)
 
 @user_passes_test(user_permission_test)
 def add_watershed_group(request):        
@@ -1159,9 +1159,9 @@ def add_watershed_group(request):
         'icon_append':'glyphicon glyphicon-tag',
         }
  
-   #initialize session
-    session = SettingsSessionMaker()
-   #Query DB for settings
+    #initialize session
+    session = mainSessionMaker()
+    #Query DB for settings
     watersheds  = session.query(Watershed) \
                         .order_by(Watershed.watershed_name,
                                   Watershed.subbasin_name) \
@@ -1198,7 +1198,7 @@ def add_watershed_group(request):
                 'watershed_select': watershed_select,
                 'add_button': add_button,
               }
-    return render(request, 'erfp_tool/add_watershed_group.html', context)
+    return render(request, 'streamflow_prediction_tool/add_watershed_group.html', context)
  
 @user_passes_test(user_permission_test)
 def manage_watershed_groups(request):        
@@ -1206,14 +1206,14 @@ def manage_watershed_groups(request):
     Controller for the app manage_watershed_groups page.
     """
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     num_watershed_groups = session.query(WatershedGroup).count()
     session.close()
     context = {
                 'initial_page': 0,
                 'num_watershed_groups': num_watershed_groups,
               }
-    return render(request, 'erfp_tool/manage_watershed_groups.html', context)
+    return render(request, 'streamflow_prediction_tool/manage_watershed_groups.html', context)
 
 @user_passes_test(user_permission_test)
 def manage_watershed_groups_table(request):
@@ -1221,7 +1221,7 @@ def manage_watershed_groups_table(request):
     Controller for the app manage_watershed_groups page.
     """
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     RESULTS_PER_PAGE = 5
     page = int(request.GET.get('page'))
 
@@ -1256,7 +1256,7 @@ def manage_watershed_groups_table(request):
                 'watershed_groups': watershed_groups,
                 'watersheds' : watersheds,
               }
-    table_html = render(request, 'erfp_tool/manage_watershed_groups_table.html', context)
+    table_html = render(request, 'streamflow_prediction_tool/manage_watershed_groups_table.html', context)
     session.close()
 
     return table_html
@@ -1267,8 +1267,4 @@ def getting_started(request):
     Controller for the app home page.
     """
    
-    context = {
-                
-              }
-
-    return render(request, 'erfp_tool/getting_started.html', context)
+    return render(request, 'streamflow_prediction_tool/getting_started.html', {})

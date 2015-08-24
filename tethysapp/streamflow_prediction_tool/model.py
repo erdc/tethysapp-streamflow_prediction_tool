@@ -6,8 +6,8 @@ from uuid import uuid5, NAMESPACE_DNS
 from datetime import datetime
 from .utilities import get_persistent_store_engine
 # DB Engine, sessionmaker and base
-settingsEngine = get_persistent_store_engine('settings_db')
-SettingsSessionMaker = sessionmaker(bind=settingsEngine)
+mainEngine = get_persistent_store_engine('main_db')
+mainSessionMaker = sessionmaker(bind=mainEngine)
 Base = declarative_base()
 
 class MainSettings(Base):

@@ -1,4 +1,4 @@
-{% extends "erfp_tool/base.html" %}
+{% extends "streamflow_prediciton_tool/base.html" %}
 
 {% load staticfiles %}
 
@@ -6,19 +6,19 @@
 
 {% block global_scripts %}
   {{ block.super }}
-  <script src="{% static 'erfp_tool/vendor/openlayers/v3.3.0/ol.js' %}" type="text/javascript"></script>
-  <script src="{% static 'erfp_tool/vendor/highcharts/highcharts.js' %}" type="text/javascript"></script>
-  <script src="{% static 'erfp_tool/vendor/highcharts/highcharts-more.js' %}" type="text/javascript"></script>
-  <script src="{% static 'erfp_tool/vendor/highcharts/exporting.js' %}" type="text/javascript"></script>
-  <script src="{% static 'erfp_tool/vendor/highcharts/export-csv.js' %}" type="text/javascript"></script>
-  <script src="{% static 'erfp_tool/vendor/select2/v3.5.2/select2.js' %}" type="text/javascript"></script>
+  <script src="{% static 'streamflow_prediciton_tool/vendor/openlayers/v3.3.0/ol.js' %}" type="text/javascript"></script>
+  <script src="{% static 'streamflow_prediciton_tool/vendor/highcharts/highcharts.js' %}" type="text/javascript"></script>
+  <script src="{% static 'streamflow_prediciton_tool/vendor/highcharts/highcharts-more.js' %}" type="text/javascript"></script>
+  <script src="{% static 'streamflow_prediciton_tool/vendor/highcharts/exporting.js' %}" type="text/javascript"></script>
+  <script src="{% static 'streamflow_prediciton_tool/vendor/highcharts/export-csv.js' %}" type="text/javascript"></script>
+  <script src="{% static 'streamflow_prediciton_tool/vendor/select2/v3.5.2/select2.js' %}" type="text/javascript"></script>
 {% endblock %}
 
 {% block styles %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'erfp_tool/css/map.css' %}" type="text/css">
-  <link rel="stylesheet" href="{% static 'erfp_tool/vendor/openlayers/v3.3.0/ol.css' %}" type="text/css">
-  <link rel="stylesheet" href="{% static 'erfp_tool/vendor/select2/v3.5.2/select2.css' %}" type="text/css">
+  <link rel="stylesheet" href="{% static 'streamflow_prediciton_tool/css/map.css' %}" type="text/css">
+  <link rel="stylesheet" href="{% static 'streamflow_prediciton_tool/vendor/openlayers/v3.3.0/ol.css' %}" type="text/css">
+  <link rel="stylesheet" href="{% static 'streamflow_prediciton_tool/vendor/select2/v3.5.2/select2.css' %}" type="text/css">
 {% endblock %}
 
 {% block app_content %}
@@ -88,7 +88,7 @@
 
 {% block app_navigation_items %}
     <li class="title">App Navigation</li>
-    <li><a href="{% url 'erfp_tool:home' %}">Select Watershed(s)</a></li>
+    <li><a href="{% url 'streamflow_prediciton_tool:home' %}">Select Watershed(s)</a></li>
     {% if layers_info %}
         <li class="title collapse-control">
             <a class="closeall" data-toggle="collapse" data-target="#map-navigation">
@@ -228,6 +228,6 @@
 
 {% block scripts %}
   {{ block.super }}
-  <script src="{% static 'erfp_tool/js/waterml_parser.js' %}" type="text/javascript"></script>
-  <script src="{% static 'erfp_tool/js/map.js' %}" type="text/javascript"></script>
+  <script src="{% static 'streamflow_prediciton_tool/js/waterml_parser.js' %}" type="text/javascript"></script>
+  <script src="{% static 'streamflow_prediciton_tool/js/map.js' %}" type="text/javascript"></script>
 {% endblock %}

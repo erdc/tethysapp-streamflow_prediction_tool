@@ -2,7 +2,7 @@
 from .model import (Base, BaseLayer, DataStore, DataStoreType, Geoserver, MainSettings,
                     settingsEngine, SettingsSessionMaker)
 
-def init_erfp_settings_db(first_time):
+def init_main(first_time):
     # Create tables
     Base.metadata.create_all(settingsEngine)
     
