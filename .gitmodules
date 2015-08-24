@@ -1,0 +1,3 @@
+[submodule "tethysapp/streamflow_prediction_tool/spt_dataset_manager"]
+	path = tethysapp/streamflow_prediction_tool/spt_dataset_manager
+	url = https://github.com/erdc-cm/spt_dataset_manager
