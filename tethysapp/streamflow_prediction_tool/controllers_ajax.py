@@ -361,7 +361,7 @@ def ecmwf_get_avaialable_dates(request):
                 if len(basin_files) >0: # and get_reach_index(reach_id, basin_files):
                     output_directories.append({
                         'id' : directory, 
-                        'text' : str(date + datetime.timedelta(0,int(hour)*60*60))
+                        'text' : str(date + datetime.timedelta(hours=int(hour)))
                     })
                     directory_count += 1
                 #limit number of directories
@@ -494,7 +494,7 @@ def ecmwf_get_hydrograph(request):
                     else:
                         erfp_time = []
                         for i in range(0,len(data_values)):
-                            next_time = int((start_date+datetime.timedelta(0,i*6*60*60)) \
+                            next_time = int((start_date+datetime.timedelta(hours=i*6+6)) \
                                             .strftime('%s'))*1000
                             erfp_time.append(next_time)
 
