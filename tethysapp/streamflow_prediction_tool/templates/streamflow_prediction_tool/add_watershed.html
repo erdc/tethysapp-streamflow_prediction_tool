@@ -1,4 +1,4 @@
-{% extends "streamflow_prediciton_tool/base.html" %}
+{% extends "streamflow_prediction_tool/base.html" %}
 
 {% load staticfiles %}
 
@@ -13,7 +13,7 @@
     <h3>Data Storage</h3>
     <em>This is where the predictions are stored.</em><br/><br/>
     {% gizmo select_input data_store_select %}
-    <p class="help-block">Don't see the data store you want? Add one <a href="{% url 'streamflow_prediciton_tool:add-data-store' %}">here</a>.</p>
+    <p class="help-block">Don't see the data store you want? Add one <a href="{% url 'streamflow_prediction_tool:add-data-store' %}">here</a>.</p>
 
     <h5 class="data_store hidden">ECMWF Data Storage Input</h5>
     <p class="help-block data_store hidden">The format of the ECMWF dataset name on the data store server 
@@ -41,7 +41,7 @@
     <h3>Geoserver Location</h3> 
     <em>Where the reach and catchbasin files are stored.</em><br/><br/>
     {% gizmo select_input geoserver_select %}
-    <p class="help-block">Don't see the geoserver you want? Add one <a href="{% url 'streamflow_prediciton_tool:add-geoserver' %}">here</a>.</p>
+    <p class="help-block">Don't see the geoserver you want? Add one <a href="{% url 'streamflow_prediction_tool:add-geoserver' %}">here</a>.</p>
     {% gizmo toggle_switch shp_upload_toggle_switch %}
     <!-- Drainage Line !-->
     {% gizmo text_input geoserver_drainage_line_input %}
@@ -95,5 +95,5 @@
 
 {% block scripts %}
   {{ block.super }}
-  <script src="{% static 'streamflow_prediciton_tool/js/add_watershed.js' %}" type="text/javascript"></script>
+  <script src="{% static 'streamflow_prediction_tool/js/add_watershed.js' %}" type="text/javascript"></script>
 {% endblock %}

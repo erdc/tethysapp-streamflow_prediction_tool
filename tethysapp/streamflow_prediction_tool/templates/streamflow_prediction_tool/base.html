@@ -6,7 +6,7 @@
 
 {% block styles %}
   {{ block.super }}
-  <link href="{% static 'streamflow_prediciton_tool/css/main.css' %}" rel="stylesheet"/>
+  <link href="{% static 'streamflow_prediction_tool/css/main.css' %}" rel="stylesheet"/>
 {% endblock %}
 
 {% block app_icon %}
@@ -19,23 +19,23 @@
 
 {% block app_navigation_items %}
     <li class="title">App Navigation</li>
-    <li><a href="{% url 'streamflow_prediciton_tool:home' %}">Select Watershed(s)</a></li>
+    <li><a href="{% url 'streamflow_prediction_tool:home' %}">Select Watershed(s)</a></li>
     {% if user.is_superuser or user.is_staff %}
     <li class="title">Configuration</li>
-    <li><a href="{% url 'streamflow_prediciton_tool:settings' %}">Settings</a></li>
+    <li><a href="{% url 'streamflow_prediction_tool:settings' %}">Settings</a></li>
     <li class="title">Add</li>
-    <li><a href="{% url 'streamflow_prediciton_tool:add-watershed' %}">Add a Watershed</a></li>
-    <li><a href="{% url 'streamflow_prediciton_tool:add-watershed-group' %}">Add a Watershed Group</a></li>
-    <li><a href="{% url 'streamflow_prediciton_tool:add-data-store' %}">Add a Data Store</a></li>
-    <li><a href="{% url 'streamflow_prediciton_tool:add-geoserver' %}">Add a Geoserver</a></li>
+    <li><a href="{% url 'streamflow_prediction_tool:add-watershed' %}">Add a Watershed</a></li>
+    <li><a href="{% url 'streamflow_prediction_tool:add-watershed-group' %}">Add a Watershed Group</a></li>
+    <li><a href="{% url 'streamflow_prediction_tool:add-data-store' %}">Add a Data Store</a></li>
+    <li><a href="{% url 'streamflow_prediction_tool:add-geoserver' %}">Add a Geoserver</a></li>
     <li class="title">Manage</li>
-    <li><a href="{% url 'streamflow_prediciton_tool:manage-watersheds' %}">Manage Watersheds</a></li>
-    <li><a href="{% url 'streamflow_prediciton_tool:manage-watershed-groups' %}">Manage Watershed Groups</a></li>
-    <li><a href="{% url 'streamflow_prediciton_tool:manage-data-stores' %}">Manage Data Stores</a></li>
-    <li><a href="{% url 'streamflow_prediciton_tool:manage-geoservers' %}">Manage Geoservers</a></li>
+    <li><a href="{% url 'streamflow_prediction_tool:manage-watersheds' %}">Manage Watersheds</a></li>
+    <li><a href="{% url 'streamflow_prediction_tool:manage-watershed-groups' %}">Manage Watershed Groups</a></li>
+    <li><a href="{% url 'streamflow_prediction_tool:manage-data-stores' %}">Manage Data Stores</a></li>
+    <li><a href="{% url 'streamflow_prediction_tool:manage-geoservers' %}">Manage Geoservers</a></li>
     <li class="title">Learn</li>
-    <li><a href="{% url 'streamflow_prediciton_tool:getting-started' %}">Getting Started</a></li>
-    <li><a href="https://github.com/CI-WATER/tethysapp-streamflow_prediciton_tool">View the Code</a></li>
+    <li><a href="{% url 'streamflow_prediction_tool:getting-started' %}">Getting Started</a></li>
+    <li><a href="https://github.com/CI-WATER/tethysapp-streamflow_prediction_tool">View the Code</a></li>
     {% endif %}
 {% endblock %}
 
@@ -47,5 +47,5 @@
 
 {% block scripts %}
   {{ block.super }}
-  <script src="{% static 'streamflow_prediciton_tool/js/main.js' %}" type="text/javascript"></script>
+  <script src="{% static 'streamflow_prediction_tool/js/main.js' %}" type="text/javascript"></script>
 {% endblock %}

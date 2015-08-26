@@ -1,15 +1,15 @@
 # Put your persistent store initializer functions in here
 from .model import (Base, BaseLayer, DataStore, DataStoreType, Geoserver, MainSettings,
-                    settingsEngine, SettingsSessionMaker)
+                    mainEngine, mainSessionMaker)
 
-def init_main(first_time):
+def init_main_db(first_time):
     # Create tables
-    Base.metadata.create_all(settingsEngine)
+    Base.metadata.create_all(mainEngine)
     
     # Initial data
     if first_time:
         #make session
-        session = SettingsSessionMaker()
+        session = mainSessionMaker()
         
         #add all possible base layers
         session.add(BaseLayer("MapQuest","none",))

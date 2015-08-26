@@ -8,8 +8,8 @@ from shutil import rmtree
 from sqlalchemy import and_
 
 #local import
-from model import SettingsSessionMaker, MainSettings, Watershed
-from sfpt_dataset_manager.dataset_manager import (CKANDatasetManager, 
+from model import mainSessionMaker, MainSettings, Watershed
+from spt_dataset_manager.dataset_manager import (CKANDatasetManager, 
                                                   GeoServerDatasetManager)
 
     
@@ -42,7 +42,7 @@ def delete_old_watershed_prediction_files(watershed, forecast="all"):
                 pass
         
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
     forecast = forecast.lower()
     
@@ -124,7 +124,7 @@ def delete_old_watershed_geoserver_files(watershed):
     Removes old watershed geoserver files from system
     """
     #initialize session
-    session = SettingsSessionMaker()
+    session = mainSessionMaker()
     main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
     
     #initialize geoserver manager
