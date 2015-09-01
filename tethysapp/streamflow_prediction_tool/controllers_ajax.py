@@ -473,7 +473,8 @@ def ecmwf_get_hydrograph(request):
         all_data_first_half = []
         all_data_second_half = []
         high_res_data = []
-        erfp_time = []
+        low_res_time = []
+        high_res_time = []
         for in_nc in basin_files:
             try:
                 index_str = os.path.basename(in_nc)[:-3].split("_")[-1]
@@ -493,31 +494,53 @@ def ecmwf_get_hydrograph(request):
                     data_nc.close()
                     continue
 
-                #get time
-                if (len(data_values)>len(erfp_time)):
-                    variables = data_nc.variables.keys()
-                    if 'time' in variables:
-                        erfp_time = [t*1000 for t in data_nc.variables['time'][:]]
-                    else:
-                        erfp_time = []
-                        for i in range(0,len(data_values)):
-                            next_time = int((start_date+datetime.timedelta(hours=i*6+6)) \
-                                            .strftime('%s'))*1000
-                            erfp_time.append(next_time)
 
-                data_nc.close()
-
-                all_data_first_half.append(data_values[:first_half_size].clip(min=0))
                 if(index < 52):
-                    all_data_second_half.append(data_values[first_half_size:].clip(min=0))
+                    #get time
+                    if (len(data_values)>len(low_res_time)):
+                        variables = data_nc.variables.keys()
+                        if 'time' in variables:
+                            low_res_time = [t*1000 for t in data_nc.variables['time'][:]]
+                        else:
+                            low_res_time = []
+                            for i in range(0,len(data_values)):
+                                next_time = int((start_date+datetime.timedelta(hours=i*6+6)) \
+                                                .strftime('%s'))*1000
+                                low_res_time.append(next_time)
+                    all_data_first_half.append(data_values[:first_half_size])
+                    all_data_second_half.append(data_values[first_half_size:])
                 if(index == 52):
+                    if (len(data_values)>len(high_res_time)):
+                        variables = data_nc.variables.keys()
+                        if 'time' in variables:
+                            high_res_time = [t*1000 for t in data_nc.variables['time'][:]]
+                        else:
+                            high_res_time = []
+                            for i in range(0,len(data_values)):
+                                next_time = int((start_date+datetime.timedelta(hours=i*6+6)) \
+                                                .strftime('%s'))*1000
+                                high_res_time.append(next_time)
+                    if len(high_res_time)>109:
+                        streamflow_1hr = data_values[:91:6]
+                        # calculate time series of 6 hr data from 3 hr data
+                        streamflow_3hr = data_values[92:109:2]
+                        # get the time series of 6 hr data
+                        streamflow_6hr = data_values[109:]
+                        # concatenate all time series
+                        all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr, streamflow_6hr]))
+                    else:
+                        print len(data_values)
+                        all_data_first_half.append(data_values)
                     high_res_data = data_values
+                data_nc.close()
             except Exception, e:
+                data_nc.close()
                 print e
                 pass
         return_data = {}
-        if erfp_time:
+        if low_res_time:
             #perform analysis on datasets
+            print all_data_first_half
             all_data_first = np.array(all_data_first_half, dtype=np.float64)
             all_data_second = np.array(all_data_second_half, dtype=np.float64)
             #get mean
@@ -541,12 +564,13 @@ def ecmwf_get_hydrograph(request):
             #mean minus std
             mean_mins_std = (mean_series - std_dev).clip(min=0)
             #return results of analysis
-            return_data["mean"] = zip(erfp_time, mean_series.tolist())
-            return_data["outer_range"] = zip(erfp_time, min_series.tolist(), max_series.tolist())
-            return_data["std_dev_range"] = zip(erfp_time, mean_mins_std.tolist(), mean_plus_std.tolist())
+            return_data["mean"] = zip(low_res_time, mean_series.tolist())
+            return_data["outer_range"] = zip(low_res_time, min_series.tolist(), max_series.tolist())
+            return_data["std_dev_range"] = zip(low_res_time, mean_mins_std.tolist(), mean_plus_std.tolist())
             if len(high_res_data) > 0:
-                return_data["high_res"] = zip(erfp_time,high_res_data.tolist())
-        return_data["success"] = "ECMWF Data analysis complete!"
+                return_data["high_res"] = zip(high_res_time,high_res_data.tolist())
+            return_data["success"] = "ECMWF Data analysis complete!"
+        return_data["error"] = "Problem generating forecast."
         return JsonResponse(return_data)
                     
 def era_interim_get_hydrograph(request):
