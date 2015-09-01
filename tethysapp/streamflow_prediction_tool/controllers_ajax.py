@@ -529,7 +529,6 @@ def ecmwf_get_hydrograph(request):
                         # concatenate all time series
                         all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr, streamflow_6hr]))
                     else:
-                        print len(data_values)
                         all_data_first_half.append(data_values)
                     high_res_data = data_values
                 data_nc.close()
@@ -540,7 +539,6 @@ def ecmwf_get_hydrograph(request):
         return_data = {}
         if low_res_time:
             #perform analysis on datasets
-            print all_data_first_half
             all_data_first = np.array(all_data_first_half, dtype=np.float64)
             all_data_second = np.array(all_data_second_half, dtype=np.float64)
             #get mean
