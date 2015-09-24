@@ -94,5 +94,5 @@ See crontab(1) for more information
 ```
 If not, add the permissions in the cron.allow file.
 ```
-echo apache >>/etc/cron.allow
+# echo apache >>/etc/cron.allow
 ```
