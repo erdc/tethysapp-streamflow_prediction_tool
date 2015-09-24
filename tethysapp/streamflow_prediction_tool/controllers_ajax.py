@@ -200,7 +200,7 @@ def geoserver_add(request):
             .filter(
                 or_(
                     Geoserver.name == geoserver_name, 
-                    Geoserver.url == geoserver_manager.geoserver_url
+                    Geoserver.url == geoserver_manager.engine_url
                 )
             ) \
             .count()
@@ -210,7 +210,7 @@ def geoserver_add(request):
   
         #add Data Store
         session.add(Geoserver(geoserver_name.strip(), 
-                              geoserver_manager.geoserver_url,
+                              geoserver_manager.engine_url,
                               geoserver_username.strip(), 
                               geoserver_password.strip()
                               ))
