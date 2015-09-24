@@ -74,13 +74,25 @@ $ tethys syncstores erfp_tool -r
 Restart the Apache Server:
 See: http://tethys-platform.readthedocs.org/en/1.0.0/production.html#enable-site-and-restart-apache
 
-#Troubleshooting
-If you see this error:
-ImportError: No module named packages.urllib3.poolmanager
+# Troubleshooting
+## ImportError: No module named packages.urllib3.poolmanager
 ```
 $ pip install pip --upgrade
 ```
 Restart your terminal
 ```
 $ pip install requests --upgrade
+```
+## Crontab Errors
+Check if your server has crontab permissions:
+Ex:
+'''
+# su -s /bin/bash apache
+bash-4.2$ crontab -e
+You (apache) are not allowed to use this program (crontab)
+See crontab(1) for more information
+''
+If not, add the permissions in the cron.allow file.
+```
+echo apache >>/etc/cron.allow
 ```
