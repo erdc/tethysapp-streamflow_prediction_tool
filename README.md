@@ -86,12 +86,12 @@ $ pip install requests --upgrade
 ## Crontab Errors
 Check if your server has crontab permissions:
 Ex:
-'''
+```
 # su -s /bin/bash apache
 bash-4.2$ crontab -e
 You (apache) are not allowed to use this program (crontab)
 See crontab(1) for more information
-''
+```
 If not, add the permissions in the cron.allow file.
 ```
 echo apache >>/etc/cron.allow
