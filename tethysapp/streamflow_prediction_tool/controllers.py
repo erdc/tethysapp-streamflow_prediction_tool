@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta
 
 #django imports
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.shortcuts import redirect, render
 #from endless_pagination import utils
 
@@ -14,7 +14,7 @@ from .model import (BaseLayer, DataStore, DataStoreType, Geoserver, MainSettings
                     mainSessionMaker, Watershed, WatershedGroup)
 from .functions import (format_name, format_watershed_title, 
                         user_permission_test)
-
+@login_required
 def home(request):
     """
     Controller for the app home page.
@@ -76,6 +76,7 @@ def home(request):
 
     return render(request, 'streamflow_prediction_tool/home.html', context)
 
+@login_required
 def map(request):
     """
     Controller for the app map page.
