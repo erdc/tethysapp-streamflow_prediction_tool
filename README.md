@@ -96,3 +96,9 @@ If not, add the permissions in the cron.allow file.
 ```
 # echo apache >>/etc/cron.allow
 ```
+## SELinux
+If you are using a drive/folder not associated with your normal apache server locations, you may need to set SELinux to allow it. In this example, I am using a folder named /tethys
+```
+# semanage fcontext -a -t httpd_sys_content_t '/tethys(/.*)?'
+# restorecon -Rv /tethys
+```
