@@ -12,7 +12,7 @@ from sqlalchemy.orm.exc import ObjectDeletedError
 from django.http import JsonResponse
 
 #django imports
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 
 #tethys imports
 from tethys_dataset_services.engines import CkanDatasetEngine
@@ -317,7 +317,8 @@ def geoserver_update(request):
             return JsonResponse({ 'success': "Geoserver sucessfully updated!" })
         return JsonResponse({ 'error': "Cannot change this geoserver." })
     return JsonResponse({ 'error': "A problem with your request exists." })
-    
+
+@login_required    
 def ecmwf_get_avaialable_dates(request):
     """""
     Finds a list of directories with valid data and returns dates in select2 format
@@ -374,7 +375,8 @@ def ecmwf_get_avaialable_dates(request):
                     })
         else:
             return JsonResponse({'error' : 'Recent ECMWF forecasts for reach with id: %s not found.' % reach_id})
-     
+
+@login_required      
 def wrf_hydro_get_avaialable_dates(request):
     """""
     Finds a list of directories with valid data and returns dates in select2 format
@@ -428,6 +430,7 @@ def wrf_hydro_get_avaialable_dates(request):
         else:
             return JsonResponse({'error' : 'Recent WRF-Hydro forecasts for %s (%s) not found.' % (watershed_name, subbasin_name)})
 
+@login_required 
 def ecmwf_get_hydrograph(request):
     """""
     Plots 52 ECMWF ensembles analysis with min., max., avg. ,std. dev.
@@ -570,7 +573,8 @@ def ecmwf_get_hydrograph(request):
             return_data["success"] = "ECMWF Data analysis complete!"
         return_data["error"] = "Problem generating forecast."
         return JsonResponse(return_data)
-                    
+
+@login_required                     
 def era_interim_get_hydrograph(request):
     """""
     Returns ERA Interim hydrograph
@@ -639,6 +643,7 @@ def era_interim_get_hydrograph(request):
                 "two" : str(sorted_values[rp_index_2]),
         })
 
+@login_required 
 def wrf_hydro_get_hydrograph(request):
     """""
     Returns WRF-Hydro hydrograph
@@ -695,7 +700,7 @@ def wrf_hydro_get_hydrograph(request):
                 "wrf_hydro" : zip(time, data_values.tolist()),
         })
         
-@user_passes_test(user_permission_test)
+@login_required
 def generate_warning_points(request):
     """
     Controller for getting warning points for user on map
