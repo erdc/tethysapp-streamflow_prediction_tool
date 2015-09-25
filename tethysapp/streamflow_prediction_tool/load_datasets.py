@@ -4,7 +4,7 @@ from shutil import rmtree
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tethys_apps.settings")
 #local imports
-from tethys_apps.tethysapp.streamflow_prediciton_tool.model import (MainSettings, 
+from tethys_apps.tethysapp.streamflow_prediction_tool.model import (MainSettings, 
                                                                     mainSessionMaker, 
                                                                     Watershed)
                                                    
