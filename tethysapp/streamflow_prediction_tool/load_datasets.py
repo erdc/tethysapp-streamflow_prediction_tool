@@ -4,13 +4,13 @@ from shutil import rmtree
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tethys_apps.settings")
 #local imports
-from tethys_apps.tethysapp.erfp_tool.model import (MainSettings, 
-                                                   mainSessionMaker, 
-                                                   Watershed)
+from tethys_apps.tethysapp.streamflow_prediciton_tool.model import (MainSettings, 
+                                                                    mainSessionMaker, 
+                                                                    Watershed)
                                                    
 from spt_dataset_manager.dataset_manager import (ECMWFRAPIDDatasetManager,
-                                                  GeoServerDatasetManager,
-                                                  WRFHydroHRRRDatasetManager)
+                                                 GeoServerDatasetManager,
+                                                 WRFHydroHRRRDatasetManager)
                                                   
 def download_single_watershed_ecmwf_data(watershed, 
                                          ecmwf_rapid_prediction_directory,
