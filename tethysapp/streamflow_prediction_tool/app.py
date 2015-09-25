@@ -1,5 +1,5 @@
-from tethys_apps.base import TethysAppBase, url_map_maker
-from tethys_apps.base import PersistentStore
+from tethys_sdk.base import TethysAppBase, url_map_maker
+from tethys_sdk.stores import PersistentStore
 
 class StreamflowPredictionTool(TethysAppBase):
     """
