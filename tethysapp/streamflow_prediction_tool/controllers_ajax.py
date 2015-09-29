@@ -729,22 +729,29 @@ def generate_warning_points(request):
             return JsonResponse({'error' : 'Invalid return period.'})
         
         path_to_output_files = os.path.join(path_to_ecmwf_rapid_output, watershed_name, subbasin_name)
+        recent_directory = None
         if os.path.exists(path_to_output_files):
-            recent_directory = sorted([d for d in os.listdir(path_to_output_files) \
-                                if os.path.isdir(os.path.join(path_to_output_files, d))],
-                                 reverse=True)[0]
+
+            directory_list = sorted([d for d in os.listdir(path_to_output_files) \
+                                    if os.path.isdir(os.path.join(path_to_output_files, d))],
+                                    reverse=True)
+            if directory_list:
+                recent_directory = directory_list[0]
         else:
             return JsonResponse({'error' : 'No files found for watershed.'})
-                             
-        if return_period == 20:
-            #get warning points to load in
-            warning_points_file = os.path.join(path_to_output_files,recent_directory, "return_20_points.txt")
-        elif return_period == 10:
-            warning_points_file = os.path.join(path_to_output_files,recent_directory, "return_10_points.txt")
-        elif return_period == 2:
-            warning_points_file = os.path.join(path_to_output_files,recent_directory, "return_2_points.txt")
+            
+        if recent_directory:
+            if return_period == 20:
+                #get warning points to load in
+                warning_points_file = os.path.join(path_to_output_files,recent_directory, "return_20_points.txt")
+            elif return_period == 10:
+                warning_points_file = os.path.join(path_to_output_files,recent_directory, "return_10_points.txt")
+            elif return_period == 2:
+                warning_points_file = os.path.join(path_to_output_files,recent_directory, "return_2_points.txt")
+            else:
+                return JsonResponse({'error' : 'Invalid return period.'})
         else:
-            return JsonResponse({'error' : 'Invalid return period.'})
+            return JsonResponse({'error' : 'No forecasts found with warning points.'})
  
         warning_points = []
         if os.path.exists(warning_points_file):
