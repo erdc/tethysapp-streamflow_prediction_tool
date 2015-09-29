@@ -325,13 +325,19 @@ def map(request):
                                     floodmap_info = geoserver_manager.dataset_engine.get_resource(resource_id=resource_name)
                                     if floodmap_info['success']: 
                                         latlon_bbox = floodmap_info['result']['latlon_bbox'][:4]
-                                        geoserver_info['flood_maps']['geoserver_info_list'].append({'name': resource_name,
-                                                                             'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
-                                                                             'projection': floodmap_info['result']['projection'],
-                                                                             'forecast_directory' : directory,
-                                                                             'forecast_timestamp' : str(date + timedelta(0,int(hour)*60*60))
-                                                                            })
-                                        flood_map_count += 1
+                                        if (abs(float(latlon_bbox[0])-float(latlon_bbox[2]))>0.001 and\
+                                            abs(float(latlon_bbox[1])-float(latlon_bbox[3]))>0.001):
+                                            geoserver_info['flood_maps']['geoserver_info_list'].append({'name': resource_name,
+                                                                                 'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
+                                                                                 'projection': floodmap_info['result']['projection'],
+                                                                                 'forecast_directory' : directory,
+                                                                                 'forecast_timestamp' : str(date + timedelta(0,int(hour)*60*60))
+                                                                                })
+                                            flood_map_count += 1
+                                        else:
+                                            geoserver_info['flood_maps']['geoserver_info_list'].append({'error': "Invalid bounding box ...",
+                                                                                                     'forecast_directory' : directory,
+                                                                                                     })
                                         #limit number of flood maps
                                         if flood_map_count >= 7:
                                             break
