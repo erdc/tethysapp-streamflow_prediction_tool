@@ -156,7 +156,7 @@ def map(request):
                 wms_url = watershed.geoserver.url
                 api_url = watershed.geoserver.url
                 if watershed.geoserver.url.endswith('/geoserver/rest'):
-                    wms_url = "/".join(watershed.geoserver.url.split("/")[:-1])
+                    wms_url = "%s/ows" % "/".join(watershed.geoserver.url.split("/")[:-1])
                 elif watershed.geoserver.url.endswith('/geoserver'):
                     wms_url = "%s/ows" % watershed.geoserver.url
                     api_url = "%s/rest" % watershed.geoserver.url
