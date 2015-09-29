@@ -432,20 +432,27 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: gets tile layer for geoserver
     getTileLayer = function(layer_info, geoserver_url, layer_id) {
-        var layer = new ol.layer.Tile({
-            source: new ol.source.TileWMS({
-                url: geoserver_url,
-                params: {'LAYERS': layer_info['name'], 
-                         'TILED': true},
-                serverType: 'geoserver',
-            }),
-        });
-        layer.set('extent', ol.proj.transformExtent(layer_info['latlon_bbox'].map(Number), 
-                                                'EPSG:4326',
-                                                m_map_projection));
-        layer.set('layer_id', layer_id);
-        layer.set('layer_type', 'geoserver');
-        return layer;
+        //validate extent
+        var extent = layer_info['latlon_bbox'].map(Number)
+        if (Math.abs(extent[0]-extent[1]) > 0.001 &&
+            Math.abs(extent[2]-extent[3]) > 0.001) {
+
+            var layer = new ol.layer.Tile({
+                source: new ol.source.TileWMS({
+                    url: geoserver_url,
+                    params: {'LAYERS': layer_info['name'], 
+                             'TILED': true},
+                    serverType: 'geoserver',
+                }),
+            });
+            layer.set('extent', ol.proj.transformExtent(extent, 
+                                                        'EPSG:4326',
+                                                        m_map_projection));
+            layer.set('layer_id', layer_id);
+            layer.set('layer_type', 'geoserver');
+            return layer;
+        }
+        return null;
     };
 
     //FUNCTION: removes message and hides the div
@@ -1302,8 +1309,13 @@ var ERFP_MAP = (function() {
                                            "error_" + catchment_layer_id, "message-error");
                     } else {
                         var layer = getTileLayer(layer_info['catchment'], layer_info['geoserver_url'], catchment_layer_id);
-                        layer.setOpacity(0.5);
-                        layers.push(layer);
+                        if (layer != null) {
+                            layer.setOpacity(0.5);
+                            layers.push(layer);
+                        } else {
+                            appendErrorMessage("Catchment Layer Invalid ... ", 
+                                               "error_" + catchment_layer_id, "message-error");
+                        }
                     }
                 }
                 //add gage if exists
@@ -1314,7 +1326,13 @@ var ERFP_MAP = (function() {
                                            ": " + layer_info.gage.error, 
                                            'error_' + gage_layer_id, "message-error");
                     } else {
-                        layers.push(getTileLayer(layer_info['gage'], layer_info['geoserver_url'], gage_layer_id));
+                        var layer = getTileLayer(layer_info['gage'], layer_info['geoserver_url'], gage_layer_id);
+                        if (layer != null) {
+                            layers.push(layer);
+                        } else {
+                            appendErrorMessage("Gage Layer Invalid ... ", 
+                                               "error_" + gage_layer_id, "message-error");
+                        }
                     }
                 }
                 //add flood maps if they exist
@@ -1336,22 +1354,30 @@ var ERFP_MAP = (function() {
                                 var layer = getTileLayer(flood_map_info, 
                                                          layer_info.geoserver_url, 
                                                          flood_map_dataset_id);
-                                layer.setOpacity(0.5);
-                                if(valid_floodmap_count>0) {
-                                    layer.setVisible(false);
+                                if (layer != null) {
+                                    layer.setOpacity(0.5);
+                                    if(valid_floodmap_count>0) {
+                                        layer.setVisible(false);
+                                    }
+                                    valid_floodmap_count += 1;
+                                    layer.set('watershed_name', layer_info.watershed);
+                                    layer.set('subbasin_name', layer_info.subbasin);
+                                    layer.set('date_timestep', flood_map_info.forecast_directory);
+                                    layer.set("flood_map_sublayer_id", flood_map_sublayer_id);
+                                    flood_maps.push(layer);
                                 }
-                                valid_floodmap_count += 1;
-                                layer.set('watershed_name', layer_info.watershed);
-                                layer.set('subbasin_name', layer_info.subbasin);
-                                layer.set('date_timestep', flood_map_info.forecast_directory);
-                                layer.set("flood_map_sublayer_id", flood_map_sublayer_id);
-                                flood_maps.push(layer);
+                                else {
+                                    console.log("Invalid Floodmap Layer: ");
+                                    console.log(layer_info);
+                                }
                                 
                             }
                         });
-                        m_flood_maps.push(new ol.layer.Group({ 
-                            layers: flood_maps,
-                        }));
+                        if (flood_maps.length > 0) {
+                            m_flood_maps.push(new ol.layer.Group({ 
+                                layers: flood_maps,
+                            }));
+                        }
                     }
                 }
                 //add ahps station if exists
