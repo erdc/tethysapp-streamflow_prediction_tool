@@ -22,12 +22,12 @@
 {% endblock %}
 
 {% block app_content %}
-    <div class="container" style="height:80%;">
-        <div class="row" style="height:100%">
+    <div class="container-fluid">
+        <div class="row-fluid" style="height:100%">
             <div class="col-md-5" style="height:100%">
-                <div id="map" class="map row" base-layer-info="{{base_layer_info}}" layers-info="{{layers_info_json}}"></div>
+                <div id="map" class="map" base-layer-info="{{base_layer_info}}" layers-info="{{layers_info_json}}"></div>
             </div>
-            <div id="graph_panel" class="col-md-7" style="height: 100%:">
+            <div id="graph_panel" class="col-md-5" style="height: 100%:">
                 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
                     <div class="panel panel-default">
                         <div class="panel-heading" role="tab" id="headingOne">
@@ -60,7 +60,7 @@
                     <div class="col-sm-2"></div>
                     <div class="col-sm-2">{% gizmo toggle_switch ecmwf_toggle_switch %}</div>
                     <div class="col-sm-2"></div>
-                    <div id="wrf_toogle_col" class="col-sm-4">{% gizmo toggle_switch wrf_toggle_switch %}</div>
+                    <div id="wrf_toogle_col" class="col-sm-3">{% gizmo toggle_switch wrf_toggle_switch %}</div>
                 </div>
                 <div id="message" class="alert alert-info row" role="alert">
                     <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
