@@ -21,6 +21,7 @@ var ERFP_MAP = (function() {
         m_map,                    // the main map
         m_map_projection, //main map projection
         m_map_extent,           //the extent of all objects in map
+        m_basemap_layer,
         m_drainage_line_layers,
         m_select_interaction,
         m_selected_feature,
@@ -86,38 +87,20 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: resize content based
     resizeAppContent = function() {
-        var nav_open = $('#app-content-wrapper').hasClass('show-nav');
-        var height_ratio = 0.97;
 
         var document_width = $(document).width();
 
+        if (document_width > 900) {
+            $('#app-content-wrapper').addClass('show-nav');
+        }
+
         var container = $('.container');
         container.removeClass('no-padding');
-        //get column
-        var graph_col = $('#graph_panel');
-        graph_col.removeClass('col-md-7');
-        graph_col.removeClass('col-md-6');
-        graph_col.removeClass('col-md-5');
-        graph_col.removeClass('col-md-4');
-        var wrf_toggle_col = $('#wrf_toogle_col');
-        wrf_toggle_col.removeClass('col-sm-3');
-        wrf_toggle_col.removeClass('col-sm-4');
 
-
-        if (nav_open && document_width < 1400) {
-            graph_col.addClass('col-md-4');
-            wrf_toggle_col.addClass('col-sm-4');
-        } else if (nav_open && document_width < 1500) {
-            graph_col.addClass('col-md-6');
-            wrf_toggle_col.addClass('col-sm-3');
-        } else {
-            if (nav_open) {
-                container.addClass('no-padding');
-            }
-            graph_col.addClass('col-md-7');
-            wrf_toggle_col.addClass('col-sm-3');
+        var height_ratio = 0.97;
+        if (document_width > 1500) {
             height_ratio = 0.57;
-        }
+        } 
         //resize highchart
         var long_term_chart = $("#long-term-chart").highcharts();
         if (typeof long_term_chart != 'undefined') {
@@ -1172,6 +1155,9 @@ var ERFP_MAP = (function() {
     // Initialization: jQuery function that gets called when 
     // the DOM tree finishes loading
     $(function() {
+        var map_div = $('#inner-app-content').children().first();
+        map_div.attr("style","height:" + parseInt($(document).height()-400) + "px");
+
         resizeAppContent();
         $('#map_top_navigation').find('.form-group').addClass('inline-block');
         //initialize map global variables
@@ -1280,7 +1266,7 @@ var ERFP_MAP = (function() {
         //load base layer
         var base_layer_info = JSON.parse($("#map").attr('base-layer-info'));
         
-        var basemap_layer = getBaseLayer(base_layer_info.name,base_layer_info.api_key);
+        m_basemap_layer = getBaseLayer(base_layer_info.name,base_layer_info.api_key);
         
         //load drainage line kml layers
         var layers_info = JSON.parse($("#map").attr('layers-info'));
@@ -1856,7 +1842,7 @@ var ERFP_MAP = (function() {
         if(m_flood_maps.length > 0) {
             all_group_layers = all_group_layers.concat(m_flood_maps);
         }
-        var all_map_layers = [basemap_layer].concat(all_group_layers);
+        var all_map_layers = [m_basemap_layer].concat(all_group_layers);
         //var all_map_layers = all_group_layers;
         //create map
         m_map = new ol.Map({
@@ -2047,9 +2033,7 @@ var ERFP_MAP = (function() {
         });
 
         //resize app content based on window size and nav bar
-        $('.toggle-nav').click(function() {
-            resizeAppContent();
-        });
+        $('.toggle-nav').off();
 
         $(window).resize(function() {
             resizeAppContent();
