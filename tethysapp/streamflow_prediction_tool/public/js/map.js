@@ -87,7 +87,11 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: resize content based
     resizeAppContent = function() {
-
+        var map_div = $('#inner-app-content').children().first();
+        map_div.attr("style","height:" + parseInt($(document).height()*0.8) + "px");
+        if (typeof m_map != 'undefined') {
+            m_map.updateSize();
+        }
         var document_width = $(document).width();
 
         if (document_width > 900) {
@@ -1177,9 +1181,6 @@ var ERFP_MAP = (function() {
     // Initialization: jQuery function that gets called when 
     // the DOM tree finishes loading
     $(function() {
-        var map_div = $('#inner-app-content').children().first();
-        map_div.attr("style","height:" + parseInt($(document).height()-400) + "px");
-
         resizeAppContent();
         $('#map_top_navigation').find('.form-group').addClass('inline-block');
         //initialize map global variables
