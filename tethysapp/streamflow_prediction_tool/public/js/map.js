@@ -438,7 +438,7 @@ var ERFP_MAP = (function() {
 
             var layer = new ol.layer.Tile({
                 source: new ol.source.TileWMS({
-                    url: geoserver_url + "/ows",
+                    url: geoserver_url,
                     params: {'LAYERS': layer_info['name'], 
                              'TILED': true},
                     serverType: 'geoserver',
