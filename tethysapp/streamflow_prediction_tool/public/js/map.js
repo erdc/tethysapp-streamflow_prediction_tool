@@ -96,11 +96,27 @@ var ERFP_MAP = (function() {
 
         var container = $('.container');
         container.removeClass('no-padding');
+        console.log(document_width);
 
         var height_ratio = 0.97;
         if (document_width > 1500) {
             height_ratio = 0.57;
-        } 
+        }
+        $('#wrf_toogle_col').removeClass('col-sm-2')
+                            .removeClass('col-sm-3')
+                            .removeClass('col-sm-4');
+
+        if (document_width > 1900) {
+            $('#wrf_toogle_col').addClass('col-sm-2');
+        } else if (document_width > 1400){
+            $('#wrf_toogle_col').addClass('col-sm-3');
+        } else if (document_width > 900) {
+            $('#wrf_toogle_col').addClass('col-sm-4');
+        } else if (document_width > 700) {
+            $('#wrf_toogle_col').addClass('col-sm-2');
+        } else {
+            $('#wrf_toogle_col').addClass('col-sm-3');
+        }
         //resize highchart
         var long_term_chart = $("#long-term-chart").highcharts();
         if (typeof long_term_chart != 'undefined') {
