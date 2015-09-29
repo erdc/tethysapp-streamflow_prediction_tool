@@ -292,7 +292,7 @@ def geoserver_update(request):
             num_similar_geoservers  = session.query(Geoserver) \
               .filter(
                       or_(Geoserver.name == geoserver_name,
-                          Geoserver.url == geoserver_manager.geoserver_url)
+                          Geoserver.url == geoserver_manager.engine_url)
                       ) \
               .filter(Geoserver.id != geoserver_id) \
               .count()
@@ -309,7 +309,7 @@ def geoserver_update(request):
                 return JsonResponse({ 'error': "The geoserver to update does not exist." })
             
             geoserver.name = geoserver_name.strip()
-            geoserver.url = geoserver_manager.geoserver_url    
+            geoserver.url = geoserver_manager.engine_url    
             geoserver.username = geoserver_username.strip()    
             geoserver.password = geoserver_password.strip()    
             session.commit()
