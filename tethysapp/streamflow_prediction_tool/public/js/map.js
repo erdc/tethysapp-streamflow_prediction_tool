@@ -96,7 +96,6 @@ var ERFP_MAP = (function() {
 
         var container = $('.container');
         container.removeClass('no-padding');
-        console.log(document_width);
 
         var height_ratio = 0.97;
         if (document_width > 1500) {
@@ -1368,7 +1367,7 @@ var ERFP_MAP = (function() {
                                 }
                                 else {
                                     console.log("Invalid Floodmap Layer: ");
-                                    console.log(layer_info);
+                                    console.log(flood_map_info);
                                 }
                                 
                             }
