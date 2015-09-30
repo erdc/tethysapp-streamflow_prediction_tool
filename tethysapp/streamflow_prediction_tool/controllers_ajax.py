@@ -940,7 +940,10 @@ def watershed_add(request):
                 return JsonResponse({'error' : "Drainage Line Error: %s" % ex})
                                                
             geoserver_drainage_line_uploaded = True
-
+            
+            if geoserver_drainage_line_layer == None:
+                return JsonResponse({'error' : "Error uploading drainage line ..."})
+                
 
         
         #add watershed
@@ -1355,6 +1358,9 @@ def watershed_update(request):
                 #create shapefile
                 geoserver_drainage_line_layer = geoserver_manager.upload_shapefile(drainage_line_resource_name, 
                                                                                    drainage_line_shp_file)
+                if geoserver_drainage_line_layer == None:
+                    return JsonResponse({'error' : "Error uploading drainage line ..."})
+
                                                    
                 geoserver_drainage_line_uploaded = True
             elif geoserver_drainage_line_layer and watershed.geoserver_drainage_line_layer \
@@ -1379,6 +1385,9 @@ def watershed_update(request):
                 #create shapefile
                 geoserver_catchment_layer = geoserver_manager.upload_shapefile(catchment_resource_name, 
                                                                                catchment_shp_file)
+                if geoserver_catchment_layer == None:
+                    return JsonResponse({'error' : "Error uploading catchment ..."})
+
                 geoserver_catchment_uploaded = True
 
             elif geoserver_catchment_layer and watershed.geoserver_catchment_layer \
@@ -1405,6 +1414,9 @@ def watershed_update(request):
 
                 #create shapefile
                 geoserver_gage_layer = geoserver_manager.upload_shapefile(gage_resource_name, gage_shp_file)
+                if geoserver_gage_layer == None:
+                    return JsonResponse({'error' : "Error uploading gage ..."})
+
                 geoserver_gage_uploaded = True
 
             elif geoserver_gage_layer and watershed.geoserver_gage_layer \
@@ -1430,6 +1442,9 @@ def watershed_update(request):
 
                  #create shapefile
                 geoserver_ahps_station_layer = geoserver_manager.upload_shapefile(ahps_station_resource_name, ahps_station_shp_file)
+                if geoserver_ahps_station_layer == None:
+                    return JsonResponse({'error' : "Error uploading AHPS station ..."})
+
                 geoserver_ahps_station_uploaded = True
 
             elif geoserver_ahps_station_layer and watershed.geoserver_ahps_station_layer \
