@@ -324,7 +324,6 @@ def map(request):
                                     resource_name = geoserver_manager.get_layer_name("%s%s" % (flood_map_layer_name_beginning, directory))
                                     #floodmap_info = geoserver_manager.dataset_engine.get_resource(resource_id=resource_name)
                                     floodmap_info = geoserver_manager.dataset_engine.get_layer_group(resource_name)
-                                    print floodmap_info
                                     if floodmap_info['success']: 
                                         latlon_bbox = floodmap_info['result']['bounds'][:4]
                                         print latlon_bbox, floodmap_info['result']['bounds'][-1]
