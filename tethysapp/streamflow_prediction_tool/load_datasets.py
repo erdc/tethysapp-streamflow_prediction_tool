@@ -63,8 +63,9 @@ def download_single_watershed_ecmwf_data(watershed,
                                          reverse=True)[7:]
                     for geoserver_directory in geoserver_directories:
                         layer_name = geoserver_manager.get_layer_name("%s%s" % (flood_map_layer_name_beginning, geoserver_directory))
-                        print "Deleting geoserver layer:", layer_name
-                        geoserver_manager.purge_remove_geoserver_layer(layer_name)
+                        print "Deleting geoserver layer group:", layer_name
+                        geoserver_manager.purge_remove_geoserver_layer(layer_name) #TODO: REMOVE THIS LINE
+                        geoserver_manager.purge_remove_geoserver_layer_group(layer_name)
                 except Exception as ex:
                     print ex
                     pass
