@@ -326,8 +326,6 @@ def map(request):
                                     floodmap_info = geoserver_manager.dataset_engine.get_layer_group(resource_name)
                                     if floodmap_info['success']: 
                                         latlon_bbox = floodmap_info['result']['bounds'][:4]
-                                        print latlon_bbox, floodmap_info['result']['bounds'][-1]
-                                        print [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]]
                                         if (abs(float(latlon_bbox[0])-float(latlon_bbox[2]))>0.001 and\
                                             abs(float(latlon_bbox[1])-float(latlon_bbox[3]))>0.001):
                                             geoserver_info['flood_maps']['geoserver_info_list'].append({'name': resource_name,
