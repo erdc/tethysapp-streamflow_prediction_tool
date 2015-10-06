@@ -322,14 +322,18 @@ def map(request):
                                 try:
                                     #load floodmap layer if exists
                                     resource_name = geoserver_manager.get_layer_name("%s%s" % (flood_map_layer_name_beginning, directory))
-                                    floodmap_info = geoserver_manager.dataset_engine.get_resource(resource_id=resource_name)
+                                    #floodmap_info = geoserver_manager.dataset_engine.get_resource(resource_id=resource_name)
+                                    floodmap_info = geoserver_manager.dataset_engine.get_layer_group(resource_name)
+                                    print floodmap_info
                                     if floodmap_info['success']: 
-                                        latlon_bbox = floodmap_info['result']['latlon_bbox'][:4]
+                                        latlon_bbox = floodmap_info['result']['bounds'][:4]
+                                        print latlon_bbox, floodmap_info['result']['bounds'][-1]
+                                        print [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]]
                                         if (abs(float(latlon_bbox[0])-float(latlon_bbox[2]))>0.001 and\
                                             abs(float(latlon_bbox[1])-float(latlon_bbox[3]))>0.001):
                                             geoserver_info['flood_maps']['geoserver_info_list'].append({'name': resource_name,
                                                                                  'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
-                                                                                 'projection': floodmap_info['result']['projection'],
+                                                                                 'projection': floodmap_info['result']['bounds'][-1],
                                                                                  'forecast_directory' : directory,
                                                                                  'forecast_timestamp' : str(date + timedelta(0,int(hour)*60*60))
                                                                                 })
