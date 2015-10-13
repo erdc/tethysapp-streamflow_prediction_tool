@@ -194,13 +194,10 @@ def map(request):
                                     contained_attributes.append(layer_attribute)
                                     return True
                             return False
-                                
                         #check COMID/HydroID attribute
                         if not find_add_attribute_ci('COMID', layer_attributes, contained_attributes):
                             if not find_add_attribute_ci('HydroID', layer_attributes, contained_attributes):
-                                missing_attributes.append('HydroID')
-                            else:
-                                missing_attributes.append('COMID')
+                                missing_attributes.append('COMID or HydroID')
                         
                         #check ECMWF watershed/subbasin attributes
                         if not find_add_attribute_ci('watershed', layer_attributes, contained_attributes) \
