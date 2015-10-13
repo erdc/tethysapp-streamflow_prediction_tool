@@ -1491,6 +1491,7 @@ def watershed_update(request):
         watershed.ecmwf_data_store_subbasin_name = ecmwf_data_store_subbasin_name
         watershed.wrf_hydro_data_store_watershed_name = wrf_hydro_data_store_watershed_name
         watershed.wrf_hydro_data_store_subbasin_name = wrf_hydro_data_store_subbasin_name
+        watershed.geoserver_id = geoserver_id
         watershed.geoserver_drainage_line_layer = geoserver_drainage_line_layer.strip() if geoserver_drainage_line_layer else ""
         watershed.geoserver_catchment_layer = geoserver_catchment_layer.strip() if geoserver_catchment_layer else ""
         watershed.geoserver_gage_layer = geoserver_gage_layer.strip() if geoserver_gage_layer else ""
