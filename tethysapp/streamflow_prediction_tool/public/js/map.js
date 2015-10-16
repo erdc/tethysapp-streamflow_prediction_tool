@@ -509,6 +509,7 @@ var ERFP_MAP = (function() {
                             name: series_name,
                             data: convertTimeSeriesMetricToEnglish(series_data),
                             color: series_color,
+                            selected: true
                          };
         if(typeof series_type != 'undefined' && new_series != null) {
             new_series.type = series_type;
@@ -665,7 +666,7 @@ var ERFP_MAP = (function() {
                     },
                 })
                 .done(function (data) {
-                        if (!("error" in data)) {
+                        if ("success" in data) {
                             var long_term_chart = $("#long-term-chart").highcharts();
                             //load interim data to chart
                             xhr_ecmwf_hydrograph.always(function(){
