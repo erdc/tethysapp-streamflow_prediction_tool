@@ -653,15 +653,15 @@ def era_interim_get_hydrograph(request):
                     rp_10 = return_period_nc.variables['return_period_10'][rp_reach_index]
                     rp_2 = return_period_nc.variables['return_period_2'][rp_reach_index]
                     return_period_nc.close()
+                    return_period_return_data["max"] = str(rp_max)
+                    return_period_return_data["twenty"] = str(rp_20)
+                    return_period_return_data["ten"] = str(rp_10)
+                    return_period_return_data["two"] = str(rp_2)
                 except Exception:
                     return_period_nc.close()
-                    return JsonResponse({'error' : "Invalid return period file"})
+                    return_period_return_data['error'] = "Invalid return period file"
                     pass
                     
-                return_period_return_data["max"] = str(rp_max)
-                return_period_return_data["twenty"] = str(rp_20)
-                return_period_return_data["ten"] = str(rp_10)
-                return_period_return_data["two"] = str(rp_2)
             else:
                 return_period_return_data['error'] = 'Return period for reach with id: %s not found.' % reach_id
         else:
