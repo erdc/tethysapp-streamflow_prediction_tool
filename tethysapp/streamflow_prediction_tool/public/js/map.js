@@ -634,6 +634,8 @@ var ERFP_MAP = (function() {
                                                    Highcharts.getOptions().colors[1]);
                         }
                         $('.long-term-select').removeClass('hidden');
+                        var long_term_chart = $("#long-term-chart").highcharts();
+                        long_term_chart.rangeSelector.clickButton(0,0,true);
                         $('#long-term-chart').removeClass('hidden');
                     } else {
                         m_long_term_chart_data_ajax_load_failed = true;
