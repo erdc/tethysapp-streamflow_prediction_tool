@@ -593,55 +593,87 @@ def era_interim_get_hydrograph(request):
         watershed_name = format_name(get_info['watershed_name']) if 'watershed_name' in get_info else None
         subbasin_name = format_name(get_info['subbasin_name']) if 'subbasin_name' in get_info else None
         reach_id = get_info.get('reach_id')
-        date_string = get_info.get('date_string')
-        if not reach_id or not watershed_name or not subbasin_name or not date_string:
+        if not reach_id or not watershed_name or not subbasin_name:
             return JsonResponse({'error' : 'ERA Interim AJAX request input faulty.'})
 
+        #----------------------------------------------
+        # HISTORICAL DATA SECTION
+        #----------------------------------------------
+        era_interim_return_data = {}
         #find/check current output datasets
         path_to_output_files = os.path.join(path_to_era_interim_data, watershed_name, subbasin_name)
-        forecast_files = glob(os.path.join(path_to_output_files, "*.nc"))
-        if not forecast_files:
-            return JsonResponse({'error' : 'ERA Interim data for %s (%s) not found.' % (watershed_name, subbasin_name)})
+        historical_data_files = glob(os.path.join(path_to_output_files, "Qout*.nc"))
+        if historical_data_files:
+            historical_data_file = historical_data_files[0]
+            #get/check the index of the reach
+            reach_index = get_reach_index(reach_id, historical_data_file)
+            if reach_index != None:
+                #get information from dataset
+                data_nc = NET.Dataset(historical_data_file, mode="r")
+                qout_dimensions = data_nc.variables['Qout'].dimensions
+                
+                if qout_dimensions[0].lower() == 'comid' and \
+                    qout_dimensions[1].lower() == 'time':
+                    data_values = data_nc.variables['Qout'][reach_index,:]
+                    variables = data_nc.variables.keys()
+                    if 'time' in variables:
+                        time = [t*1000 for t in data_nc.variables['time'][:]]
+                        data_nc.close()
+                        era_interim_return_data['series'] = zip(time, data_values.tolist())
+                    else:
+                        data_nc.close()
+                        era_interim_return_data['error'] = "Invalid ERA-Interim file"
+                else:
+                    data_nc.close()
+                    era_interim_return_data['error'] = "Invalid ERA-Interim file"
+        
+            else:
+                era_interim_return_data['error'] = 'ERA Interim reach with id: %s not found.' % reach_id
 
-        forecast_file = forecast_files[0]
-        #get/check the index of the reach
-        reach_index = get_reach_index(reach_id, forecast_file)
-        if reach_index == None:
-            return JsonResponse({'error' : 'ERA Interim reach with id: %s not found.' % reach_id})
-
-        #get information from dataset
-        data_nc = NET.Dataset(forecast_file, mode="r")
-        qout_dimensions = data_nc.variables['Qout'].dimensions
-        if qout_dimensions[0].lower() == 'comid' and \
-            qout_dimensions[1].lower() == 'time':
-            data_values = data_nc.variables['Qout'][reach_index,:]
         else:
-            data_nc.close()
-            return JsonResponse({'error' : "Invalid ERA-Interim file"})
+            era_interim_return_data['error'] = 'ERA Interim data for %s (%s) not found.' % (watershed_name, subbasin_name)
 
-        variables = data_nc.variables.keys()
-        if 'time' in variables:
-            time = [t*1000 for t in data_nc.variables['time'][:]]
+        #----------------------------------------------
+        # RETURN PERIOD SECTION
+        #----------------------------------------------
+        return_period_return_data = {}
+        return_period_files = glob(os.path.join(path_to_output_files, "return_period*.nc"))
+        if return_period_files:
+            
+            return_period_file = return_period_files[0]
+            #get/check the index of the reach
+            rp_reach_index = get_reach_index(reach_id, return_period_file)
+            if rp_reach_index != None:
+    
+                #get information from dataset
+                try:
+                    return_period_nc = NET.Dataset(return_period_file, mode="r")
+                    rp_max = return_period_nc.variables['max_flow'][rp_reach_index]
+                    rp_20 = return_period_nc.variables['return_period_20'][rp_reach_index]
+                    rp_10 = return_period_nc.variables['return_period_10'][rp_reach_index]
+                    rp_2 = return_period_nc.variables['return_period_2'][rp_reach_index]
+                    return_period_nc.close()
+                except Exception:
+                    return_period_nc.close()
+                    return JsonResponse({'error' : "Invalid return period file"})
+                    pass
+                    
+                return_period_return_data["max"] = str(rp_max)
+                return_period_return_data["twenty"] = str(rp_20)
+                return_period_return_data["ten"] = str(rp_10)
+                return_period_return_data["two"] = str(rp_2)
+            else:
+                return_period_return_data['error'] = 'Return period for reach with id: %s not found.' % reach_id
         else:
-            data_nc.close()
-            return JsonResponse({'error' : "Invalid ERA-Interim file"})
-        data_nc.close()
+            return_period_return_data['error'] = 'ERA Interim return period data for %s (%s) not found.' % (watershed_name, subbasin_name)
+
+
+        return JsonResponse({ 'success' : "ERA-Interim data analysis complete!",
+                              'era_interim' : era_interim_return_data,
+                              'return_period' : return_period_return_data
+                          })
+
         
-        num_years = int(len(data_values)/365)
-        sorted_values = np.sort(data_values)[:num_years:-1]
-        
-        rp_index_20 = round((num_years + 1)/20.0, 0)
-        rp_index_10 = round((num_years + 1)/10.0, 0)
-        rp_index_2 = round((num_years + 1)/2.0, 0)
-        
-        return JsonResponse({
-                "success" : "ERA-Interim data analysis complete!",
-                "era_interim" : zip(time, data_values.tolist()),
-                "max" : str(sorted_values[0]),
-                "twenty" : str(sorted_values[rp_index_20]),
-                "ten" : str(sorted_values[rp_index_10]),
-                "two" : str(sorted_values[rp_index_2]),
-        })
 
 @login_required 
 def wrf_hydro_get_hydrograph(request):
