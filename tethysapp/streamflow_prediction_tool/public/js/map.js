@@ -548,9 +548,13 @@ var ERFP_MAP = (function() {
                 y_axis_title = "Flow (cfs)";
             }
             var default_chart_settings = {
+
                 title: { text: "Forecast"},
                 chart: {
                     zoomType: 'x',
+                },
+                rangeSelector: {
+                    selected: 0
                 },
                 plotOptions: {
                     series: {
@@ -587,7 +591,7 @@ var ERFP_MAP = (function() {
                 default_chart_settings.subtitle = subtitle;
             }
 
-            $("#long-term-chart").highcharts(default_chart_settings);
+            $("#long-term-chart").highcharts('StockChart', default_chart_settings);
 
             //get ecmwf data
             if (m_ecmwf_show && m_selected_ecmwf_watershed != null &&
@@ -658,68 +662,76 @@ var ERFP_MAP = (function() {
                         watershed_name: m_selected_ecmwf_watershed,
                         subbasin_name: m_selected_ecmwf_subbasin,
                         reach_id: m_selected_reach_id,
-                        date_string: m_wrf_hydro_date_string,
                     },
                 })
                 .done(function (data) {
-                    if ("success" in data) {
-                        //wrf_hydro
-                        if ("era_interim" in data) {
+                        if (!("error" in data)) {
+                            var long_term_chart = $("#long-term-chart").highcharts();
+                            //load interim data to chart
                             xhr_ecmwf_hydrograph.always(function(){
-                                var era_interim_series = {
-                                    name: "ERA Interim",
-                                    data: convertTimeSeriesMetricToEnglish(data.era_interim),
-                                    dashStyle: 'longdash',
-                                    color: Highcharts.getOptions().colors[10],
-                                };
-                                var long_term_chart = $("#long-term-chart").highcharts();
-                                long_term_chart.addSeries(era_interim_series);
-    
-    
-                                var extremes = long_term_chart.yAxis[0].getExtremes();
-                                var maxY = Math.max(extremes.max, convertValueMetricToEnglish(parseFloat(data.max)));
-                                long_term_chart.yAxis[0].addPlotBand({
-                                    from: convertValueMetricToEnglish(parseFloat(data.twenty)),
-                                    to: convertValueMetricToEnglish(maxY),
-                                    color: 'rgba(128,0,128,0.4)',
-                                    id: '20-yr',
-                                    label: {
-                                        text: '20-yr',
-                                        align: 'right',
+                                if ("era_interim" in data) {
+                                    if (!("error" in data.era_interim)) {
+                                        var era_interim_series = {
+                                            name: "ERA Interim",
+                                            data: convertTimeSeriesMetricToEnglish(data.era_interim.series),
+                                            dashStyle: 'longdash',
+                                            color: Highcharts.getOptions().colors[10],
+                                        };
+                                        long_term_chart.addSeries(era_interim_series);
+                                    } else {
+                                        appendErrorMessage("Error: " + data.era_interim.error, "era_interim_error", "message-error");
                                     }
-                                });
-                                long_term_chart.yAxis[0].addPlotBand({
-                                    from: convertValueMetricToEnglish(parseFloat(data.ten)),
-                                    to: convertValueMetricToEnglish(parseFloat(data.twenty)),
-                                    color: 'rgba(255,0,0,0.3)',
-                                    id: '10-yr',
-                                    label: {
-                                        text: '10-yr',
-                                        align: 'right',
+                                }
+                                //load return peeriod data to chart
+                                if ("return_period" in data) {
+                                    if (!("error" in data.return_period)) {
+        
+                                        var extremes = long_term_chart.yAxis[0].getExtremes();
+                                        var maxY = Math.max(extremes.max, convertValueMetricToEnglish(parseFloat(data.return_period.max)));
+                                        long_term_chart.yAxis[0].addPlotBand({
+                                            from: convertValueMetricToEnglish(parseFloat(data.return_period.twenty)),
+                                            to: convertValueMetricToEnglish(maxY),
+                                            color: 'rgba(128,0,128,0.4)',
+                                            id: '20-yr',
+                                            label: {
+                                                text: '20-yr',
+                                                align: 'right',
+                                            }
+                                        });
+                                        long_term_chart.yAxis[0].addPlotBand({
+                                            from: convertValueMetricToEnglish(parseFloat(data.return_period.ten)),
+                                            to: convertValueMetricToEnglish(parseFloat(data.return_period.twenty)),
+                                            color: 'rgba(255,0,0,0.3)',
+                                            id: '10-yr',
+                                            label: {
+                                                text: '10-yr',
+                                                align: 'right',
+                                            }
+                                        });
+                                        long_term_chart.yAxis[0].addPlotBand({
+                                            from: convertValueMetricToEnglish(parseFloat(data.return_period.two)),
+                                            to: convertValueMetricToEnglish(parseFloat(data.return_period.ten)),
+                                            color: 'rgba(255,255,0,0.3)',
+                                            id: '2-yr',
+                                            label: {
+                                                text: '2-yr',
+                                                align: 'right',
+                                            }
+                                        });
+                                    } else {
+                                        appendErrorMessage("Error: " + data.return_period.error, "era_interim_error", "message-error");
+                                    }  
+                                }
+                                //if ERA Interim series present, show chart
+                                if ("era_interim" in data) {
+                                    if (!("error" in data.era_interim)) {
+                                        $('#long-term-chart').removeClass('hidden');
                                     }
-                                });
-                                long_term_chart.yAxis[0].addPlotBand({
-                                    from: convertValueMetricToEnglish(parseFloat(data.two)),
-                                    to: convertValueMetricToEnglish(parseFloat(data.ten)),
-                                    color: 'rgba(255,255,0,0.3)',
-                                    id: '2-yr',
-                                    label: {
-                                        text: '2-yr',
-                                        align: 'right',
-                                    }
-                                });
-    
-                                $(long_term_chart.series).each(function(){
-                                    if (this.name == "ERA Interim") {
-                                        this.hide();
-                                    }
-                                });
-                                $('#long-term-chart').removeClass('hidden');
+                                }
                             });
+                        } else {
+                            appendErrorMessage("Error: " + data.error, "era_interim_error", "message-error");
                         }
-                    } else {
-                        appendErrorMessage("Error: " + data.error, "era_interim_error", "message-error");
-                    }
                 })
                 .fail(function (request, status, error) {
                     appendErrorMessage("Error: " + error, "era_interim_error", "message-error");
