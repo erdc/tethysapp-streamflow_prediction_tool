@@ -575,7 +575,8 @@ var ERFP_MAP = (function() {
                     title: {
                         text: y_axis_title
                     },
-                    min: 0
+                    min: 0,
+                    opposite: false
                 },
             };
             //handle subtitles - ECMWF first priority
