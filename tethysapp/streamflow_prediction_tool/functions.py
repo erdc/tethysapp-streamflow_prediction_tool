@@ -188,7 +188,7 @@ def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
             time = directory.split(".")[-1]
             path_to_files = os.path.join(path_to_watershed_files, directory)
             if os.path.exists(path_to_files):
-                basin_files = glob(os.path.join(path_to_files,"*.nc"))
+                basin_files = sorted(glob(os.path.join(path_to_files,"*.nc")), reverse=True)
                 if len(basin_files)>0:
                     hour = int(time)/100
                     return basin_files, date + datetime.timedelta(0,int(hour)*60*60)
