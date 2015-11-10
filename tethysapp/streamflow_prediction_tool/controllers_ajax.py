@@ -532,12 +532,10 @@ def ecmwf_get_hydrograph(request):
                         #convert to 3hr-6hr
                         streamflow_1hr = data_values[:90:3]
                         # calculate time series of 6 hr data from 3 hr data
-                        streamflow_3hr = data_values[90:109]
+                        streamflow_3hr_6hr = data_values[90:]
                         # get the time series of 6 hr data
-                        streamflow_6hr = data_values[109:]
-                        # concatenate all time series
-                        all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr, streamflow_6hr]))
-                    elif high_res_time == 125:
+                        all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr_6hr]))
+                    elif len(high_res_time) == 125:
                         #convert to 6hr
                         streamflow_1hr = data_values[:90:6]
                         # calculate time series of 6 hr data from 3 hr data
@@ -547,6 +545,7 @@ def ecmwf_get_hydrograph(request):
                         # concatenate all time series
                         all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr, streamflow_6hr]))
                     else:
+                        
                         all_data_first_half.append(data_values)
                     high_res_data = data_values
                 data_nc.close()
