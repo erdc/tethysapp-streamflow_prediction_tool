@@ -469,9 +469,14 @@ def ecmwf_get_hydrograph(request):
         time_length = len(data_nc.variables['time'][:])
         data_nc.close()
     
-        first_half_size = 40
+        first_half_size = 40 #run 6-hr resolution for all
         if time_length == 41 or time_length == 61:
+            #run at full resolution for high res and 6-hr for low res
             first_half_size = 41
+        elif time_length == 85 or time_length == 125:
+            #run at full resolution for all
+            first_half_size = 65
+
         #get information from datasets
         all_data_first_half = []
         all_data_second_half = []
@@ -523,10 +528,20 @@ def ecmwf_get_hydrograph(request):
                                 next_time = int((start_date+datetime.timedelta(hours=i*6+6)) \
                                                 .strftime('%s'))*1000
                                 high_res_time.append(next_time)
-                    if len(high_res_time)>109:
-                        streamflow_1hr = data_values[:91:6]
+                    if first_half_size == 65:
+                        #convert to 3hr-6hr
+                        streamflow_1hr = data_values[:90:3]
                         # calculate time series of 6 hr data from 3 hr data
-                        streamflow_3hr = data_values[92:109:2]
+                        streamflow_3hr = data_values[90:109]
+                        # get the time series of 6 hr data
+                        streamflow_6hr = data_values[109:]
+                        # concatenate all time series
+                        all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr, streamflow_6hr]))
+                    elif high_res_time == 125:
+                        #convert to 6hr
+                        streamflow_1hr = data_values[:90:6]
+                        # calculate time series of 6 hr data from 3 hr data
+                        streamflow_3hr = data_values[90:109:2]
                         # get the time series of 6 hr data
                         streamflow_6hr = data_values[109:]
                         # concatenate all time series
