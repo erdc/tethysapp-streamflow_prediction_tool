@@ -566,6 +566,7 @@ var ERFP_MAP = (function() {
                 },
                 xAxis: {
                     type: 'datetime',
+                    ordinal: false,
                     title: {
                         text: 'Date (UTC)'
                     },
