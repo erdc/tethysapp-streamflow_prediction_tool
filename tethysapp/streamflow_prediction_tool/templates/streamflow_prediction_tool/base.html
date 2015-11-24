@@ -35,7 +35,9 @@
     <li><a href="{% url 'streamflow_prediction_tool:manage-geoservers' %}">Manage Geoservers</a></li>
     {% endif %}
     <li class="title">Learn</li>
+    {% if user.is_superuser or user.is_staff %}
     <li><a href="{% url 'streamflow_prediction_tool:getting-started' %}">Getting Started</a></li>
+    {% endif %}
     <li><a href="https://github.com/erdc-cm/tethysapp-streamflow_prediction_tool">View the Code</a></li>
     <li><a href="http://scholarsarchive.byu.edu/etd/5272">How it Works</a></li>
 {% endblock %}
