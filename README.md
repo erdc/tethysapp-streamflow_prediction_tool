@@ -5,7 +5,7 @@
 See: https://github.com/CI-WATER/tethys and http://docs.tethys.ci-water.org**
 
 *This app requires you to have the ECMWF AutoRAPID preprocessing completed 
-separately. See: hhttps://github.com/erdc-cm/spt_ecmwf_autorapid_process*
+separately. See: https://github.com/erdc-cm/spt_ecmwf_autorapid_process*
 
 ##Prerequisites:
 - Tethys Platform (CKAN, PostgresQL, GeoServer)
