@@ -297,7 +297,10 @@ def map(request):
                         pass
                 
                 #LOAD IN FLOOD MAPS
-                if watershed.geoserver_search_for_flood_map:
+                if watershed.geoserver_search_for_flood_map and \
+                    watershed.ecmwf_data_store_watershed_name and \
+                    watershed.ecmwf_data_store_subbasin_name:
+                        
                     path_to_rapid_output = main_settings.ecmwf_rapid_prediction_directory
                     path_to_watershed_files = os.path.join(path_to_rapid_output, 
                                                            watershed.ecmwf_data_store_watershed_name, 
@@ -309,7 +312,7 @@ def map(request):
                         flood_map_layer_name_beginning = "%s-%s-floodmap-" % (watershed.ecmwf_data_store_watershed_name,
                                                                               watershed.ecmwf_data_store_subbasin_name)
                         directories = sorted([d for d in os.listdir(path_to_watershed_files) \
-                                            if os.path.isdir(os.path.join(path_to_watershed_files, d))],
+                                            if d and os.path.isdir(os.path.join(path_to_watershed_files, d))],
                                              reverse=True)
                         flood_map_count = 0
                         for directory in directories:
