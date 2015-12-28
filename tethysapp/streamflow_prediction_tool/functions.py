@@ -3,6 +3,7 @@ from glob import glob
 import netCDF4 as NET
 import numpy as np
 import os
+from pytz import utc
 import re
 from shutil import rmtree
 from sqlalchemy import and_
@@ -191,7 +192,7 @@ def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
                 basin_files = sorted(glob(os.path.join(path_to_files,"*.nc")), reverse=True)
                 if len(basin_files)>0:
                     hour = int(time)/100
-                    return basin_files, date + datetime.timedelta(0,int(hour)*60*60)
+                    return basin_files, (date + datetime.timedelta(0,int(hour)*60*60)).replace(tzinfo=utc)
         except Exception as ex:
             print ex
             pass
