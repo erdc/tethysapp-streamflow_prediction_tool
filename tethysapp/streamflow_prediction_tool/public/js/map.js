@@ -1381,6 +1381,7 @@ var ERFP_MAP = (function() {
                                     layer.set('subbasin_name', layer_info.subbasin);
                                     layer.set('date_timestep', flood_map_info.forecast_directory);
                                     layer.set("flood_map_sublayer_id", flood_map_sublayer_id);
+                                    layer.setMaxResolution(1000);
                                     flood_maps.push(layer);
                                 }
                                 else {
