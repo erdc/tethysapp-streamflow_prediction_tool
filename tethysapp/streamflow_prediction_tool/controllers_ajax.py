@@ -466,16 +466,18 @@ def ecmwf_get_hydrograph(request):
             return JsonResponse({'error' : 'ECMWF reach with id: %s not found.' % reach_id})
 
         data_nc = NET.Dataset(basin_files[0], mode="r")
-        time_length = len(data_nc.variables['time'][:])
-        data_nc.close()
     
         first_half_size = 40 #run 6-hr resolution for all
-        if time_length == 41 or time_length == 61:
-            #run at full resolution for high res and 6-hr for low res
-            first_half_size = 41
-        elif time_length == 85 or time_length == 125:
-            #run at full resolution for all
-            first_half_size = 65
+        if 'time' in data_nc.variables.keys():
+            time_length = len(data_nc.variables['time'][:])
+            if time_length == 41 or time_length == 61:
+                #run at full resolution for high res and 6-hr for low res
+                first_half_size = 41
+            elif time_length == 85 or time_length == 125:
+                #run at full resolution for all
+                first_half_size = 65
+
+        data_nc.close()
 
         #get information from datasets
         all_data_first_half = []
