@@ -17,7 +17,7 @@ from django.contrib.auth.decorators import user_passes_test, login_required
 from django.shortcuts import redirect, render
 
 #tethys imports
-from tethys_sdk.gizmos import TextInput
+from tethys_sdk.gizmos import SelectInput, TextInput, ToggleSwitch
 
 #local imports
 from spt_dataset_manager.dataset_manager import GeoServerDatasetManager
@@ -64,19 +64,14 @@ def home(request):
     for group in groups:
         watershed_groups.append((group.name,group.id))
     
-    watershed_select = {
-                'display_text': 'Select Watershed(s)',
-                'name': 'watershed_select',
-                'options': watershed_list,
-                'multiple': True,
-                'placeholder': 'Select Watershed(s)',
-                }          
-    watershed_group_select = {
-                'display_text': 'Select a Watershed Group',
-                'name': 'watershed_group_select',
-                'options': watershed_groups,
-                'placeholder': 'Select a Watershed Group',
-                }          
+    watershed_select = SelectInput(display_text='Select Watershed(s)',
+                                   name='watershed_select',
+                                   options=watershed_list,
+                                   multiple=True,)
+                                   
+    watershed_group_select = SelectInput(display_text='Select a Watershed Group',
+                                         name='watershed_group_select',
+                                         options=watershed_groups,)
     context = {
                 'watershed_select' : watershed_select,
                 'watersheds_length': len(watersheds),
@@ -194,7 +189,7 @@ def map(request):
                         
                     latlon_bbox = drainage_line_info['result']['latlon_bbox'][:4]
                     geoserver_info['drainage_line'] = {'name': watershed.geoserver_drainage_line_layer,
-                                                       'geojsonp': drainage_line_info['result']['wfs']['geojson'],
+                                                       'geojson': drainage_line_info['result']['wfs']['geojson'],
                                                        'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
                                                        'projection': drainage_line_info['result']['projection'],
                                                        'contained_attributes': contained_attributes,
@@ -261,7 +256,7 @@ def map(request):
                     if ahps_station_info['success']: 
                         latlon_bbox = ahps_station_info['result']['latlon_bbox'][:4]
                         geoserver_info['ahps_station'] = {'name': watershed.geoserver_ahps_station_layer,
-                                                          'geojsonp': ahps_station_info['result']['wfs']['geojson'],
+                                                          'geojson': ahps_station_info['result']['wfs']['geojson'],
                                                           'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
                                                           'projection': ahps_station_info['result']['projection'],
                                                          }
@@ -367,27 +362,21 @@ def map(request):
                 else:
                     flood_map_date_selectors.append(None)
                     
-        units_toggle_switch = { 
-                                'display_text': 'Units',
-                                'name': 'units-toggle',
-                                'on_label': 'Metric',
-                                'off_label': 'English',
-                                'initial': True,
-                              }
+        units_toggle_switch = ToggleSwitch(display_text='Units',
+                                           name='units-toggle',
+                                           on_label='Metric',
+                                           off_label='English',
+                                           initial=True,)
 
-        ecmwf_toggle_switch = {
-                                'display_text' : "ECMWF",
-                                'name': 'ecmwf-toggle',
-                                'on_style': 'success',
-                                'initial': True,
-                              }
+        ecmwf_toggle_switch = ToggleSwitch(display_text="ECMWF",
+                                           name='ecmwf-toggle',
+                                           on_style='success',
+                                           initial=True,)
 
-        wrf_toggle_switch = {
-                                'display_text' : "WRF-Hydro",
-                                'name': 'wrf-toggle',
-                                'on_style': 'warning',
-                                'initial': False,
-                              }
+        wrf_toggle_switch =  ToggleSwitch(display_text="WRF-Hydro",
+                                          name='wrf-toggle',
+                                          on_style='warning',
+                                          initial=False,)
 
         #Query DB for settings
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
@@ -434,45 +423,36 @@ def settings(request):
     #Query DB for settings
     main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
 
-    base_layer_select_input = {
-                'display_text': 'Select a Base Layer',
-                'name': 'base-layer-select',
-                'multiple': False,
-                'options': base_layer_list,
-                'initial': main_settings.base_layer.name,
-                }
+    base_layer_select_input = { 'display_text':'Select a Base Layer',
+                                'name':'base-layer-select',
+                                'multiple':False,
+                                'options':base_layer_list,
+                                'initial':main_settings.base_layer.name,
+                                }
 
-    base_layer_api_key_input = {
-                'display_text': 'Base Layer API Key',
-                'name': 'api-key-input',
-                'placeholder': 'e.g.: a1b2c3-d4e5d6-f7g8h9',
-                'icon_append':'glyphicon glyphicon-lock',
-                'initial': main_settings.base_layer.api_key
-              }
+    base_layer_api_key_input = TextInput(display_text='Base Layer API Key',
+                                         name='api-key-input',
+                                         placeholder='e.g.: a1b2c3-d4e5d6-f7g8h9',
+                                         icon_append='glyphicon glyphicon-lock',
+                                         initial=main_settings.base_layer.api_key,)
               
-    ecmwf_rapid_directory_input = {
-                'display_text': 'Server Folder Location of ECMWF-RAPID files',
-                'name': 'ecmwf-rapid-location-input',
-                'placeholder': 'e.g.: /home/username/work/rapid/ecmwf_output',
-                'icon_append':'glyphicon glyphicon-folder-open',
-                'initial': main_settings.ecmwf_rapid_prediction_directory,
-              }
+    ecmwf_rapid_directory_input = TextInput(display_text='Server Folder Location of ECMWF-RAPID files',
+                                            name='ecmwf-rapid-location-input',
+                                            placeholder='e.g.: /home/username/work/rapid/ecmwf_output',
+                                            icon_append='glyphicon glyphicon-folder-open',
+                                            initial=main_settings.ecmwf_rapid_prediction_directory,)
 
-    era_interim_rapid_directory_input = {
-                'display_text': 'Server Folder Location of ERA Interim RAPID files',
-                'name': 'era-interim-rapid-location-input',
-                'placeholder': 'e.g.: /home/username/work/rapid/era_interim',
-                'icon_append':'glyphicon glyphicon-folder-open',
-                'initial': main_settings.era_interim_rapid_directory,
-              }
+    era_interim_rapid_directory_input = TextInput(display_text='Server Folder Location of ERA Interim RAPID files',
+                                                  name='era-interim-rapid-location-input',
+                                                  placeholder='e.g.: /home/username/work/rapid/era_interim',
+                                                  icon_append='glyphicon glyphicon-folder-open',
+                                                  initial=main_settings.era_interim_rapid_directory,)
               
-    wrf_hydro_rapid_directory_input = {
-                'display_text': 'Server Folder Location of WRF-Hydro RAPID files',
-                'name': 'wrf-hydro-rapid-location-input',
-                'placeholder': 'e.g.: /home/username/work/rapid/wrf_output',
-                'icon_append':'glyphicon glyphicon-folder-open',
-                'initial': main_settings.wrf_hydro_rapid_prediction_directory,
-              }
+    wrf_hydro_rapid_directory_input = TextInput(display_text='Server Folder Location of WRF-Hydro RAPID files',
+                                                name='wrf-hydro-rapid-location-input',
+                                                placeholder='e.g.: /home/username/work/rapid/wrf_output',
+                                                icon_append='glyphicon glyphicon-folder-open',
+                                                initial=main_settings.wrf_hydro_rapid_prediction_directory,)
               
     submit_button = {'buttons': [
                                  {'display_text': 'Submit',
@@ -582,23 +562,21 @@ def add_watershed(request):
                                              placeholder='e.g.: erfp:ahps-station',
                                              icon_append='glyphicon glyphicon-link')
               
-    search_floodmap_toggle_switch = {'display_text': 'Search for Flood Maps?',
-                                     'name': 'search-floodmap-toggle',
-                                     'on_label': 'Yes',
-                                     'off_label': 'No',
-                                     'on_style': 'success',
-                                     'off_style': 'danger',
-                                     'initial': False,
-                                    }
+    search_floodmap_toggle_switch = ToggleSwitch(display_text='Search for Flood Maps?',
+                                                 name='search-floodmap-toggle',
+                                                 on_label='Yes',
+                                                 off_label='No',
+                                                 on_style='success',
+                                                 off_style='danger',
+                                                 initial=False,)
 
-    shp_upload_toggle_switch = {'display_text': 'Upload Shapefile?',
-                'name': 'shp-upload-toggle',
-                'on_label': 'Yes',
-                'off_label': 'No',
-                'on_style': 'success',
-                'off_style': 'danger',
-                'initial': True,
-              }
+    shp_upload_toggle_switch = ToggleSwitch(display_text='Upload Shapefile?',
+                                            name='shp-upload-toggle',
+                                            on_label='Yes',
+                                            off_label='No',
+                                            on_style='success',
+                                            off_style='danger',
+                                            initial=True,)
 
     add_button = {'buttons': [
                                  {'display_text': 'Add Watershed',
@@ -674,14 +652,13 @@ def manage_watersheds_table(request):
 
     session.close()
 
-    shp_upload_toggle_switch = {
-                'name': 'shp-upload-toggle',
-                'on_label': 'Yes',
-                'off_label': 'No',
-                'on_style': 'success',
-                'off_style': 'danger',
-                'initial': False,
-                }
+    shp_upload_toggle_switch = ToggleSwitch(name='shp-upload-toggle',
+                                            on_label='Yes',
+                                            off_label='No',
+                                            on_style='success',
+                                            off_style='danger',
+                                            initial=False,)
+                                            
     prev_button = {'buttons': [
                 {'display_text' : 'Previous',
                  'name' : 'prev_button',
@@ -815,24 +792,21 @@ def edit_watershed(request):
                                                  icon_append='glyphicon glyphicon-link',
                                                  initial=watershed.geoserver_ahps_station_layer,)
 
-        search_floodmap_toggle_switch = {
-                    'display_text': 'Search for Flood Maps?',
-                    'name': 'search-floodmap-toggle',
-                    'on_label': 'Yes',
-                    'off_label': 'No',
-                    'on_style': 'success',
-                    'off_style': 'danger',
-                    'initial': watershed.geoserver_search_for_flood_map,
-                  }
+        search_floodmap_toggle_switch = ToggleSwitch(display_text='Search for Flood Maps?',
+                                                     name='search-floodmap-toggle',
+                                                     on_label='Yes',
+                                                     off_label='No',
+                                                     on_style='success',
+                                                     off_style='danger',
+                                                     initial=watershed.geoserver_search_for_flood_map,)
 
-        shp_upload_toggle_switch = {'display_text': 'Upload Shapefile?',
-                    'name': 'shp-upload-toggle',
-                    'on_label': 'Yes',
-                    'off_label': 'No',
-                    'on_style': 'success',
-                    'off_style': 'danger',
-                    'initial': False,
-                    }
+        shp_upload_toggle_switch = ToggleSwitch(display_text='Upload Shapefile?',
+                                                name='shp-upload-toggle',
+                                                on_label='Yes',
+                                                off_label='No',
+                                                on_style='success',
+                                                off_style='danger',
+                                                initial=False,)
 
         add_button = {'buttons': [
                                      {'display_text': 'Add Watershed',
