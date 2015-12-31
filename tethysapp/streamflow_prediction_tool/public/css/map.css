@@ -11,8 +11,24 @@
     list-style-type: none;
 }
 
-#map {
+.map {
     height: 100%;
+}
+
+.map:-moz-full-screen {
+    width: 100%;
+}
+
+.map:-webkit-full-screen {
+    width: 100%;
+}
+
+.map:-ms-fullscreen {
+    width: 100%;
+}
+
+.map:fullscreen {
+    width: 100%;
 }
 
 .sfpt-chart {
