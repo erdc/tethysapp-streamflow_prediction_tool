@@ -1544,18 +1544,17 @@ var ERFP_MAP = (function() {
                     else { //layer_info['drainage_line']['geoserver_method'] == "simple"
                         var drainage_line_vector_source = new ol.source.Vector({
                             format: new ol.format.GeoJSON(),
-                            loader: function(extent, resolution, projection) {
-                                this.geojsonp_url = layer_info['drainage_line']['geojsonp'];
-                                this.callback = 'loadFeatures' + drainage_line_layer_id;
-                                this.attributes = layer_info['drainage_line']['contained_attributes'].join(",");
-                                return this.geojsonp_url + 
+                            url: function(extent, resolution, projection) {
+                                return layer_info['drainage_line']['geojsonp'] + 
                                       '&PROPERTYNAME=the_geom,' +
-                                       this.attributes +
-                                      '&BBOX=' + extent.join(',') + 
+                                       layer_info['drainage_line']['contained_attributes'].join(",") +
+                                      '&bbox=' + extent.join(',') + 
                                       ','+ m_map_projection +
                                       '&srsname=' + m_map_projection;
                             },
-                            strategy: ol.loadingstrategy.bbox,
+                            strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+                                maxZoom: 19
+                            })),
                             projection: m_map_projection
                         });
                         drainage_line = new ol.layer.Vector({
