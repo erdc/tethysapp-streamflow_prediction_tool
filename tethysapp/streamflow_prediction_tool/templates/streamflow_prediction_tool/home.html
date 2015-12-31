@@ -15,7 +15,6 @@
         {% endif %}
     {% endif %}
     {% if watersheds_length > 0 %}
-        <h4>Either...</h4>
         <h1>Select a Watershed</h1>
         <form action="{% url 'streamflow_prediction_tool:map' %}" method="get">
             <p id="too-many-watersheds-alert" class="alert alert-warning hidden" role="alert"><em>Warning: Selecting too many watersheds can make the operation of the app slow.</em></p>
