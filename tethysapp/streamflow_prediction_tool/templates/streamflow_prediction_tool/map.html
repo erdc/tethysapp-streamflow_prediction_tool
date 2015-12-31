@@ -1,3 +1,9 @@
+<!--  add_data_store.html -->
+<!--  streamflow_prediction_tool -->
+<!--  Created by Alan D. Snow 2015. -->
+<!--  Copyright © 2015 Alan D Snow. All rights reserved. -->
+<!--  License: BSD 2-Clause -->
+
 {% extends "streamflow_prediction_tool/base.html" %}
 
 {% load staticfiles %}
@@ -6,7 +12,7 @@
 
 {% block global_scripts %}
   {{ block.super }}
-  <script src="{% static 'streamflow_prediction_tool/vendor/openlayers/v3.3.0/ol.js' %}" type="text/javascript"></script>
+  <script src="{% static 'streamflow_prediction_tool/vendor/openlayers/v3.12.1/ol.js' %}" type="text/javascript"></script>
   <script src="{% static 'streamflow_prediction_tool/vendor/highcharts/highstock.js' %}" type="text/javascript"></script>
   <script src="{% static 'streamflow_prediction_tool/vendor/highcharts/exporting.js' %}" type="text/javascript"></script>
   <script src="{% static 'streamflow_prediction_tool/vendor/highcharts/highcharts-more.js' %}" type="text/javascript"></script>
@@ -16,9 +22,9 @@
 
 {% block styles %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'streamflow_prediction_tool/css/map.css' %}" type="text/css">
-  <link rel="stylesheet" href="{% static 'streamflow_prediction_tool/vendor/openlayers/v3.3.0/ol.css' %}" type="text/css">
+  <link rel="stylesheet" href="{% static 'streamflow_prediction_tool/vendor/openlayers/v3.12.1/ol.css' %}" type="text/css">
   <link rel="stylesheet" href="{% static 'streamflow_prediction_tool/vendor/select2/v3.5.2/select2.css' %}" type="text/css">
+  <link rel="stylesheet" href="{% static 'streamflow_prediction_tool/css/map.css' %}" type="text/css">
 {% endblock %}
 
 {% block app_content %}

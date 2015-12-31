@@ -1,3 +1,9 @@
+<!--  add_data_store.html -->
+<!--  streamflow_prediction_tool -->
+<!--  Created by Alan D. Snow 2015. -->
+<!--  Copyright © 2015 Alan D Snow. All rights reserved. -->
+<!--  License: BSD 2-Clause -->
+
 {% load tethys_gizmos %}
 <div id="message" class="alert alert-danger hidden" role="alert"></div>
 <input id="watershed_id" type="hidden" value="{{watershed.id}}"/>
@@ -5,7 +11,7 @@
 {% gizmo text_input subbasin_name_input %}
 <h3>Data Storage Input</h3>
 {% gizmo select_input data_store_select %}
-<h5 class="data_store hidden">ECMWF Data Storage Input</h5>
+<h5>ECMWF Data Storage Input</h5>
 {% gizmo text_input ecmwf_data_store_watershed_name_input %}
 {% gizmo text_input ecmwf_data_store_subbasin_name_input %}
 <div class="form-group data_store{% if watershed.data_store_id == 1 %} hidden{% endif %}">
@@ -13,7 +19,7 @@
     <input id="ecmwf-rapid-files-upload-input" name="ecmwf-rapid-files-upload-input" type="file" accept=".zip">
     <p class="help-block">These files are used on the computatonal node to run the simulation.</p>
 </div>
-<h5 class="data_store hidden">WRF-Hydro Data Storage Input</h5>
+<h5>WRF-Hydro Data Storage Input</h5>
 {% gizmo text_input wrf_hydro_data_store_watershed_name_input %}
 {% gizmo text_input wrf_hydro_data_store_subbasin_name_input %}
 
@@ -23,48 +29,32 @@
 {% gizmo toggle_switch shp_upload_toggle_switch %}
 <!-- Drainage Line !-->
 {% gizmo text_input geoserver_drainage_line_input %}
-<div class="form-group kml">
-    <label class="control-label" for="drainage-line-kml-upload-input">Drainage Line KML File</label>
-    <input id="drainage-line-kml-upload-input" name="drainage-line-kml-upload-input" data-kml_drainage_line_layer="{{watershed.kml_drainage_line_layer}}" type="file" accept=".kml">
-    <p class="help-block hidden">Must select file to submit!</p>
-</div>
-<p class="help-block kml">Current: {{watershed.kml_drainage_line_layer}}</p>
-<div class="form-group shapefile upload hidden">
+<div class="form-group geo_upload">
     <label class="control-label" for="drainage-line-shp-upload-input">Drainage Line Shapefile</label>
     <input id="drainage-line-shp-upload-input" name="drainage-line-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
     <p class="help-block hidden">Must select file to submit!</p>
 </div>
-<p class="help-block shapefile upload hidden">Need .shp, .shx, .prj, .dbf files.</p>
+<p class="help-block geo_upload">Need .shp, .shx, .prj, .dbf files.</p>
 <!-- Catchments !-->
 {% gizmo text_input geoserver_catchment_input %}
-<div class="form-group kml">
-    <label class="control-label" for="catchment-kml-upload-input">Catchment KML File (Optional)</label>
-    <input id="catchment-kml-upload-input" name="catchment-kml-upload-input" data-kml_catchment_layer="{{watershed.kml_catchment_layer}}" type="file" accept=".kml">
-</div>
-<p class="help-block kml">Current: {{watershed.kml_catchment_layer}}</p>
-<div class="form-group shapefile upload hidden">
+<div class="form-group geo_upload">
     <label class="control-label" for="catchment-shp-upload-input">Catchment Shapefile (Optional)</label>
     <input id="catchment-shp-upload-input" name="catchment-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
 </div>
-<p class="help-block shapefile upload hidden">Need .shp, .shx, .prj, .dbf files.</p>
+<p class="help-block geo_upload">Need .shp, .shx, .prj, .dbf files.</p>
 <!-- Gages !-->
 {% gizmo text_input geoserver_gage_input %}
-<div class="form-group kml">
-    <label class="control-label" for="gage-kml-upload-input">Gage KML File (Optional)</label>
-    <input id="gage-kml-upload-input" name="gage-kml-upload-input" data-kml_gage_layer="{{watershed.kml_gage_layer}}" type="file" accept=".kml">
-</div>
-<p class="help-block kml">Current: {{watershed.kml_gage_layer}}</p>
-<div class="form-group shapefile upload hidden">
+<div class="form-group geo_upload">
     <label class="control-label" for="gage-shp-upload-input">Gage Shapefile (Optional)</label>
     <input id="gage-shp-upload-input" name="gage-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
 </div>
-<p class="help-block shapefile upload hidden">Need .shp, .shx, .prj, .dbf files.</p>
+<p class="help-block geo_upload">Need .shp, .shx, .prj, .dbf files.</p>
 <!-- AHPS Stations !-->
 {% gizmo text_input geoserver_ahps_station_input %}
-<div class="form-group shapefile upload hidden">
+<div class="form-group geo_upload">
     <label class="control-label" for="ahps-station-shp-upload-input">AHPS Station Shapefile (Optional)</label>
     <input id="ahps-station-shp-upload-input" name="ahps-station-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
 </div>
-<p class="help-block shapefile upload hidden">Need .shp, .shx, .prj, .dbf files.</p>
+<p class="help-block geo_upload">Need .shp, .shx, .prj, .dbf files.</p>
 <!-- Geoserver Search for FloodMap ~-->
 {% gizmo toggle_switch search_floodmap_toggle_switch %}

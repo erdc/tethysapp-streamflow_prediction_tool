@@ -1,4 +1,14 @@
 #!/usr/bin/env python
+
+# -*- coding: utf-8 -*-
+##
+##  load_datasets.py
+##  streamflow_prediction_tool
+##
+##  Created by Alan D. Snow 2015.
+##  Copyright © 2015 Alan D Snow. All rights reserved.
+##
+
 import os
 from shutil import rmtree
 
@@ -156,16 +166,18 @@ def load_watershed(watershed):
     
         
 if __name__ == "__main__":
-    load_datasets()
-    """
-    engine_url = 'http://ciwckan.chpc.utah.edu'
-    api_key = '8dcc1b34-0e09-4ddc-8356-df4a24e5be87'
+    #load_datasets()
+    #engine_url = 'https://ckan.test'
+    #api_key = ':SDKLFGNSD:L-sfl;jgn'
+    """    
     #ECMWF
     er_manager = ECMWFRAPIDDatasetManager(engine_url, api_key)
-    er_manager.download_prediction_resource(watershed='magdalena', 
-                                            subbasin='el_banco', 
-                                            date_string='20150505.0', 
-                                            extract_directory='/home/alan/work/magdalena/20150505.0')
+    er_manager.download_prediction_dataset(watershed='philippines', 
+                                            subbasin='luzon', 
+                                            date_string='20151214.0', 
+                                            extract_directory='/home/alan/work/rapid-io/output/philippines-luzon')
+    """
+    """
     #WRF-Hydro
     wr_manager = WRFHydroHRRRDatasetManager(engine_url, api_key)
     wr_manager.download_prediction_resource(watershed='usa', 

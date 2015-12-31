@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+##
+##  controllers.py
+##  streamflow_prediction_tool
+##
+##  Created by Alan D. Snow 2015.
+##  Copyright © 2015 Alan D Snow. All rights reserved.
+##
+
 from glob import glob
 import json
 import os
@@ -6,13 +15,15 @@ from datetime import datetime, timedelta
 #django imports
 from django.contrib.auth.decorators import user_passes_test, login_required
 from django.shortcuts import redirect, render
-#from endless_pagination import utils
+
+#tethys imports
+from tethys_sdk.gizmos import TextInput
 
 #local imports
 from spt_dataset_manager.dataset_manager import GeoServerDatasetManager
 from .model import (BaseLayer, DataStore, DataStoreType, Geoserver, MainSettings,
                     mainSessionMaker, Watershed, WatershedGroup)
-from .functions import (format_name, format_watershed_title, 
+from .functions import (format_watershed_title, 
                         user_permission_test)
 @login_required
 def home(request):
@@ -108,253 +119,218 @@ def map(request):
                                     WatershedGroup.id == group_id)) \
                             .all()
             
-        ##find all kml files to add to page    
-        kml_file_location = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                         'public','kml')
         layers_info = []
-        #add kml urls to list and add their navigation items as well
+        #add layer urls to list and add their navigation items as well
         group_id = 0
         for watershed in watersheds:
             ecmwf_watershed_name = watershed.ecmwf_data_store_watershed_name if \
                                    watershed.ecmwf_data_store_watershed_name else watershed.watershed_name
             ecmwf_subbasin_name = watershed.ecmwf_data_store_subbasin_name if \
                                    watershed.ecmwf_data_store_subbasin_name else watershed.subbasin_name
-            #if on the local server
-            if watershed.geoserver_id == 1:
-                file_path = os.path.join(kml_file_location, format_name(watershed.watershed_name))
-                kml_info = {'watershed' : watershed.folder_name, 
-                            'subbasin' : watershed.file_name,
-                            'ecmwf_watershed' : ecmwf_watershed_name,
-                            'ecmwf_subbasin' : ecmwf_subbasin_name,
-                            'title' : format_watershed_title(watershed.watershed_name,
+            # (get geoserver info)
+            #get wms/api url
+            wms_url = watershed.geoserver.url
+            api_url = watershed.geoserver.url
+            if watershed.geoserver.url.endswith('/geoserver/rest'):
+                wms_url = "%s/ows" % "/".join(watershed.geoserver.url.split("/")[:-1])
+            elif watershed.geoserver.url.endswith('/geoserver'):
+                wms_url = "%s/ows" % watershed.geoserver.url
+                api_url = "%s/rest" % watershed.geoserver.url
+                
+            geoserver_info = {'watershed': watershed.folder_name, 
+                              'subbasin': watershed.file_name,
+                              'ecmwf_watershed' : ecmwf_watershed_name,
+                              'ecmwf_subbasin' : ecmwf_subbasin_name,
+                              'geoserver_url': wms_url,
+                              'title' : format_watershed_title(watershed.watershed_name,
                                                             watershed.subbasin_name)
-                            }
-                #prepare kml files
-                drainage_line_kml = os.path.join(file_path, watershed.kml_drainage_line_layer)
-                if os.path.exists(drainage_line_kml) and watershed.kml_drainage_line_layer:
-                    drainage_line_kml = os.path.basename(drainage_line_kml)
-                    kml_info['drainage_line'] = '/static/streamflow_prediction_tool/kml/%s/%s' \
-                                % (watershed.folder_name, 
-                                   watershed.kml_drainage_line_layer)
-                catchment_kml = os.path.join(file_path, watershed.kml_catchment_layer)
-                if os.path.exists(catchment_kml) and watershed.kml_catchment_layer:
-                    catchment_kml = os.path.basename(catchment_kml)
-                    kml_info['catchment'] = '/static/streamflow_prediction_tool/kml/%s/%s' \
-                                            % (watershed.folder_name,
-                                               watershed.kml_catchment_layer)
-                gage_kml = os.path.join(file_path, watershed.kml_gage_layer)
-                if os.path.exists(gage_kml) and watershed.kml_gage_layer:
-                    catchment_kml = os.path.basename(gage_kml)
-                    kml_info['gage'] = '/static/streamflow_prediction_tool/kml/%s/%s' \
-                                            % (watershed.folder_name,
-                                               watershed.kml_gage_layer)
-        
-                layers_info.append(kml_info)
-            #if geoserver
-            else: # (get geoserver info)
-                #get wms/api url
-                wms_url = watershed.geoserver.url
-                api_url = watershed.geoserver.url
-                if watershed.geoserver.url.endswith('/geoserver/rest'):
-                    wms_url = "%s/ows" % "/".join(watershed.geoserver.url.split("/")[:-1])
-                elif watershed.geoserver.url.endswith('/geoserver'):
-                    wms_url = "%s/ows" % watershed.geoserver.url
-                    api_url = "%s/rest" % watershed.geoserver.url
+                              }
+            geoserver_manager = GeoServerDatasetManager(engine_url=api_url, 
+                                                        username=watershed.geoserver.username,
+                                                        password=watershed.geoserver.password, 
+                                                        app_instance_id=main_settings.app_instance_id)
+            #LOAD DRAINAGE LINE
+            try:
+                #load drainage line layer if exists
+                drainage_line_info = geoserver_manager.dataset_engine.get_resource(resource_id=watershed.geoserver_drainage_line_layer.strip())
+                if drainage_line_info['success']:
+                    #check layers attributes to see if valid
+                    layer_attributes = drainage_line_info['result']['attributes']
+                    missing_attributes = []
+                    contained_attributes = []
+                    #check required attributes
+                    #necessary_attributes = ['COMID','watershed', 'subbasin', 'wwatershed','wsubbasin']
                     
-                geoserver_info = {'watershed': watershed.folder_name, 
-                                  'subbasin': watershed.file_name,
-                                  'ecmwf_watershed' : ecmwf_watershed_name,
-                                  'ecmwf_subbasin' : ecmwf_subbasin_name,
-                                  'geoserver_url': wms_url,
-                                  'title' : format_watershed_title(watershed.watershed_name,
-                                                                watershed.subbasin_name)
-                                  }
-                geoserver_manager = GeoServerDatasetManager(engine_url=api_url, 
-                                                            username=watershed.geoserver.username,
-                                                            password=watershed.geoserver.password, 
-                                                            app_instance_id=main_settings.app_instance_id)
-                #LOAD DRAINAGE LINE
-                try:
-                    #load drainage line layer if exists
-                    drainage_line_info = geoserver_manager.dataset_engine.get_resource(resource_id=watershed.geoserver_drainage_line_layer.strip())
-                    if drainage_line_info['success']:
-                        #check layers attributes to see if valid
-                        layer_attributes = drainage_line_info['result']['attributes']
-                        missing_attributes = []
-                        contained_attributes = []
-                        #check required attributes
-                        #necessary_attributes = ['COMID','watershed', 'subbasin', 'wwatershed','wsubbasin']
+                    def find_add_attribute_ci(attribute, layer_attributes, contained_attributes):
+                        """
+                        Case insensitive attribute search and add
+                        """
+                        for layer_attribute in layer_attributes:    
+                            if layer_attribute.lower() == attribute.lower():
+                                contained_attributes.append(layer_attribute)
+                                return True
+                        return False
+                    #check COMID/HydroID attribute
+                    if not find_add_attribute_ci('COMID', layer_attributes, contained_attributes):
+                        if not find_add_attribute_ci('HydroID', layer_attributes, contained_attributes):
+                            missing_attributes.append('COMID or HydroID')
+                    
+                    #check ECMWF watershed/subbasin attributes
+                    if not find_add_attribute_ci('watershed', layer_attributes, contained_attributes) \
+                    or not find_add_attribute_ci('subbasin', layer_attributes, contained_attributes):
+                        missing_attributes.append('watershed')
+                        missing_attributes.append('subbasin')
                         
-                        def find_add_attribute_ci(attribute, layer_attributes, contained_attributes):
-                            """
-                            Case insensitive attribute search and add
-                            """
-                            for layer_attribute in layer_attributes:    
-                                if layer_attribute.lower() == attribute.lower():
-                                    contained_attributes.append(layer_attribute)
-                                    return True
-                            return False
-                        #check COMID/HydroID attribute
-                        if not find_add_attribute_ci('COMID', layer_attributes, contained_attributes):
-                            if not find_add_attribute_ci('HydroID', layer_attributes, contained_attributes):
-                                missing_attributes.append('COMID or HydroID')
+                    #check WRF-Hydro watershed/subbasin attributes
+                    if not find_add_attribute_ci('wwatershed', layer_attributes, contained_attributes) \
+                    or not find_add_attribute_ci('wsubbasin', layer_attributes, contained_attributes):
+                        missing_attributes.append('wwatershed')
+                        missing_attributes.append('wsubbasin')
                         
-                        #check ECMWF watershed/subbasin attributes
-                        if not find_add_attribute_ci('watershed', layer_attributes, contained_attributes) \
-                        or not find_add_attribute_ci('subbasin', layer_attributes, contained_attributes):
-                            missing_attributes.append('watershed')
-                            missing_attributes.append('subbasin')
-                            
-                        #check WRF-Hydro watershed/subbasin attributes
-                        if not find_add_attribute_ci('wwatershed', layer_attributes, contained_attributes) \
-                        or not find_add_attribute_ci('wsubbasin', layer_attributes, contained_attributes):
-                            missing_attributes.append('wwatershed')
-                            missing_attributes.append('wsubbasin')
-                            
-                        #check optional attributes
-                        optional_attributes = ['usgs_id', 'nws_id', 'hydroserve']
-                        for optional_attribute in optional_attributes:
-                            find_add_attribute_ci(optional_attribute, layer_attributes, contained_attributes)
-                            
-                        latlon_bbox = drainage_line_info['result']['latlon_bbox'][:4]
-                        geoserver_info['drainage_line'] = {'name': watershed.geoserver_drainage_line_layer,
-                                                           'geojsonp': drainage_line_info['result']['wfs']['geojsonp'],
-                                                           'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
-                                                           'projection': drainage_line_info['result']['projection'],
-                                                           'contained_attributes': contained_attributes,
-                                                           'missing_attributes': missing_attributes,
-                                                           }
-                        #check if needed attribute is there to perfrom query based rendering of layer
-                        query_attribute = []
-                        if find_add_attribute_ci('Natur_Flow', layer_attributes, query_attribute):
-                            geoserver_info['drainage_line']['geoserver_method'] = "natur_flow_query"
-                            geoserver_info['drainage_line']['geoserver_query_attribute'] = query_attribute[0]
-                        elif find_add_attribute_ci('RiverOrder', layer_attributes, query_attribute):
-                            geoserver_info['drainage_line']['geoserver_method'] = "river_order_query"
-                            geoserver_info['drainage_line']['geoserver_query_attribute'] = query_attribute[0]
-                        else:
-                            geoserver_info['drainage_line']['geoserver_method'] = "simple"
+                    #check optional attributes
+                    optional_attributes = ['usgs_id', 'nws_id', 'hydroserve']
+                    for optional_attribute in optional_attributes:
+                        find_add_attribute_ci(optional_attribute, layer_attributes, contained_attributes)
+                        
+                    latlon_bbox = drainage_line_info['result']['latlon_bbox'][:4]
+                    geoserver_info['drainage_line'] = {'name': watershed.geoserver_drainage_line_layer,
+                                                       'geojsonp': drainage_line_info['result']['wfs']['geojson'],
+                                                       'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
+                                                       'projection': drainage_line_info['result']['projection'],
+                                                       'contained_attributes': contained_attributes,
+                                                       'missing_attributes': missing_attributes,
+                                                       }
+                    #check if needed attribute is there to perfrom query based rendering of layer
+                    query_attribute = []
+                    if find_add_attribute_ci('Natur_Flow', layer_attributes, query_attribute):
+                        geoserver_info['drainage_line']['geoserver_method'] = "natur_flow_query"
+                        geoserver_info['drainage_line']['geoserver_query_attribute'] = query_attribute[0]
+                    elif find_add_attribute_ci('RiverOrder', layer_attributes, query_attribute):
+                        geoserver_info['drainage_line']['geoserver_method'] = "river_order_query"
+                        geoserver_info['drainage_line']['geoserver_query_attribute'] = query_attribute[0]
                     else:
-                        geoserver_info['drainage_line'] = {'error': drainage_line_info['error']}
+                        geoserver_info['drainage_line']['geoserver_method'] = "simple"
+                else:
+                    geoserver_info['drainage_line'] = {'error': drainage_line_info['error']}
+                    
+            except Exception:
+                geoserver_info['drainage_line'] = {'error': "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984."}
+                pass
+            
+            if watershed.geoserver_catchment_layer:
+                #LOAD CATCHMENT
+                try:
+                    #load catchment layer if exists
+                    catchment_info = geoserver_manager.dataset_engine.get_resource(resource_id=watershed.geoserver_catchment_layer.strip())
+                    if catchment_info['success']: 
+                        latlon_bbox = catchment_info['result']['latlon_bbox'][:4]
+                        geoserver_info['catchment'] = {'name': watershed.geoserver_catchment_layer,
+                                                       'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
+                                                       'projection': catchment_info['result']['projection'],
+                                                  }
+                    else:
+                        geoserver_info['catchment'] = {'error': catchment_info['error']}
+                                                  
+                except Exception:
+                    geoserver_info['catchment'] = {'error': "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984."}
+                    pass
+
+            if watershed.geoserver_gage_layer:
+                #LOAD GAGE
+                try:
+                    #load gage layer if exists
+                    gage_info = geoserver_manager.dataset_engine.get_resource(resource_id=watershed.geoserver_gage_layer.strip())
+                    if gage_info['success']: 
+                        latlon_bbox = gage_info['result']['latlon_bbox'][:4]
+                        geoserver_info['gage'] = {'name': watershed.geoserver_gage_layer,
+                                                  'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
+                                                  'projection': gage_info['result']['projection'],
+                                                 }
+                    else:
+                        geoserver_info['gage'] = {'error': gage_info['error']}
                         
                 except Exception:
-                    geoserver_info['drainage_line'] = {'error': "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984."}
+                    geoserver_info['gage'] = {'error': "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984." }
                     pass
-                
-                if watershed.geoserver_catchment_layer:
-                    #LOAD CATCHMENT
-                    try:
-                        #load catchment layer if exists
-                        catchment_info = geoserver_manager.dataset_engine.get_resource(resource_id=watershed.geoserver_catchment_layer.strip())
-                        if catchment_info['success']: 
-                            latlon_bbox = catchment_info['result']['latlon_bbox'][:4]
-                            geoserver_info['catchment'] = {'name': watershed.geoserver_catchment_layer,
-                                                           'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
-                                                           'projection': catchment_info['result']['projection'],
-                                                      }
-                        else:
-                            geoserver_info['catchment'] = {'error': catchment_info['error']}
-                                                      
-                    except Exception:
-                        geoserver_info['catchment'] = {'error': "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984."}
-                        pass
 
-                if watershed.geoserver_gage_layer:
-                    #LOAD GAGE
-                    try:
-                        #load gage layer if exists
-                        gage_info = geoserver_manager.dataset_engine.get_resource(resource_id=watershed.geoserver_gage_layer.strip())
-                        if gage_info['success']: 
-                            latlon_bbox = gage_info['result']['latlon_bbox'][:4]
-                            geoserver_info['gage'] = {'name': watershed.geoserver_gage_layer,
-                                                      'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
-                                                      'projection': gage_info['result']['projection'],
-                                                     }
-                        else:
-                            geoserver_info['gage'] = {'error': gage_info['error']}
-                            
-                    except Exception:
-                        geoserver_info['gage'] = {'error': "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984." }
-                        pass
-
-                if watershed.geoserver_ahps_station_layer:
-                    #LOAD AHPS STATION
-                    try:
-                        #load gage layer if exists
-                        ahps_station_info = geoserver_manager.dataset_engine.get_resource(resource_id=watershed.geoserver_ahps_station_layer.strip())
-                        if ahps_station_info['success']: 
-                            latlon_bbox = ahps_station_info['result']['latlon_bbox'][:4]
-                            geoserver_info['ahps_station'] = {'name': watershed.geoserver_ahps_station_layer,
-                                                              'geojsonp': ahps_station_info['result']['wfs']['geojsonp'],
-                                                              'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
-                                                              'projection': ahps_station_info['result']['projection'],
-                                                             }
-                        else:
-                            geoserver_info['ahps_station'] = {'error': ahps_station_info['error']}
-                            
-                    except Exception:
-                        geoserver_info['ahps_station'] = {'error': "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984."}
-                        pass
-                
-                #LOAD IN FLOOD MAPS
-                if watershed.geoserver_search_for_flood_map and \
-                    watershed.ecmwf_data_store_watershed_name and \
-                    watershed.ecmwf_data_store_subbasin_name:
+            if watershed.geoserver_ahps_station_layer:
+                #LOAD AHPS STATION
+                try:
+                    #load gage layer if exists
+                    ahps_station_info = geoserver_manager.dataset_engine.get_resource(resource_id=watershed.geoserver_ahps_station_layer.strip())
+                    if ahps_station_info['success']: 
+                        latlon_bbox = ahps_station_info['result']['latlon_bbox'][:4]
+                        geoserver_info['ahps_station'] = {'name': watershed.geoserver_ahps_station_layer,
+                                                          'geojsonp': ahps_station_info['result']['wfs']['geojson'],
+                                                          'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
+                                                          'projection': ahps_station_info['result']['projection'],
+                                                         }
+                    else:
+                        geoserver_info['ahps_station'] = {'error': ahps_station_info['error']}
                         
-                    path_to_rapid_output = main_settings.ecmwf_rapid_prediction_directory
-                    path_to_watershed_files = os.path.join(path_to_rapid_output, 
-                                                           watershed.ecmwf_data_store_watershed_name, 
-                                                           watershed.ecmwf_data_store_subbasin_name)
-                    if os.path.exists(path_to_rapid_output) and os.path.exists(path_to_watershed_files):
-                        geoserver_info['flood_maps'] = {'watershed': watershed.ecmwf_data_store_watershed_name,
-                                                        'subbasin': watershed.ecmwf_data_store_subbasin_name,
-                                                        'geoserver_info_list': []}
-                        flood_map_layer_name_beginning = "%s-%s-floodmap-" % (watershed.ecmwf_data_store_watershed_name,
-                                                                              watershed.ecmwf_data_store_subbasin_name)
-                        directories = sorted([d for d in os.listdir(path_to_watershed_files) \
-                                            if d and os.path.isdir(os.path.join(path_to_watershed_files, d))],
-                                             reverse=True)
-                        flood_map_count = 0
-                        for directory in directories:
-                            date = datetime.strptime(directory.split(".")[0],"%Y%m%d")
-                            hour = int(directory.split(".")[-1])/100
-                            #search for corresponding geoserver layer to load in
-                            if glob(os.path.join(path_to_watershed_files, directory, "*.nc")):
-                                try:
-                                    #load floodmap layer if exists
-                                    resource_name = geoserver_manager.get_layer_name("%s%s" % (flood_map_layer_name_beginning, directory))
-                                    #floodmap_info = geoserver_manager.dataset_engine.get_resource(resource_id=resource_name)
-                                    floodmap_info = geoserver_manager.dataset_engine.get_layer_group(resource_name)
-                                    if floodmap_info['success']: 
-                                        latlon_bbox = floodmap_info['result']['bounds'][:4]
-                                        if (abs(float(latlon_bbox[0])-float(latlon_bbox[2]))>0.001 and\
-                                            abs(float(latlon_bbox[1])-float(latlon_bbox[3]))>0.001):
-                                            geoserver_info['flood_maps']['geoserver_info_list'].append({'name': resource_name,
-                                                                                 'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
-                                                                                 'projection': floodmap_info['result']['bounds'][-1],
-                                                                                 'forecast_directory' : directory,
-                                                                                 'forecast_timestamp' : str(date + timedelta(0,int(hour)*60*60))
-                                                                                })
-                                            flood_map_count += 1
-                                        else:
-                                            geoserver_info['flood_maps']['geoserver_info_list'].append({'error': "Invalid bounding box ...",
-                                                                                                     'forecast_directory' : directory,
-                                                                                                     })
-                                        #limit number of flood maps
-                                        if flood_map_count >= 7:
-                                            break
+                except Exception:
+                    geoserver_info['ahps_station'] = {'error': "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984."}
+                    pass
+            
+            #LOAD IN FLOOD MAPS
+            if watershed.geoserver_search_for_flood_map and \
+                watershed.ecmwf_data_store_watershed_name and \
+                watershed.ecmwf_data_store_subbasin_name:
+                    
+                path_to_rapid_output = main_settings.ecmwf_rapid_prediction_directory
+                path_to_watershed_files = os.path.join(path_to_rapid_output, 
+                                                       watershed.ecmwf_data_store_watershed_name, 
+                                                       watershed.ecmwf_data_store_subbasin_name)
+                if os.path.exists(path_to_rapid_output) and os.path.exists(path_to_watershed_files):
+                    geoserver_info['flood_maps'] = {'watershed': watershed.ecmwf_data_store_watershed_name,
+                                                    'subbasin': watershed.ecmwf_data_store_subbasin_name,
+                                                    'geoserver_info_list': []}
+                    flood_map_layer_name_beginning = "%s-%s-floodmap-" % (watershed.ecmwf_data_store_watershed_name,
+                                                                          watershed.ecmwf_data_store_subbasin_name)
+                    directories = sorted([d for d in os.listdir(path_to_watershed_files) \
+                                        if d and os.path.isdir(os.path.join(path_to_watershed_files, d))],
+                                         reverse=True)
+                    flood_map_count = 0
+                    for directory in directories:
+                        date = datetime.strptime(directory.split(".")[0],"%Y%m%d")
+                        hour = int(directory.split(".")[-1])/100
+                        #search for corresponding geoserver layer to load in
+                        if glob(os.path.join(path_to_watershed_files, directory, "*.nc")):
+                            try:
+                                #load floodmap layer if exists
+                                resource_name = geoserver_manager.get_layer_name("%s%s" % (flood_map_layer_name_beginning, directory))
+                                #floodmap_info = geoserver_manager.dataset_engine.get_resource(resource_id=resource_name)
+                                floodmap_info = geoserver_manager.dataset_engine.get_layer_group(resource_name)
+                                if floodmap_info['success']: 
+                                    latlon_bbox = floodmap_info['result']['bounds'][:4]
+                                    if (abs(float(latlon_bbox[0])-float(latlon_bbox[2]))>0.001 and\
+                                        abs(float(latlon_bbox[1])-float(latlon_bbox[3]))>0.001):
+                                        geoserver_info['flood_maps']['geoserver_info_list'].append({'name': resource_name,
+                                                                             'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
+                                                                             'projection': floodmap_info['result']['bounds'][-1],
+                                                                             'forecast_directory' : directory,
+                                                                             'forecast_timestamp' : str(date + timedelta(0,int(hour)*60*60))
+                                                                            })
+                                        flood_map_count += 1
                                     else:
-                                        geoserver_info['flood_maps']['geoserver_info_list'].append({'error': floodmap_info['error'],
+                                        geoserver_info['flood_maps']['geoserver_info_list'].append({'error': "Invalid bounding box ...",
                                                                                                  'forecast_directory' : directory,
                                                                                                  })
-                                        
-                                except Exception:
-                                    error_msg = "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984."
-                                    geoserver_info['flood_maps']['geoserver_info_list'].append({'error': error_msg })
-                                    pass
+                                    #limit number of flood maps
+                                    if flood_map_count >= 7:
+                                        break
+                                else:
+                                    geoserver_info['flood_maps']['geoserver_info_list'].append({'error': floodmap_info['error'],
+                                                                                             'forecast_directory' : directory,
+                                                                                             })
+                                    
+                            except Exception:
+                                error_msg = "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984."
+                                geoserver_info['flood_maps']['geoserver_info_list'].append({'error': error_msg })
+                                pass
 
-                if geoserver_info:                
-                    layers_info.append(geoserver_info)
+            if geoserver_info:                
+                layers_info.append(geoserver_info)
 
             group_id += 1
             
@@ -530,20 +506,17 @@ def add_watershed(request):
     #initialize session
     session = mainSessionMaker()
 
-    watershed_name_input = {
-                'display_text': 'Watershed Display Name',
-                'name': 'watershed-name-input',
-                'placeholder': 'e.g.: Magdalena',
-                'icon_append':'glyphicon glyphicon-home',
-              }
+    watershed_name_input = TextInput(display_text='Watershed Display Name',
+                                     name='watershed-name-input',
+                                     placeholder='e.g.: Magdalena',
+                                     icon_append='glyphicon glyphicon-home',
+                                     )
               
-    subbasin_name_input = {
-                'display_text': 'Subbasin Display Name',
-                'name': 'subbasin-name-input',
-                'placeholder': 'e.g.: El Banco',
-                'icon_append':'glyphicon glyphicon-tree-deciduous',
-              }
-              
+    subbasin_name_input = TextInput(display_text='Subbasin Display Name',
+                                    name='subbasin-name-input',
+                                    placeholder='e.g.: El Banco',
+                                    icon_append='glyphicon glyphicon-tree-deciduous',
+                                    )
     # Query DB for data stores
     data_stores = session.query(DataStore).all()
     data_store_list = []
@@ -551,40 +524,30 @@ def add_watershed(request):
         data_store_list.append(("%s (%s)" % (data_store.name, data_store.api_endpoint),
                                  data_store.id))
 
-    data_store_select = {
-                'display_text': 'Select a Data Store',
-                'name': 'data-store-select',
-                'options': data_store_list,
-                'placeholder': 'Select a Data Store',
-                }          
+    data_store_select = {'display_text':'Select a Data Store',
+                         'name':'data-store-select',
+                         'options':data_store_list,
+                         'placeholder':'Select a Data Store'}
               
-    ecmwf_data_store_watershed_name_input = {
-                'display_text': 'ECMWF Watershed Data Store Name',
-                'name': 'ecmwf-data-store-watershed-name-input',
-                'placeholder': 'e.g.: magdalena',
-                'icon_append':'glyphicon glyphicon-home',
-              }
+    ecmwf_data_store_watershed_name_input = TextInput(display_text='ECMWF Watershed Data Store Name',
+                                                      name='ecmwf-data-store-watershed-name-input',
+                                                      placeholder='e.g.: magdalena',
+                                                      icon_append='glyphicon glyphicon-home',)
               
-    ecmwf_data_store_subbasin_name_input = {
-                'display_text': 'ECMWF Subbasin Data Store Name',
-                'name': 'ecmwf-data-store-subbasin-name-input',
-                'placeholder': 'e.g.: el_banco',
-                'icon_append':'glyphicon glyphicon-tree-deciduous',
-              }
+    ecmwf_data_store_subbasin_name_input = TextInput(display_text='ECMWF Subbasin Data Store Name',
+                                                     name='ecmwf-data-store-subbasin-name-input',
+                                                     placeholder='e.g.: el_banco',
+                                                     icon_append='glyphicon glyphicon-tree-deciduous',)
 
-    wrf_hydro_data_store_watershed_name_input = {
-                'display_text': 'WRF-Hydro Watershed Data Store Name',
-                'name': 'wrf-hydro-data-store-watershed-name-input',
-                'placeholder': 'e.g.: nfie_wrfhydro_conus',
-                'icon_append':'glyphicon glyphicon-home',
-              }
+    wrf_hydro_data_store_watershed_name_input = TextInput(display_text='WRF-Hydro Watershed Data Store Name',
+                                                          name='wrf-hydro-data-store-watershed-name-input',
+                                                          placeholder='e.g.: nfie_wrfhydro_conus',
+                                                          icon_append='glyphicon glyphicon-home',)
               
-    wrf_hydro_data_store_subbasin_name_input = {
-                'display_text': 'WRF-Hydro Subbasin Data Store Name',
-                'name': 'wrf-hydro-data-store-subbasin-name-input',
-                'placeholder': 'e.g.: nfie_wrfhydro_conus',
-                'icon_append':'glyphicon glyphicon-tree-deciduous',
-              }
+    wrf_hydro_data_store_subbasin_name_input = TextInput(display_text='WRF-Hydro Subbasin Data Store Name',
+                                                         name='wrf-hydro-data-store-subbasin-name-input',
+                                                         placeholder='e.g.: nfie_wrfhydro_conus',
+                                                         icon_append='glyphicon glyphicon-tree-deciduous')
 
     # Query DB for geoservers
     geoservers = session.query(Geoserver).all()
@@ -594,49 +557,39 @@ def add_watershed(request):
                                geoserver.id))
     session.close()
 
-    geoserver_select= {
-                'display_text': 'Select a Geoserver',
-                'name': 'geoserver-select',
-                'options': geoserver_list,
-                'placeholder': 'Select a Geoserver',
-              }
-                
-    geoserver_drainage_line_input = {
-                'display_text': 'Geoserver Drainage Line Layer',
-                'name': 'geoserver-drainage-line-input',
-                'placeholder': 'e.g.: erfp:streams',
-                'icon_append':'glyphicon glyphicon-link',
-              }
+    geoserver_select = {'display_text':'Select a Geoserver',
+                        'name':'geoserver-select',
+                        'options':geoserver_list,
+                        'placeholder':'Select a Geoserver'}
+                                   
+    geoserver_drainage_line_input = TextInput(display_text='Geoserver Drainage Line Layer',
+                                              name='geoserver-drainage-line-input',
+                                              placeholder='e.g.: erfp:streams',
+                                              icon_append='glyphicon glyphicon-link')
               
-    geoserver_catchment_input = {
-                'display_text': 'Geoserver Catchment Layer',
-                'name': 'geoserver-catchment-input',
-                'placeholder': 'e.g.: erfp:catchment',
-                'icon_append':'glyphicon glyphicon-link',
-              }
+    geoserver_catchment_input = TextInput(display_text='Geoserver Catchment Layer',
+                                          name='geoserver-catchment-input',
+                                          placeholder='e.g.: erfp:catchment',
+                                          icon_append='glyphicon glyphicon-link')
               
-    geoserver_gage_input = {
-                'display_text': 'Geoserver Gage Layer',
-                'name': 'geoserver-gage-input',
-                'placeholder': 'e.g.: erfp:gage',
-                'icon_append':'glyphicon glyphicon-link',
-              }
+    geoserver_gage_input = TextInput(display_text='Geoserver Gage Layer',
+                                     name='geoserver-gage-input',
+                                     placeholder='e.g.: erfp:gage',
+                                     icon_append='glyphicon glyphicon-link')
 
-    geoserver_ahps_station_input = {
-                'display_text': 'Geoserver AHPS Station Layer',
-                'name': 'geoserver-ahps-station-input',
-                'placeholder': 'e.g.: erfp:ahps-station',
-                'icon_append':'glyphicon glyphicon-link',
-              }
+    geoserver_ahps_station_input = TextInput(display_text='Geoserver AHPS Station Layer',
+                                             name='geoserver-ahps-station-input',
+                                             placeholder='e.g.: erfp:ahps-station',
+                                             icon_append='glyphicon glyphicon-link')
               
     search_floodmap_toggle_switch = {'display_text': 'Search for Flood Maps?',
-                'name': 'search-floodmap-toggle',
-                'on_label': 'Yes',
-                'off_label': 'No',
-                'on_style': 'success',
-                'off_style': 'danger',
-                'initial': False,
-              }
+                                     'name': 'search-floodmap-toggle',
+                                     'on_label': 'Yes',
+                                     'off_label': 'No',
+                                     'on_style': 'success',
+                                     'off_style': 'danger',
+                                     'initial': False,
+                                    }
 
     shp_upload_toggle_switch = {'display_text': 'Upload Shapefile?',
                 'name': 'shp-upload-toggle',
@@ -772,21 +725,17 @@ def edit_watershed(request):
             session.close()
             return JsonResponse({ 'error': "The watershed to update does not exist." })
         """
-        watershed_name_input = {
-                'display_text': 'Watershed Name',
-                'name': 'watershed-name-input',
-                'placeholder': 'e.g.: magdalena',
-                'icon_append':'glyphicon glyphicon-home',
-                'initial' : watershed.watershed_name,
-              }
+        watershed_name_input = TextInput(display_text='Watershed Name',
+                                         name='watershed-name-input',
+                                         placeholder='e.g.: magdalena',
+                                         icon_append='glyphicon glyphicon-home',
+                                         initial=watershed.watershed_name,)
 
-        subbasin_name_input = {
-                    'display_text': 'Subbasin Name',
-                    'name': 'subbasin-name-input',
-                    'placeholder': 'e.g.: el_banco',
-                    'icon_append':'glyphicon glyphicon-tree-deciduous',
-                    'initial' : watershed.subbasin_name,
-                  }
+        subbasin_name_input = TextInput(display_text='Subbasin Name',
+                                        name='subbasin-name-input',
+                                        placeholder='e.g.: el_banco',
+                                        icon_append='glyphicon glyphicon-tree-deciduous',
+                                        initial=watershed.subbasin_name,)
 
         # Query DB for data stores
         data_stores = session.query(DataStore).all()
@@ -803,37 +752,30 @@ def edit_watershed(request):
                     'initial' : ["%s (%s)" % (watershed.data_store.name, watershed.data_store.api_endpoint)]
                     }
 
-        ecmwf_data_store_watershed_name_input = {
-                    'display_text': 'ECMWF Watershed Data Store Name',
-                    'name': 'ecmwf-data-store-watershed-name-input',
-                    'placeholder': 'e.g.: magdalena',
-                    'icon_append':'glyphicon glyphicon-home',
-                    'initial' : watershed.ecmwf_data_store_watershed_name,
-                  }
+        ecmwf_data_store_watershed_name_input = TextInput(display_text='ECMWF Watershed Data Store Name',
+                                                          name='ecmwf-data-store-watershed-name-input',
+                                                          placeholder='e.g.: magdalena',
+                                                          icon_append='glyphicon glyphicon-home',
+                                                          initial=watershed.ecmwf_data_store_watershed_name,)
                   
-        ecmwf_data_store_subbasin_name_input = {
-                    'display_text': 'ECMWF Subbasin Data Store Name',
-                    'name': 'ecmwf-data-store-subbasin-name-input',
-                    'placeholder': 'e.g.: el_banco',
-                    'icon_append':'glyphicon glyphicon-tree-deciduous',
-                    'initial' : watershed.ecmwf_data_store_subbasin_name,
-                  }
+        ecmwf_data_store_subbasin_name_input = TextInput(display_text='ECMWF Subbasin Data Store Name',
+                                                         name='ecmwf-data-store-subbasin-name-input',
+                                                         placeholder='e.g.: el_banco',
+                                                         icon_append='glyphicon glyphicon-tree-deciduous',
+                                                         initial=watershed.ecmwf_data_store_subbasin_name,)
     
-        wrf_hydro_data_store_watershed_name_input = {
-                    'display_text': 'WRF-Hydro Watershed Data Store Name',
-                    'name': 'wrf-hydro-data-store-watershed-name-input',
-                    'placeholder': 'e.g.: magdalena',
-                    'icon_append':'glyphicon glyphicon-home',
-                    'initial' : watershed.wrf_hydro_data_store_watershed_name,
-                  }
+        wrf_hydro_data_store_watershed_name_input = TextInput(display_text='WRF-Hydro Watershed Data Store Name',
+                                                              name='wrf-hydro-data-store-watershed-name-input',
+                                                              placeholder='e.g.: magdalena',
+                                                              icon_append='glyphicon glyphicon-home',
+                                                              initial=watershed.wrf_hydro_data_store_watershed_name,)
                   
-        wrf_hydro_data_store_subbasin_name_input = {
-                    'display_text': 'WRF-Hydro Subbasin Data Store Name',
-                    'name': 'wrf-hydro-data-store-subbasin-name-input',
-                    'placeholder': 'e.g.: el_banco',
-                    'icon_append':'glyphicon glyphicon-tree-deciduous',
-                    'initial' : watershed.wrf_hydro_data_store_subbasin_name,
-                  }
+        wrf_hydro_data_store_subbasin_name_input = TextInput(display_text='WRF-Hydro Subbasin Data Store Name',
+                                                             name='wrf-hydro-data-store-subbasin-name-input',
+                                                             placeholder='e.g.: el_banco',
+                                                             icon_append='glyphicon glyphicon-tree-deciduous',
+                                                             initial=watershed.wrf_hydro_data_store_subbasin_name,)
+                                                             
        # Query DB for geoservers
         geoservers = session.query(Geoserver).all()
         geoserver_list = []
@@ -849,36 +791,32 @@ def edit_watershed(request):
                     'initial' : ["%s (%s)" % (watershed.geoserver.name, watershed.geoserver.url)]
                     }
 
-        geoserver_drainage_line_input = {
-                    'display_text': 'Geoserver Drainage Line Layer',
-                    'name': 'geoserver-drainage-line-input',
-                    'placeholder': 'e.g.: erfp:streams',
-                    'icon_append':'glyphicon glyphicon-link',
-                    'initial' : watershed.geoserver_drainage_line_layer
-                  }
-        geoserver_catchment_input = {
-                    'display_text': 'Geoserver Catchment Layer (Optional)',
-                    'name': 'geoserver-catchment-input',
-                    'placeholder': 'e.g.: erfp:catchment',
-                    'icon_append':'glyphicon glyphicon-link',
-                    'initial' : watershed.geoserver_catchment_layer
-                  }
-        geoserver_gage_input = {
-                    'display_text': 'Geoserver Gage Layer (Optional)',
-                    'name': 'geoserver-gage-input',
-                    'placeholder': 'e.g.: erfp:gage',
-                    'icon_append':'glyphicon glyphicon-link',
-                    'initial' : watershed.geoserver_gage_layer
-                  }
-        geoserver_ahps_station_input = {
-                    'display_text': 'Geoserver AHPS Station Layer (Optional)',
-                    'name': 'geoserver-ahps-station-input',
-                    'placeholder': 'e.g.: erfp:ahps-station',
-                    'icon_append':'glyphicon glyphicon-link',
-                    'initial' : watershed.geoserver_ahps_station_layer
-                  }
+        geoserver_drainage_line_input = TextInput(display_text='Geoserver Drainage Line Layer',
+                                                  name='geoserver-drainage-line-input',
+                                                  placeholder='e.g.: erfp:streams',
+                                                  icon_append='glyphicon glyphicon-link',
+                                                  initial=watershed.geoserver_drainage_line_layer,)
+                                                  
+        geoserver_catchment_input = TextInput(display_text='Geoserver Catchment Layer (Optional)',
+                                              name='geoserver-catchment-input',
+                                              placeholder='e.g.: erfp:catchment',
+                                              icon_append='glyphicon glyphicon-link',
+                                              initial=watershed.geoserver_catchment_layer,)
+                                              
+        geoserver_gage_input = TextInput(display_text='Geoserver Gage Layer (Optional)',
+                                         name='geoserver-gage-input',
+                                         placeholder='e.g.: erfp:gage',
+                                         icon_append='glyphicon glyphicon-link',
+                                         initial=watershed.geoserver_gage_layer,)
+                                         
+        geoserver_ahps_station_input = TextInput(display_text='Geoserver AHPS Station Layer (Optional)',
+                                                 name='geoserver-ahps-station-input',
+                                                 placeholder='e.g.: erfp:ahps-station',
+                                                 icon_append='glyphicon glyphicon-link',
+                                                 initial=watershed.geoserver_ahps_station_layer,)
 
-        search_floodmap_toggle_switch = {'display_text': 'Search for Flood Maps?',
+        search_floodmap_toggle_switch = {
+                    'display_text': 'Search for Flood Maps?',
                     'name': 'search-floodmap-toggle',
                     'on_label': 'Yes',
                     'off_label': 'No',
@@ -961,19 +899,15 @@ def add_data_store(request):
                 'initial': data_store_type_list[0][0]
                 }          
 
-    data_store_endpoint_input = {
-                'display_text': 'Data Store API Endpoint',
-                'name': 'data-store-endpoint-input',
-                'placeholder': 'e.g.: http://ciwweb.chpc.utah.edu/api/3/action',
-                'icon_append':'glyphicon glyphicon-cloud-download',
-              }
+    data_store_endpoint_input = TextInput(display_text='Data Store API Endpoint',
+                                          name='data-store-endpoint-input',
+                                          placeholder='e.g.: http://ciwweb.chpc.utah.edu/api/3/action',
+                                          icon_append='glyphicon glyphicon-cloud-download',)
 
-    data_store_api_key_input = {
-                'display_text': 'Data Store API Key',
-                'name': 'data-store-api-key-input',
-                'placeholder': 'e.g.: a1b2c3-d4e5d6-f7g8h9',
-                'icon_append':'glyphicon glyphicon-lock',
-              }
+    data_store_api_key_input = TextInput(display_text='Data Store API Key',
+                                         name='data-store-api-key-input',
+                                         placeholder='e.g.: a1b2c3-d4e5d6-f7g8h9',
+                                         icon_append='glyphicon glyphicon-lock',)
 
     add_button = {'buttons': [
                                  {'display_text': 'Add Data Store',
@@ -1058,26 +992,20 @@ def add_geoserver(request):
     """
     Controller for the app add_geoserver page.
     """
-    geoserver_name_input = {
-        'display_text': 'Geoserver Name',
-        'name': 'geoserver-name-input',
-        'placeholder': 'e.g.: My Geoserver',
-        'icon_append':'glyphicon glyphicon-tag',
-        }
+    geoserver_name_input = TextInput(display_text='Geoserver Name',
+                                     name='geoserver-name-input',
+                                     placeholder='e.g.: My Geoserver',
+                                     icon_append='glyphicon glyphicon-tag',)
 
-    geoserver_url_input = {
-        'display_text': 'Geoserver Url',
-        'name': 'geoserver-url-input',
-        'placeholder': 'e.g.: http://felek.cns.umass.edu:8080/geoserver',
-        'icon_append':'glyphicon glyphicon-cloud-download',
-        }
+    geoserver_url_input = TextInput(display_text='Geoserver Url',
+                                    name='geoserver-url-input',
+                                    placeholder='e.g.: http://felek.cns.umass.edu:8080/geoserver',
+                                    icon_append='glyphicon glyphicon-cloud-download')
               
-    geoserver_username_input = {
-        'display_text': 'Geoserver Username',
-        'name': 'geoserver-username-input',
-        'placeholder': 'e.g.: admin',
-        'icon_append':'glyphicon glyphicon-user',
-        }
+    geoserver_username_input = TextInput(display_text='Geoserver Username',
+                                         name='geoserver-username-input',
+                                         placeholder='e.g.: admin',
+                                         icon_append='glyphicon glyphicon-user',)
         
     add_button = {'buttons': [
                                  {'display_text': 'Add Geoserver',
@@ -1161,12 +1089,10 @@ def add_watershed_group(request):
     """
     Controller for the app add_watershed_group page.
     """
-    watershed_group_name_input = {
-        'display_text': 'Watershed Group Name',
-        'name': 'watershed-group-name-input',
-        'placeholder': 'e.g.: My Watershed Group',
-        'icon_append':'glyphicon glyphicon-tag',
-        }
+    watershed_group_name_input = TextInput(display_text='Watershed Group Name',
+                                           name='watershed-group-name-input',
+                                           placeholder='e.g.: My Watershed Group',
+                                           icon_append='glyphicon glyphicon-tag',)
  
     #initialize session
     session = mainSessionMaker()

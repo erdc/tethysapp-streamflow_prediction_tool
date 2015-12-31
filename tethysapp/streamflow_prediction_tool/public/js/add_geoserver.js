@@ -1,3 +1,10 @@
+/*****************************************************************************
+ * FILE:    add_geoserver.js
+ * AUTHOR:  Alan Snow
+ * COPYRIGHT: © 2015 Alan D Snow. All rights reserved.
+ * LICENSE: BSD 2-Clause
+ *****************************************************************************/
+
 jQuery(function() {
     //initialize help blockss
     var help_html = '<p class="help-block hidden">No geoserver name specified.</p>';

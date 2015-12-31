@@ -1,5 +1,13 @@
-# Put your persistent store initializer functions in here
-from .model import (Base, BaseLayer, DataStore, DataStoreType, Geoserver, MainSettings,
+# -*- coding: utf-8 -*-
+##
+##  init_stores.py
+##  streamflow_prediction_tool
+##
+##  Created by Alan D. Snow 2015.
+##  Copyright © 2015 Alan D Snow. All rights reserved.
+##
+
+from .model import (Base, BaseLayer, DataStore, DataStoreType, MainSettings,
                     mainEngine, mainSessionMaker)
 
 def init_main_db(first_time):
@@ -23,9 +31,6 @@ def init_main_db(first_time):
         
         #add all possible data stores
         session.add(DataStore("Local Server", 1, "local", ""))
-
-        #add all possible geoservers
-        session.add(Geoserver("Local Server", "media", "", ""))
 
         #add main settings
         session.add(MainSettings(1, "", "", ""))

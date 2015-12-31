@@ -1,3 +1,10 @@
+/*****************************************************************************
+ * FILE:    add_Watershed_group.js
+ * AUTHOR:  Alan Snow
+ * COPYRIGHT: © 2015 Alan D Snow. All rights reserved.
+ * LICENSE: BSD 2-Clause
+ *****************************************************************************/
+
 //initialize help blockss
 var help_html = '<p class="help-block hidden">No watershed group name specified.</p>';
 $('#watershed-group-name-input').parent().parent().append(help_html);

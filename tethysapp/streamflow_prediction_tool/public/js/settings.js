@@ -1,3 +1,10 @@
+/*****************************************************************************
+ * FILE:    settings.js
+ * AUTHOR:  Alan Snow
+ * COPYRIGHT: © 2015 Alan D Snow. All rights reserved.
+ * LICENSE: BSD 2-Clause
+ *****************************************************************************/
+
 //initialize help blockss
 var help_html = '<p class="help-block hidden">No ECMWF-RAPID location specified.</p>';
 $('#ecmwf-rapid-location-input').parent().parent().append(help_html);

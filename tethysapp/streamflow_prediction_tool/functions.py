@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+##
+##  functions.py
+##  streamflow_prediction_tool
+##
+##  Created by Alan D. Snow 2015.
+##  Copyright © 2015 Alan D Snow. All rights reserved.
+##
+
 import datetime
 from glob import glob
 import netCDF4 as NET
@@ -86,40 +95,6 @@ def delete_old_watershed_prediction_files(watershed, forecast="all"):
     session.close()
               
 
-def delete_old_watershed_kml_files(watershed):
-    """
-    Removes old watershed kml files from system
-    """
-    old_kml_file_location = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                         'public','kml',watershed.folder_name)
-    #remove old kml files on local server
-    #drainange line
-    try:
-        if watershed.kml_drainage_line_layer:
-            os.remove(os.path.join(old_kml_file_location, 
-                                   watershed.kml_drainage_line_layer))
-    except OSError:
-        pass
-    #catchment
-    try:
-        if watershed.kml_catchment_layer:
-            os.remove(os.path.join(old_kml_file_location, 
-                                   watershed.kml_catchment_layer))
-    except OSError:
-        pass
-    #gage
-    try:
-        if watershed.kml_gage_layer:
-            os.remove(os.path.join(old_kml_file_location, 
-                                   watershed.kml_gage_layer))
-    except OSError:
-        pass
-    #folder
-    try:
-        os.rmdir(old_kml_file_location)
-    except OSError:
-        pass
-
 def delete_old_watershed_geoserver_files(watershed):
     """
     Removes old watershed geoserver files from system
@@ -155,8 +130,6 @@ def delete_old_watershed_files(watershed, ecmwf_local_prediction_files_location,
     """
     Removes old watershed files from system
     """
-    #remove old kml files
-    delete_old_watershed_kml_files(watershed)
     #remove old geoserver files
     delete_old_watershed_geoserver_files(watershed)
     #remove old ECMWF and WRF-Hydro prediction files
@@ -306,24 +279,6 @@ def get_comids_in_lookup_comid_list(search_reach_id_list, lookup_reach_id_list):
 
     return search_reach_indices_list, lookup_reach_id_list[search_reach_indices_list]
 
-def get_subbasin_list(file_path):
-    """
-    Gets a list of subbasins in the watershed
-    """
-    subbasin_list = []
-    drainage_line_kmls = glob(os.path.join(file_path, '*drainage_line.kml'))
-    for drainage_line_kml in drainage_line_kmls:
-        subbasin_name = "-".join(os.path.basename(drainage_line_kml).split("-")[:-1])
-        if subbasin_name not in subbasin_list:
-            subbasin_list.append(subbasin_name)
-    catchment_kmls = glob(os.path.join(file_path, '*catchment.kml'))
-    for catchment_kml in catchment_kmls:
-        subbasin_name = "-".join(os.path.basename(catchment_kml).split("-")[:-1])
-        if subbasin_name not in subbasin_list:
-            subbasin_list.append(subbasin_name)
-    subbasin_list.sort()
-    return subbasin_list
-   
 def handle_uploaded_file(f, file_path, file_name):
     """
     Uploads file to specified path

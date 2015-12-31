@@ -1,8 +1,7 @@
 /*****************************************************************************
- * FILE:    Manage Watershed Groups
- * DATE:    2/26/2015
+ * FILE:    manage_watershed_groups.js
  * AUTHOR:  Alan Snow
- * COPYRIGHT: (c) 2015 Brigham Young University
+ * COPYRIGHT: © 2015 Alan D Snow. All rights reserved.
  * LICENSE: BSD 2-Clause
  *****************************************************************************/
 
