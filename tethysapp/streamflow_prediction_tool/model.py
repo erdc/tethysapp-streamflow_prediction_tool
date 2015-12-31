@@ -5,7 +5,7 @@
 ##
 ##  Created by Alan D. Snow 2015.
 ##  Copyright © 2015 Alan D Snow. All rights reserved.
-##
+##  License: BSD 2-Clause
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Boolean, Column, Integer, String, ForeignKey

@@ -5,7 +5,7 @@
 ##
 ##  Created by Alan D. Snow 2015.
 ##  Copyright © 2015 Alan D Snow. All rights reserved.
-##
+##  License: BSD 2-Clause
 
 from tethys_sdk.base import TethysAppBase, url_map_maker
 from tethys_sdk.stores import PersistentStore
