@@ -1385,7 +1385,7 @@ var ERFP_MAP = (function() {
                         }),
                         visible: false,
                     });
-                    ahps_station.set('geoserver_url', layer_info.ahps_station.geojsonp)
+                    ahps_station.set('geoserver_url', layer_info.ahps_station.geojson)
                     ahps_station.set('watershed_name', layer_info.watershed);
                     ahps_station.set('subbasin_name', layer_info.subbasin);
                     ahps_station.set('extent', ol.proj.transformExtent(layer_info.ahps_station.latlon_bbox.map(Number), 
@@ -1439,7 +1439,7 @@ var ERFP_MAP = (function() {
                                 if(load_features_xhr != null) {
                                     load_features_xhr.abort();
                                 }
-                                return layer_info.drainage_line.geojsonp + 
+                                return layer_info.drainage_line.geojson + 
                                       '&PROPERTYNAME=the_geom,' +
                                        layer_info.drainage_line.contained_attributes.join(",") +
                                       '&CQL_FILTER=' + layer_info.drainage_line.geoserver_query_attribute +
@@ -1502,7 +1502,7 @@ var ERFP_MAP = (function() {
                                 if(load_features_xhr != null) {
                                     load_features_xhr.abort();
                                 }
-                                return layer_info.drainage_line.geojsonp + 
+                                return layer_info.drainage_line.geojson + 
                                       '&PROPERTYNAME=the_geom,' +
                                        layer_info.drainage_line.contained_attributes.join(",") +
                                       '&CQL_FILTER=' + layer_info.drainage_line.geoserver_query_attribute +
@@ -1545,9 +1545,9 @@ var ERFP_MAP = (function() {
                         var drainage_line_vector_source = new ol.source.Vector({
                             format: new ol.format.GeoJSON(),
                             url: function(extent, resolution, projection) {
-                                return layer_info['drainage_line']['geojsonp'] + 
+                                return layer_info.drainage_line.geojsonp + 
                                       '&PROPERTYNAME=the_geom,' +
-                                       layer_info['drainage_line']['contained_attributes'].join(",") +
+                                       layer_info.drainage_line.contained_attributes.join(",") +
                                       '&bbox=' + extent.join(',') + 
                                       ','+ m_map_projection +
                                       '&srsname=' + m_map_projection;
