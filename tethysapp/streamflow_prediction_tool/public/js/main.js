@@ -1,3 +1,10 @@
+/*****************************************************************************
+ * FILE:    main.js
+ * AUTHOR:  Alan Snow
+ * COPYRIGHT: © 2015 Alan D Snow. All rights reserved.
+ * LICENSE: BSD 2-Clause
+ *****************************************************************************/
+
 //get cookie
 function getCookie(name) {
     var cookieValue = null;

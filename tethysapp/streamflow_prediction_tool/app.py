@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+##
+##  app.py
+##  streamflow_prediction_tool
+##
+##  Created by Alan D. Snow 2015.
+##  Copyright © 2015 Alan D Snow. All rights reserved.
+##
+
 from tethys_sdk.base import TethysAppBase, url_map_maker
 from tethys_sdk.stores import PersistentStore
 

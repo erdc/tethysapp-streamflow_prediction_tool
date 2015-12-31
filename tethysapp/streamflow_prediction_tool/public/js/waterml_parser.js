@@ -1,8 +1,7 @@
 /*****************************************************************************
- * FILE:    JavaScript Enclosure Template
- * DATE: April 2015    
- * AUTHOR: Alan Snow
- * COPYRIGHT: (c) 2015 Brigham Young University
+ * FILE:    waterml_parser.js
+ * AUTHOR:  Alan Snow
+ * COPYRIGHT: © 2015 Alan D Snow. All rights reserved.
  * LICENSE: BSD 2-Clause
  * Code originally from https://github.com/crwr/wmlviewer
  * And modified for use in this app

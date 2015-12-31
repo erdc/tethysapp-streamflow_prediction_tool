@@ -1,4 +1,12 @@
-# Put your persistent store models in this file
+# -*- coding: utf-8 -*-
+##
+##  model.py
+##  streamflow_prediction_tool
+##
+##  Created by Alan D. Snow 2015.
+##  Copyright © 2015 Alan D Snow. All rights reserved.
+##
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship, sessionmaker
@@ -134,9 +142,6 @@ class Watershed(Base):
     geoserver_gage_uploaded = Column(Boolean)
     geoserver_ahps_station_uploaded = Column(Boolean)
     geoserver_search_for_flood_map = Column(Boolean)
-    kml_drainage_line_layer = Column(String)
-    kml_catchment_layer = Column(String)
-    kml_gage_layer = Column(String)
     watershed_groups = relationship("WatershedGroup", 
                                     secondary='watershed_watershed_group_link')
                               
@@ -148,8 +153,7 @@ class Watershed(Base):
                  geoserver_gage_layer, geoserver_ahps_station_layer,
                  geoserver_drainage_line_uploaded, geoserver_catchment_uploaded, 
                  geoserver_gage_uploaded, geoserver_ahps_station_uploaded, 
-                 geoserver_search_for_flood_map, kml_drainage_line_layer, 
-                 kml_catchment_layer, kml_gage_layer):
+                 geoserver_search_for_flood_map):
 
         self.watershed_name = watershed_name
         self.subbasin_name = subbasin_name
@@ -171,9 +175,6 @@ class Watershed(Base):
         self.geoserver_gage_uploaded = geoserver_gage_uploaded
         self.geoserver_ahps_station_uploaded = geoserver_ahps_station_uploaded
         self.geoserver_search_for_flood_map = geoserver_search_for_flood_map
-        self.kml_drainage_line_layer = kml_drainage_line_layer
-        self.kml_catchment_layer = kml_catchment_layer
-        self.kml_gage_layer = kml_gage_layer
 
 class WatershedWatershedGroupLink(Base):
     '''
