@@ -1382,9 +1382,9 @@ var ERFP_MAP = (function() {
                                     color: 'rgba(0,128,0,0.5)'
                                   })
                                 }),
-                        })
+                        }),
+                        visible: false,
                     });
-                    ahps_station.setVisibility(false);
                     ahps_station.set('geoserver_url', layer_info.ahps_station.geojsonp)
                     ahps_station.set('watershed_name', layer_info.watershed);
                     ahps_station.set('subbasin_name', layer_info.subbasin);
