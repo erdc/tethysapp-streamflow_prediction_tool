@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # -*- coding: utf-8 -*-
 ##
 ##  load_datasets.py
@@ -166,7 +164,7 @@ def load_watershed(watershed):
     
         
 if __name__ == "__main__":
-    #load_datasets()
+    load_datasets()
     #engine_url = 'https://ckan.test'
     #api_key = ':SDKLFGNSD:L-sfl;jgn'
     """    
