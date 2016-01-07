@@ -1360,7 +1360,7 @@ var ERFP_MAP = (function() {
                     var ahps_station_vector_source = new ol.source.Vector({
                         format: new ol.format.GeoJSON(),
                         url: function(extent, resolution, projection) {
-                        return layer_info.ahps_station.geojsonp + 
+                        return layer_info.ahps_station.geojson + 
                                '&PROPERTYNAME=the_geom' +
                                '&srsname=' + m_map_projection;
                         },
@@ -1545,7 +1545,7 @@ var ERFP_MAP = (function() {
                         var drainage_line_vector_source = new ol.source.Vector({
                             format: new ol.format.GeoJSON(),
                             url: function(extent, resolution, projection) {
-                                return layer_info.drainage_line.geojsonp + 
+                                return layer_info.drainage_line.geojson + 
                                       '&PROPERTYNAME=the_geom,' +
                                        layer_info.drainage_line.contained_attributes.join(",") +
                                       '&bbox=' + extent.join(',') + 
@@ -1571,7 +1571,7 @@ var ERFP_MAP = (function() {
                         }
                     });
 
-                    drainage_line.set('geoserver_url', layer_info['drainage_line']['geojsonp'])
+                    drainage_line.set('geoserver_url', layer_info['drainage_line']['geojson'])
                     drainage_line.set('watershed_name', layer_info['watershed']);
                     drainage_line.set('subbasin_name', layer_info['subbasin']);
                     drainage_line.set('extent', ol.proj.transformExtent(layer_info['drainage_line']['latlon_bbox'].map(Number), 
