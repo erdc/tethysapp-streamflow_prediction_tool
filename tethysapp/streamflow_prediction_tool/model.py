@@ -112,6 +112,30 @@ class Geoserver(Base):
         self.username = username
         self.password = password
 
+class GeoServerLayer(Base):
+    '''
+    Geoserver Layer SQLAlchemy DB Model
+    '''
+    __tablename__ = 'geoserver_layer'
+
+    # Columns
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    uploaded = Column(Boolean)
+    latlon_bbox = Column(String)
+    projection = Column(String)
+    attribute_list = Column(String)
+    wfs_url = Column(String)
+    
+    def __init__(self, name, uploaded, latlon_bbox, projection,
+                 attribute_list, wfs_url):
+        self.name = name
+        self.uploaded = uploaded
+        self.latlon_bbox = latlon_bbox
+        self.projection = projection
+        self.attribute_list = attribute_list
+        self.wfs_url = wfs_url
+    
 class Watershed(Base):
     '''
     Watershed SQLAlchemy DB Model
@@ -122,8 +146,8 @@ class Watershed(Base):
     id = Column(Integer, primary_key=True)
     watershed_name = Column(String)
     subbasin_name = Column(String)
-    folder_name = Column(String)
-    file_name = Column(String)
+    watershed_clean_name = Column(String)
+    subbasin_clean_name = Column(String)
     data_store_id = Column(Integer,ForeignKey('data_store.id'))
     data_store = relationship("DataStore")
     ecmwf_rapid_input_resource_id = Column(String)
@@ -133,32 +157,30 @@ class Watershed(Base):
     wrf_hydro_data_store_subbasin_name = Column(String)
     geoserver_id = Column(Integer,ForeignKey('geoserver.id'))
     geoserver = relationship("Geoserver")
-    geoserver_drainage_line_layer = Column(String)
-    geoserver_catchment_layer = Column(String)
-    geoserver_gage_layer = Column(String)
-    geoserver_ahps_station_layer = Column(String)
-    geoserver_drainage_line_uploaded = Column(Boolean)
-    geoserver_catchment_uploaded = Column(Boolean)
-    geoserver_gage_uploaded = Column(Boolean)
-    geoserver_ahps_station_uploaded = Column(Boolean)
+    geoserver_drainage_line_layer_id = Column(Integer,ForeignKey('geoserver_layer.id'))
+    geoserver_drainage_line_layer = relationship("GeoServerLayer")
+    geoserver_catchment_layer_id = Column(Integer,ForeignKey('geoserver_layer.id'))
+    geoserver_catchment_layer = relationship("GeoServerLayer")
+    geoserver_gage_layer_id = Column(Integer,ForeignKey('geoserver_layer.id'))
+    geoserver_gage_layer = relationship("GeoServerLayer")
+    geoserver_ahps_station_layer_id = Column(Integer,ForeignKey('geoserver_layer.id'))
+    geoserver_ahps_station_layer = relationship("GeoServerLayer")
     geoserver_search_for_flood_map = Column(Boolean)
     watershed_groups = relationship("WatershedGroup", 
                                     secondary='watershed_watershed_group_link')
                               
-    def __init__(self, watershed_name, subbasin_name, folder_name, file_name,
-                 data_store_id, ecmwf_rapid_input_resource_id, 
+    def __init__(self, watershed_name, subbasin_name, watershed_clean_name,
+                 subbasin_clean_name, data_store_id, ecmwf_rapid_input_resource_id, 
                  ecmwf_data_store_watershed_name, ecmwf_data_store_subbasin_name,
                  wrf_hydro_data_store_watershed_name, wrf_hydro_data_store_subbasin_name,
                  geoserver_id, geoserver_drainage_line_layer, geoserver_catchment_layer, 
                  geoserver_gage_layer, geoserver_ahps_station_layer,
-                 geoserver_drainage_line_uploaded, geoserver_catchment_uploaded, 
-                 geoserver_gage_uploaded, geoserver_ahps_station_uploaded, 
                  geoserver_search_for_flood_map):
 
         self.watershed_name = watershed_name
         self.subbasin_name = subbasin_name
-        self.folder_name = folder_name
-        self.file_name = file_name
+        self.watershed_clean_name = watershed_clean_name
+        self.subbasin_clean_name = subbasin_clean_name
         self.data_store_id = data_store_id
         self.ecmwf_rapid_input_resource_id = ecmwf_rapid_input_resource_id
         self.ecmwf_data_store_watershed_name = ecmwf_data_store_watershed_name
@@ -170,10 +192,6 @@ class Watershed(Base):
         self.geoserver_catchment_layer = geoserver_catchment_layer
         self.geoserver_gage_layer = geoserver_gage_layer
         self.geoserver_ahps_station_layer = geoserver_ahps_station_layer
-        self.geoserver_drainage_line_uploaded = geoserver_drainage_line_uploaded
-        self.geoserver_catchment_uploaded = geoserver_catchment_uploaded
-        self.geoserver_gage_uploaded = geoserver_gage_uploaded
-        self.geoserver_ahps_station_uploaded = geoserver_ahps_station_uploaded
         self.geoserver_search_for_flood_map = geoserver_search_for_flood_map
 
 class WatershedWatershedGroupLink(Base):
