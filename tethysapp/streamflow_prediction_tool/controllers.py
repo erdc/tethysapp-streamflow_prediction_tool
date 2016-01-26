@@ -21,8 +21,9 @@ from tethys_sdk.gizmos import SelectInput, TextInput, ToggleSwitch
 
 #local imports
 from spt_dataset_manager.dataset_manager import GeoServerDatasetManager
-from .model import (BaseLayer, DataStore, DataStoreType, Geoserver, MainSettings,
-                    mainSessionMaker, Watershed, WatershedGroup)
+from .model import (BaseLayer, DataStore, DataStoreType, Geoserver,
+                    GeoServerLayer, MainSettings, mainSessionMaker,
+                    Watershed, WatershedGroup)
 from .functions import (format_watershed_title, 
                         user_permission_test)
 @login_required
@@ -124,23 +125,23 @@ def map(request):
                                    watershed.ecmwf_data_store_subbasin_name else watershed.subbasin_name
             # (get geoserver info)
             #get wms/api url
-            wms_url = watershed.geoserver.url
-            api_url = watershed.geoserver.url
+            geoserver_wms_url = watershed.geoserver.url
+            geoserver_api_url = watershed.geoserver.url
             if watershed.geoserver.url.endswith('/geoserver/rest'):
-                wms_url = "%s/ows" % "/".join(watershed.geoserver.url.split("/")[:-1])
+                geoserver_wms_url = "%s/ows" % "/".join(watershed.geoserver.url.split("/")[:-1])
             elif watershed.geoserver.url.endswith('/geoserver'):
-                wms_url = "%s/ows" % watershed.geoserver.url
-                api_url = "%s/rest" % watershed.geoserver.url
+                geoserver_wms_url = "%s/ows" % watershed.geoserver.url
+                geoserver_api_url = "%s/rest" % watershed.geoserver.url
                 
             geoserver_info = {'watershed': watershed.folder_name, 
                               'subbasin': watershed.file_name,
                               'ecmwf_watershed' : ecmwf_watershed_name,
                               'ecmwf_subbasin' : ecmwf_subbasin_name,
-                              'geoserver_url': wms_url,
+                              'geoserver_wms_url': geoserver_wms_url,
                               'title' : format_watershed_title(watershed.watershed_name,
-                                                            watershed.subbasin_name)
+                                                               watershed.subbasin_name)
                               }
-            geoserver_manager = GeoServerDatasetManager(engine_url=api_url, 
+            geoserver_manager = GeoServerDatasetManager(engine_url=geoserver_api_url, 
                                                         username=watershed.geoserver.username,
                                                         password=watershed.geoserver.password, 
                                                         app_instance_id=main_settings.app_instance_id)

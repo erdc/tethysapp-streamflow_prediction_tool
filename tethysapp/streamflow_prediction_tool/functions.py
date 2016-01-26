@@ -9,6 +9,7 @@
 
 import datetime
 from glob import glob
+from json import dumps as json_dumps
 import netCDF4 as NET
 import numpy as np
 import os
@@ -18,11 +19,20 @@ from shutil import rmtree
 from sqlalchemy import and_
 
 #local import
-from model import mainSessionMaker, MainSettings, Watershed
+from model import GeoServerLayer, mainSessionMaker, MainSettings, Watershed
 from spt_dataset_manager.dataset_manager import (CKANDatasetManager, 
-                                                  GeoServerDatasetManager)
-
-    
+                                                 GeoServerDatasetManager)
+                                                 
+def delete_from_database(session, object_to_delete):
+    """
+    This attempts to delete an object from the database
+    """
+    try:
+        session.delete(object_to_delete)
+    except Exception:
+        pass
+    object_to_delete = None
+                                              
 def delete_old_watershed_prediction_files(watershed, forecast="all"):
     """
     Removes old watershed prediction files from system if no other watershed has them
@@ -112,17 +122,21 @@ def delete_old_watershed_geoserver_files(watershed):
     session.close()
     
     #delete layers which need to be deleted
-    if watershed.geoserver_drainage_line_uploaded and watershed.geoserver_drainage_line_layer:
-        geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_drainage_line_layer)
+    if watershed.geoserver_drainage_line_layer:
+        if watershed.geoserver_drainage_line_layer.uploaded:
+            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_drainage_line_layer)
                                      
-    if watershed.geoserver_catchment_uploaded and watershed.geoserver_catchment_layer:
-        geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_catchment_layer)
+    if watershed.geoserver_catchment_layer:
+        if watershed.geoserver_catchment_layer.uploaded:
+            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_catchment_layer)
                                      
-    if watershed.geoserver_gage_uploaded and watershed.geoserver_gage_layer:
-        geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_gage_layer)
+    if watershed.geoserver_gage_layer:
+        if watershed.geoserver_gage_layer.uploaded:
+            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_gage_layer)
 
-    if watershed.geoserver_ahps_station_uploaded and watershed.geoserver_ahps_station_layer:
-        geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_ahps_station_layer)
+    if watershed.geoserver_ahps_station_layer:
+        if watershed.geoserver_ahps_station_layer.uploaded:
+            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_ahps_station_layer)
         
 
 def delete_old_watershed_files(watershed, ecmwf_local_prediction_files_location,
@@ -295,6 +309,25 @@ def handle_uploaded_file(f, file_path, file_name):
     with open(os.path.join(file_path,file_name), 'wb+') as destination:
         for chunk in f.chunks():
             destination.write(chunk)
+
+def upload_geoserver_layer(geoserver_manager, resource_name, shp_file_list):
+    """
+    Upload a geoserver layer and return associated result
+    """
+    layer_name, layer_info = geoserver_manager.upload_shapefile(resource_name, 
+                                                                shp_file_list)
+    if layer_name and layer_info:
+        raw_latlon_bbox = layer_info['latlon_bbox'][:4]
+        latlon_bbox=json_dumps([raw_latlon_bbox[0],raw_latlon_bbox[2],
+                                raw_latlon_bbox[1],raw_latlon_bbox[3]])
+        return GeoServerLayer(name=layer_name.strip(),
+                              uploaded=True, 
+                              latlon_bbox=latlon_bbox,
+                              projection=layer_info['projection'],
+                              attribute_list=json_dumps(layer_info['attributes']), 
+                              wfs_url=layer_info['wfs']['geojson'])
+    else:
+        raise Exception("Problems uploading {}".format(resource_name))
 
 def user_permission_test(user):
     """
