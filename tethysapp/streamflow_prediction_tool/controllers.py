@@ -137,7 +137,7 @@ def map(request):
                               'subbasin': watershed.subbasin_clean_name,
                               'ecmwf_watershed' : ecmwf_watershed_name,
                               'ecmwf_subbasin' : ecmwf_subbasin_name,
-                              'geoserver_wms_url': geoserver_wms_url,
+                              'geoserver_url': geoserver_wms_url,
                               'title' : format_watershed_title(watershed.watershed_name,
                                                                watershed.subbasin_name)
                               }
