@@ -351,7 +351,7 @@ def ecmwf_get_avaialable_dates(request):
             return JsonResponse({'error' : 'ECMWF AJAX request input faulty'})
     
         #find/check current output datasets    
-        path_to_watershed_files = os.path.join(path_to_rapid_output, watershed_name, subbasin_name)
+        path_to_watershed_files = os.path.join(path_to_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
 
         if not os.path.exists(path_to_watershed_files):
             return JsonResponse({'error' : 'ECMWF forecast for %s (%s) not found.' % (watershed_name, subbasin_name) })
@@ -408,7 +408,7 @@ def wrf_hydro_get_avaialable_dates(request):
             return JsonResponse({'error' : 'AJAX request input faulty'})
 
         #find/check current output datasets
-        path_to_watershed_files = os.path.join(path_to_rapid_output, watershed_name, subbasin_name)
+        path_to_watershed_files = os.path.join(path_to_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
 
         if not os.path.exists(path_to_watershed_files):
             return JsonResponse({'error' : 'WRF-Hydro forecast for %s (%s) not found.' % (watershed_name, subbasin_name) })
@@ -464,7 +464,7 @@ def ecmwf_get_hydrograph(request):
             return JsonResponse({'error' : 'ECMWF AJAX request input faulty.'})
     
         #find/check current output datasets
-        path_to_output_files = os.path.join(path_to_rapid_output, watershed_name, subbasin_name)
+        path_to_output_files = os.path.join(path_to_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
         basin_files, start_date = ecmwf_find_most_current_files(path_to_output_files, start_folder)
         if not basin_files or not start_date:
             return JsonResponse({'error' : 'ECMWF forecast for %s (%s) not found.' % (watershed_name, subbasin_name)})
@@ -626,7 +626,7 @@ def era_interim_get_hydrograph(request):
         #----------------------------------------------
         era_interim_return_data = {}
         #find/check current output datasets
-        path_to_output_files = os.path.join(path_to_era_interim_data, watershed_name, subbasin_name)
+        path_to_output_files = os.path.join(path_to_era_interim_data, "{0}-{1}".format(watershed_name, subbasin_name))
         historical_data_files = glob(os.path.join(path_to_output_files, "Qout*.nc"))
         if historical_data_files:
             historical_data_file = historical_data_files[0]
@@ -724,7 +724,7 @@ def wrf_hydro_get_hydrograph(request):
             return JsonResponse({'error' : 'WRF-Hydro AJAX request input faulty.'})
         #find/check current output datasets
         #20150405T2300Z
-        path_to_output_files = os.path.join(path_to_rapid_output, watershed_name, subbasin_name)
+        path_to_output_files = os.path.join(path_to_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
         forecast_file = wrf_hydro_find_most_current_file(path_to_output_files, date_string)
         if not forecast_file:
             return JsonResponse({'error' : 'WRF-Hydro forecast for %s (%s) not found.' % (watershed_name, subbasin_name)})
@@ -785,7 +785,7 @@ def generate_warning_points(request):
         except TypeError, ValueError:
             return JsonResponse({'error' : 'Invalid return period.'})
         
-        path_to_output_files = os.path.join(path_to_ecmwf_rapid_output, watershed_name, subbasin_name)
+        path_to_output_files = os.path.join(path_to_ecmwf_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
         recent_directory = None
         if os.path.exists(path_to_output_files):
 

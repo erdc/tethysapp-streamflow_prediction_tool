@@ -42,9 +42,10 @@ def download_single_watershed_ecmwf_data(watershed,
                                                   watershed.ecmwf_data_store_subbasin_name,
                                                   ecmwf_rapid_prediction_directory)
     
-        path_to_predicitons = os.path.join(ecmwf_rapid_prediction_directory, 
-                                           watershed.ecmwf_data_store_watershed_name, 
-                                           watershed.ecmwf_data_store_subbasin_name)
+        path_to_predicitons = os.path.join(ecmwf_rapid_prediction_directory,
+                                           "{0}-{1}".format(watershed.ecmwf_data_store_watershed_name, 
+                                                            watershed.ecmwf_data_store_subbasin_name) 
+                                           )
 
         if os.path.exists(path_to_predicitons):
             prediction_directories = sorted(os.listdir(path_to_predicitons), 
@@ -99,8 +100,9 @@ def download_single_watershed_wrf_hydro_data(watershed,
                                                   wrf_hydro_rapid_prediction_directory)
     
         path_to_predicitons = os.path.join(wrf_hydro_rapid_prediction_directory, 
-                                           watershed.wrf_hydro_data_store_watershed_name, 
-                                           watershed.wrf_hydro_data_store_subbasin_name)
+                                           "{0}-{1}".format(watershed.wrf_hydro_data_store_watershed_name, 
+                                                            watershed.wrf_hydro_data_store_subbasin_name)
+                                          )
     
         if os.path.exists(path_to_predicitons):
             #remove oldest datasets if more than 24 exist
