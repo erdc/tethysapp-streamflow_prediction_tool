@@ -124,19 +124,19 @@ def delete_old_watershed_geoserver_files(watershed):
     #delete layers which need to be deleted
     if watershed.geoserver_drainage_line_layer:
         if watershed.geoserver_drainage_line_layer.uploaded:
-            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_drainage_line_layer)
+            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_drainage_line_layer.name)
                                      
     if watershed.geoserver_catchment_layer:
         if watershed.geoserver_catchment_layer.uploaded:
-            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_catchment_layer)
+            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_catchment_layer.name)
                                      
     if watershed.geoserver_gage_layer:
         if watershed.geoserver_gage_layer.uploaded:
-            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_gage_layer)
+            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_gage_layer.name)
 
     if watershed.geoserver_ahps_station_layer:
         if watershed.geoserver_ahps_station_layer.uploaded:
-            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_ahps_station_layer)
+            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_ahps_station_layer.name)
         
 
 def delete_old_watershed_files(watershed, ecmwf_local_prediction_files_location,
@@ -287,7 +287,8 @@ def get_comids_in_lookup_comid_list(search_reach_id_list, lookup_reach_id_list):
     """
     try:
         #get where comids are in search_list
-        search_reach_indices_list = np.where(np.in1d(search_reach_id_list, lookup_reach_id_list))[0]
+        search_reach_indices_list = np.where(np.in1d(search_reach_id_list, 
+                                                     lookup_reach_id_list))[0]
     except Exception as ex:
         print ex
 
@@ -317,6 +318,7 @@ def upload_geoserver_layer(geoserver_manager, resource_name, shp_file_list):
     layer_name, layer_info = geoserver_manager.upload_shapefile(resource_name, 
                                                                 shp_file_list)
     if layer_name and layer_info:
+        print layer_info
         raw_latlon_bbox = layer_info['latlon_bbox'][:4]
         latlon_bbox=json_dumps([raw_latlon_bbox[0],raw_latlon_bbox[2],
                                 raw_latlon_bbox[1],raw_latlon_bbox[3]])
@@ -328,6 +330,69 @@ def upload_geoserver_layer(geoserver_manager, resource_name, shp_file_list):
                               wfs_url=layer_info['wfs']['geojson'])
     else:
         raise Exception("Problems uploading {}".format(resource_name))
+
+def update_geoserver_layer_information(geoserver_manager, geoserver_layer):
+    """
+    Update information about geoserver layer
+    """
+    layer_info = geoserver_manager.dataset_engine.get_resource(resource_id=geoserver_layer.name)
+    if layer_info['success']:
+        raw_latlon_bbox = layer_info['result']['latlon_bbox'][:4]
+        latlon_bbox=json_dumps([raw_latlon_bbox[0],raw_latlon_bbox[2],
+                                raw_latlon_bbox[1],raw_latlon_bbox[3]])
+        geoserver_layer.latlon_bbox = latlon_bbox
+        geoserver_layer.projection = layer_info['result']['projection']
+        geoserver_layer.attribute_list = json_dumps(layer_info['result']['attributes'])
+        geoserver_layer.wfs_url = layer_info['result']['wfs']['geojson']
+    else:
+        raise Exception("Problems uploading {0}: {1}".format(geoserver_layer.name, 
+                                                             layer_info['error']))
+
+def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
+                           geoserver_manager, session, layer_required=False):
+    """
+    This function performs the geoserver layer update based on ajax request
+    """
+    
+    geoserver_layer_name = "" if not geoserver_layer_name else geoserver_layer_name.strip()
+    geoserver_layer = None
+    #ADD NEW SHAPEFILE TO GEOSERVER
+    if shp_file:
+        #remove old geoserver layer
+        if geoserver_layer and geoserver_layer.uploaded:
+            geoserver_manager.purge_remove_geoserver_layer(geoserver_layer.name)
+
+        #create shapefile
+        geoserver_layer = upload_geoserver_layer(geoserver_manager, 
+                                                 geoserver_layer_name,
+                                                 shp_file)
+    #CONNECT TO EXISTING LAYER ON GEOSERVER
+    elif geoserver_layer_name:
+        if geoserver_layer:
+            #if the name of the layer changed, and was previously uploaded, 
+            #delete from geoserver
+            if geoserver_layer_name != geoserver_layer.name \
+            and geoserver_layer.uploaded:
+                geoserver_manager.purge_remove_geoserver_layer(geoserver_layer.name)
+            
+            geoserver_layer.name = geoserver_layer_name
+            geoserver_layer.uploaded = False
+        else:
+            #create new layer in database
+            geoserver_layer = GeoServerLayer(geoserver_layer_name)
+                
+    #REMOVE LAYER FROM GEOSERVER AND DATABASE
+    elif not geoserver_layer_name and geoserver_layer and not layer_required:
+        if geoserver_layer.uploaded:
+            geoserver_manager.purge_remove_geoserver_layer(geoserver_layer.name)
+            delete_from_database(session, geoserver_layer)
+            geoserver_layer = None
+        
+    #UPDATE LAYER INFORMATION
+    if geoserver_layer and not shp_file:
+        update_geoserver_layer_information(geoserver_manager, geoserver_layer)
+    
+    return geoserver_layer
 
 def user_permission_test(user):
     """

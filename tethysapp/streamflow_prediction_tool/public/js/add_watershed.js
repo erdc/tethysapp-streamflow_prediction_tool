@@ -143,42 +143,40 @@ var ERFP_ADD_WATERSHED = (function() {
             var geoserver_search_for_flood_map = false;
 
             //Initialize Data Store Data
-            if(data_store_id>1) {
-                //check ecmwf inputs
-                var ecmwf_ready = false
-                ecmwf_data_store_watershed_name = $('#ecmwf-data-store-watershed-name-input').val();
-                ecmwf_data_store_subbasin_name = $('#ecmwf-data-store-subbasin-name-input').val();
-                if (typeof ecmwf_data_store_watershed_name == 'undefined' || 
-                    typeof ecmwf_data_store_subbasin_name == 'undefined') {
-                    ecmwf_data_store_watershed_name = "";
-                    ecmwf_data_store_subbasin_name = "";
-                } else {
-                    ecmwf_data_store_watershed_name = ecmwf_data_store_watershed_name.trim();
-                    ecmwf_data_store_subbasin_name = ecmwf_data_store_subbasin_name.trim();
-                    ecmwf_ready = (ecmwf_data_store_watershed_name.length > 0 &&
-                                   ecmwf_data_store_subbasin_name.length > 0);
-                }
+            //check ecmwf inputs
+            var ecmwf_ready = false
+            ecmwf_data_store_watershed_name = $('#ecmwf-data-store-watershed-name-input').val();
+            ecmwf_data_store_subbasin_name = $('#ecmwf-data-store-subbasin-name-input').val();
+            if (typeof ecmwf_data_store_watershed_name == 'undefined' || 
+                typeof ecmwf_data_store_subbasin_name == 'undefined') {
+                ecmwf_data_store_watershed_name = "";
+                ecmwf_data_store_subbasin_name = "";
+            } else {
+                ecmwf_data_store_watershed_name = ecmwf_data_store_watershed_name.trim();
+                ecmwf_data_store_subbasin_name = ecmwf_data_store_subbasin_name.trim();
+                ecmwf_ready = (ecmwf_data_store_watershed_name.length > 0 &&
+                               ecmwf_data_store_subbasin_name.length > 0);
+            }
 
-                //check wrf-hydro inputs
-                var wrf_hydro_ready = false;
-                wrf_hydro_data_store_watershed_name = $('#wrf-hydro-data-store-watershed-name-input').val();
-                wrf_hydro_data_store_subbasin_name = $('#wrf-hydro-data-store-subbasin-name-input').val();
-                if (typeof wrf_hydro_data_store_watershed_name == 'undefined' || 
-                    typeof wrf_hydro_data_store_subbasin_name == 'undefined') {
-                    wrf_hydro_data_store_watershed_name = "";
-                    wrf_hydro_data_store_subbasin_name = "";
-                } else {
-                    wrf_hydro_data_store_watershed_name = wrf_hydro_data_store_watershed_name.trim();
-                    wrf_hydro_data_store_subbasin_name = wrf_hydro_data_store_subbasin_name.trim();
-                    wrf_hydro_ready = (wrf_hydro_data_store_watershed_name.length > 0 && 
-                                       wrf_hydro_data_store_subbasin_name.length > 0);
-                }
-                //need at least one to be OK to proceed
-                if(!ecmwf_ready && !wrf_hydro_ready) {
-                    safe_to_submit.val = false;
-                    safe_to_submit.error = "Need ECMWF or WRF-Hydro watershed and subbasin names to proceed";
-             
-                }
+            //check wrf-hydro inputs
+            var wrf_hydro_ready = false;
+            wrf_hydro_data_store_watershed_name = $('#wrf-hydro-data-store-watershed-name-input').val();
+            wrf_hydro_data_store_subbasin_name = $('#wrf-hydro-data-store-subbasin-name-input').val();
+            if (typeof wrf_hydro_data_store_watershed_name == 'undefined' || 
+                typeof wrf_hydro_data_store_subbasin_name == 'undefined') {
+                wrf_hydro_data_store_watershed_name = "";
+                wrf_hydro_data_store_subbasin_name = "";
+            } else {
+                wrf_hydro_data_store_watershed_name = wrf_hydro_data_store_watershed_name.trim();
+                wrf_hydro_data_store_subbasin_name = wrf_hydro_data_store_subbasin_name.trim();
+                wrf_hydro_ready = (wrf_hydro_data_store_watershed_name.length > 0 && 
+                                   wrf_hydro_data_store_subbasin_name.length > 0);
+            }
+            //need at least one to be OK to proceed
+            if(!ecmwf_ready && !wrf_hydro_ready) {
+                safe_to_submit.val = false;
+                safe_to_submit.error = "Need ECMWF or WRF-Hydro watershed and subbasin names to proceed";
+         
             }
 
             //Initialize Geoserver Data

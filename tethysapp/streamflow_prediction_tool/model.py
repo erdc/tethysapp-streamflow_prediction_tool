@@ -19,6 +19,21 @@ mainEngine = StreamflowPredictionTool.get_persistent_store_engine('main_db')
 mainSessionMaker = sessionmaker(bind=mainEngine)
 Base = declarative_base()
 
+class BaseLayer(Base):
+    '''
+    BaseLayer SQLAlchemy DB Model
+    '''
+    __tablename__ = 'base_layer'
+
+    # Columns
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    api_key = Column(String)
+
+    def __init__(self, name, api_key):
+        self.name = name
+        self.api_key = api_key
+
 class MainSettings(Base):
     '''
     Main Settings SQLAlchemy DB Model
@@ -43,20 +58,6 @@ class MainSettings(Base):
         self.wrf_hydro_rapid_prediction_directory = wrf_hydro_rapid_prediction_directory
         self.app_instance_id = uuid5(NAMESPACE_DNS, '%s%s' % ("sfpt", datetime.now())).hex
         
-class BaseLayer(Base):
-    '''
-    BaseLayer SQLAlchemy DB Model
-    '''
-    __tablename__ = 'base_layer'
-
-    # Columns
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    api_key = Column(String)
-
-    def __init__(self, name, api_key):
-        self.name = name
-        self.api_key = api_key
 
 class DataStore(Base):
     '''
@@ -127,8 +128,8 @@ class GeoServerLayer(Base):
     attribute_list = Column(String)
     wfs_url = Column(String)
     
-    def __init__(self, name, uploaded, latlon_bbox, projection,
-                 attribute_list, wfs_url):
+    def __init__(self, name, uploaded=False, latlon_bbox="", projection="",
+                 attribute_list="", wfs_url=""):
         self.name = name
         self.uploaded = uploaded
         self.latlon_bbox = latlon_bbox
@@ -144,27 +145,31 @@ class Watershed(Base):
 
     # Columns
     id = Column(Integer, primary_key=True)
+    data_store_id = Column(Integer, ForeignKey('data_store.id'))
+    geoserver_id = Column(Integer, ForeignKey('geoserver.id'))
+    geoserver_drainage_line_layer_id = Column(Integer, ForeignKey('geoserver_layer.id'))
+    geoserver_catchment_layer_id = Column(Integer, ForeignKey('geoserver_layer.id'))
+    geoserver_gage_layer_id = Column(Integer, ForeignKey('geoserver_layer.id'))
+    geoserver_ahps_station_layer_id = Column(Integer, ForeignKey('geoserver_layer.id'))
     watershed_name = Column(String)
     subbasin_name = Column(String)
     watershed_clean_name = Column(String)
     subbasin_clean_name = Column(String)
-    data_store_id = Column(Integer,ForeignKey('data_store.id'))
     data_store = relationship("DataStore")
     ecmwf_rapid_input_resource_id = Column(String)
     ecmwf_data_store_watershed_name = Column(String)
     ecmwf_data_store_subbasin_name = Column(String)
     wrf_hydro_data_store_watershed_name = Column(String)
     wrf_hydro_data_store_subbasin_name = Column(String)
-    geoserver_id = Column(Integer,ForeignKey('geoserver.id'))
     geoserver = relationship("Geoserver")
-    geoserver_drainage_line_layer_id = Column(Integer,ForeignKey('geoserver_layer.id'))
-    geoserver_drainage_line_layer = relationship("GeoServerLayer")
-    geoserver_catchment_layer_id = Column(Integer,ForeignKey('geoserver_layer.id'))
-    geoserver_catchment_layer = relationship("GeoServerLayer")
-    geoserver_gage_layer_id = Column(Integer,ForeignKey('geoserver_layer.id'))
-    geoserver_gage_layer = relationship("GeoServerLayer")
-    geoserver_ahps_station_layer_id = Column(Integer,ForeignKey('geoserver_layer.id'))
-    geoserver_ahps_station_layer = relationship("GeoServerLayer")
+    geoserver_drainage_line_layer = relationship("GeoServerLayer", 
+                                                 foreign_keys=[geoserver_drainage_line_layer_id])
+    geoserver_catchment_layer = relationship("GeoServerLayer", 
+                                             foreign_keys=[geoserver_catchment_layer_id])
+    geoserver_gage_layer = relationship("GeoServerLayer", 
+                                        foreign_keys=[geoserver_gage_layer_id])
+    geoserver_ahps_station_layer = relationship("GeoServerLayer", 
+                                                foreign_keys=[geoserver_ahps_station_layer_id])
     geoserver_search_for_flood_map = Column(Boolean)
     watershed_groups = relationship("WatershedGroup", 
                                     secondary='watershed_watershed_group_link')

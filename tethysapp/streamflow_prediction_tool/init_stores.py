@@ -25,7 +25,7 @@ def init_main_db(first_time):
         session.add(BaseLayer("BingMaps","",))
         
         #add all possible data story types
-        session.add(DataStoreType("local", "Local (KML)"))
+        session.add(DataStoreType("local", "Computations Local (None)"))
         session.add(DataStoreType("ckan", "CKAN"))
         session.add(DataStoreType("hydroshare", "HydroShare"))
         

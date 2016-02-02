@@ -11,75 +11,80 @@
 {% load tethys_gizmos %}
 
 {% block app_content %}
-    <div id="message" class="alert alert-danger hidden" role="alert"></div>
     <h1>Add a Watershed</h1>
-    {% gizmo text_input watershed_name_input %}
-    {% gizmo text_input subbasin_name_input %}
-
-    <h3>Data Storage</h3>
-    <em>This is where the predictions are stored.</em><br/><br/>
-    {% gizmo select_input data_store_select %}
-    <p class="help-block">Don't see the data store you want? Add one <a href="{% url 'streamflow_prediction_tool:add-data-store' %}">here</a>.</p>
-    <h5>ECMWF Data Storage Input</h5>
-    <p class="help-block">The format of the ECMWF dataset name on the data store server 
-    is erfp-[watershed name]-[subbasin name]-[forecast timestamp] (Ex. erfp-magdalena-el_banco-20150603t00).</p>
-    {% gizmo text_input ecmwf_data_store_watershed_name_input %}
-    <p class="help-block">This is the watershed name in the ECMWF dataset name and RAPID folder name.</p>
-    {% gizmo text_input ecmwf_data_store_subbasin_name_input %}
-    <p class="help-block">This is the subbasin name in the ECMWF dataset name and end of RAPID 
-    namelist file name - rapid_namelist_[subbasin_name].dat (Ex. rapid_namelist_el_banco).</p>
-    <div class="form-group data_store hidden">
-        <label class="control-label" for="ecmwf-rapid-files-upload-input">ECMWF RAPID Input Files (Optional)</label>
-        <input id="ecmwf-rapid-files-upload-input" name="ecmwf-rapid-files-upload-input" type="file" accept=".zip">
-        <p class="help-block">These files are used on the computatonal node to run the simulation.</p>
-    </div>
-
-    <h5>WRF-Hydro Data Storage Input</h5>
+    {% if geoserver_select %}
+        <div id="message" class="alert alert-danger hidden" role="alert"></div>
+        {% gizmo text_input watershed_name_input %}
+        {% gizmo text_input subbasin_name_input %}
     
-    <p class="help-block">The format of the WRF-Hydro dataset name on the data store server 
-    is wrfp-[watershed name]-[subbasin name]-[year]-[month] (Ex. wrfp-nfie_wrfhydro_conus-nfie_wrfhydro_conus-2015-6).</p>
-    {% gizmo text_input wrf_hydro_data_store_watershed_name_input %}
-    <p class="help-block">This is the watershed name in the WRF-Hydro dataset name.</p>
-    {% gizmo text_input wrf_hydro_data_store_subbasin_name_input %}
-    <p class="help-block">This is the subbasin name in the WRF-Hydro dataset name.</p>
-
-    <h3>Geoserver Location</h3> 
-    <em>Where the reach and catchbasin files are stored.</em><br/><br/>
-    {% gizmo select_input geoserver_select %}
-    <p class="help-block">Don't see the geoserver you want? Add one <a href="{% url 'streamflow_prediction_tool:add-geoserver' %}">here</a>.</p>
-    {% gizmo toggle_switch shp_upload_toggle_switch %}
-    <!-- Drainage Line !-->
-    {% gizmo text_input geoserver_drainage_line_input %}
-    <div class="form-group geo_upload">
-        <label class="control-label" for="drainage-line-shp-upload-input">Drainage Line Shapefile</label>
-        <input id="drainage-line-shp-upload-input" name="drainage-line-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
-        <p class="help-block hidden">Must select file to submit!</p>
-    </div>
-    <p class="help-block">This is the shapefile file representing the river network. Need .shp, .shx, .prj, .dbf files.</p>
-    <!-- Catchments !-->
-    {% gizmo text_input geoserver_catchment_input %}
-    <div class="form-group geo_upload">
-        <label class="control-label" for="catchment-shp-upload-input">Catchment Shapefile (Optional)</label>
-        <input id="catchment-shp-upload-input" name="catchment-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
-    </div>
-    <p class="help-block">This is the shapefile file representing the watershed basin. Need .shp, .shx, .prj, .dbf files.</p>
-    <!-- Gages !-->
-    {% gizmo text_input geoserver_gage_input %}
-    <div class="form-group geo_upload">
-        <label class="control-label" for="gage-shp-upload-input">Gage Shapefile (Optional)</label>
-        <input id="gage-shp-upload-input" name="gage-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
-    </div>
-    <p class="help-block">This is the shapefile file representing the gage stations. Need .shp, .shx, .prj, .dbf files.</p>
-    <!-- AHPS Stations !-->
-    {% gizmo text_input geoserver_ahps_station_input %}
-    <div class="form-group geo_upload">
-        <label class="control-label" for="ahps-station-shp-upload-input">AHPS Station Shapefile (Optional)</label>
-        <input id="ahps-station-shp-upload-input" name="ahps-station-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
-    </div>
-    <p class="help-block">This is the shapefile file representing the AHPS stations. Need .shp, .shx, .prj, .dbf files.</p>
-    <!-- Flood Map Search !-->
-    {% gizmo toggle_switch search_floodmap_toggle_switch %}
-{% gizmo button_group add_button %}
+        <h3>Data Storage</h3>
+        <em>This is where the predictions are stored.</em><br/><br/>
+        {% gizmo select_input data_store_select %}
+        <p class="help-block">Don't see the data store you want? Add one <a href="{% url 'streamflow_prediction_tool:add-data-store' %}">here</a>.</p>
+        <h5>ECMWF Data Storage Input</h5>
+        <p class="help-block">The format of the ECMWF dataset name on the data store server 
+        is erfp-[watershed name]-[subbasin name]-[forecast timestamp] (Ex. erfp-magdalena-el_banco-20150603t00).</p>
+        {% gizmo text_input ecmwf_data_store_watershed_name_input %}
+        <p class="help-block">This is the watershed name in the ECMWF dataset name and RAPID folder name.</p>
+        {% gizmo text_input ecmwf_data_store_subbasin_name_input %}
+        <p class="help-block">This is the subbasin name in the ECMWF dataset name and end of RAPID 
+        namelist file name - rapid_namelist_[subbasin_name].dat (Ex. rapid_namelist_el_banco).</p>
+        <div class="form-group data_store hidden">
+            <label class="control-label" for="ecmwf-rapid-files-upload-input">ECMWF RAPID Input Files (Optional)</label>
+            <input id="ecmwf-rapid-files-upload-input" name="ecmwf-rapid-files-upload-input" type="file" accept=".zip">
+            <p class="help-block">These files are used on the computatonal node to run the simulation.</p>
+        </div>
+    
+        <h5>WRF-Hydro Data Storage Input</h5>
+        
+        <p class="help-block">The format of the WRF-Hydro dataset name on the data store server 
+        is wrfp-[watershed name]-[subbasin name]-[year]-[month] (Ex. wrfp-nfie_wrfhydro_conus-nfie_wrfhydro_conus-2015-6).</p>
+        {% gizmo text_input wrf_hydro_data_store_watershed_name_input %}
+        <p class="help-block">This is the watershed name in the WRF-Hydro dataset name.</p>
+        {% gizmo text_input wrf_hydro_data_store_subbasin_name_input %}
+        <p class="help-block">This is the subbasin name in the WRF-Hydro dataset name.</p>
+    
+        <h3>Geoserver Location</h3> 
+        <em>Where the reach and catchbasin files are stored.</em><br/><br/>
+        {% gizmo select_input geoserver_select %}
+        <p class="help-block">Don't see the geoserver you want? Add one <a href="{% url 'streamflow_prediction_tool:add-geoserver' %}">here</a>.</p>
+        {% gizmo toggle_switch shp_upload_toggle_switch %}
+        <!-- Drainage Line !-->
+        {% gizmo text_input geoserver_drainage_line_input %}
+        <div class="form-group geo_upload">
+            <label class="control-label" for="drainage-line-shp-upload-input">Drainage Line Shapefile</label>
+            <input id="drainage-line-shp-upload-input" name="drainage-line-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
+            <p class="help-block hidden">Must select file to submit!</p>
+        </div>
+        <p class="help-block">This is the shapefile file representing the river network. Need .shp, .shx, .prj, .dbf files.</p>
+        <!-- Catchments !-->
+        {% gizmo text_input geoserver_catchment_input %}
+        <div class="form-group geo_upload">
+            <label class="control-label" for="catchment-shp-upload-input">Catchment Shapefile (Optional)</label>
+            <input id="catchment-shp-upload-input" name="catchment-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
+        </div>
+        <p class="help-block">This is the shapefile file representing the watershed basin. Need .shp, .shx, .prj, .dbf files.</p>
+        <!-- Gages !-->
+        {% gizmo text_input geoserver_gage_input %}
+        <div class="form-group geo_upload">
+            <label class="control-label" for="gage-shp-upload-input">Gage Shapefile (Optional)</label>
+            <input id="gage-shp-upload-input" name="gage-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
+        </div>
+        <p class="help-block">This is the shapefile file representing the gage stations. Need .shp, .shx, .prj, .dbf files.</p>
+        <!-- AHPS Stations !-->
+        {% gizmo text_input geoserver_ahps_station_input %}
+        <div class="form-group geo_upload">
+            <label class="control-label" for="ahps-station-shp-upload-input">AHPS Station Shapefile (Optional)</label>
+            <input id="ahps-station-shp-upload-input" name="ahps-station-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
+        </div>
+        <p class="help-block">This is the shapefile file representing the AHPS stations. Need .shp, .shx, .prj, .dbf files.</p>
+        <!-- Flood Map Search !-->
+        {% gizmo toggle_switch search_floodmap_toggle_switch %}
+        {% gizmo button_group add_button %}
+    {% else %}
+        <div class="alert alert-danger" role="alert">No GeoServers found. You cannot add a watershed until you do.</div>
+        <p> The good news is that there is a simple solution. All you have to do is click <a href="{% url 'streamflow_prediction_tool:add-geoserver' %}">here</a> and add one.</p>
+    {% endif %}
 {% endblock %}
 
 {% block scripts %}
