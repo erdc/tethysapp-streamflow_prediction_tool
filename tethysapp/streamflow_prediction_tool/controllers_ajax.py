@@ -36,7 +36,7 @@ from functions import (delete_from_database,
                        get_cron_command,
                        get_reach_index,
                        handle_uploaded_file,
-                       upload_geoserver_layer,
+                       update_geoserver_layer,
                        user_permission_test)
 
 from model import (DataStore, Geoserver, MainSettings, 
@@ -901,43 +901,38 @@ def watershed_add(request):
             int(geoserver_id)
         except ValueError:
             return JsonResponse({'error' : 'One or more ids are faulty.'})
-            
-        #make sure information is correct
+         
+        #check ECMWF inputs
+        ecmwf_ready = False
         ecmwf_rapid_input_resource_id = ""
-        ecmwf_data_store_watershed_name = ""
-        ecmwf_data_store_subbasin_name = ""
-        wrf_hydro_data_store_watershed_name = ""
-        wrf_hydro_data_store_subbasin_name = ""
-        if(int(data_store_id)>1):
-            #check ecmwf inputs
-            ecmwf_ready = False
-            ecmwf_data_store_watershed_name = format_name(post_info.get('ecmwf_data_store_watershed_name'))
-            ecmwf_data_store_subbasin_name = format_name(post_info.get('ecmwf_data_store_subbasin_name'))
-            
-            if not ecmwf_data_store_watershed_name or not ecmwf_data_store_subbasin_name:
-                ecmwf_data_store_watershed_name = ""
-                ecmwf_data_store_subbasin_name = ""
-            else:
-                ecmwf_ready = True
-            
-            #check wrf-hydro inputs
-            wrf_hydro_ready = False
-            wrf_hydro_data_store_watershed_name = format_name(post_info.get('wrf_hydro_data_store_watershed_name'))
-            wrf_hydro_data_store_subbasin_name = format_name(post_info.get('wrf_hydro_data_store_subbasin_name'))
-            
-            if not wrf_hydro_data_store_watershed_name or not wrf_hydro_data_store_subbasin_name:
-                wrf_hydro_data_store_watershed_name = ""
-                wrf_hydro_data_store_subbasin_name = ""
-            else:
-                wrf_hydro_ready = True
 
-            #need at least one to be OK to proceed
-            if not ecmwf_ready and not wrf_hydro_ready:
-                    return JsonResponse({'error' : "Must have an ECMWF or WRF-Hydro watershed/subbasin name to continue" })
+        ecmwf_data_store_watershed_name = format_name(post_info.get('ecmwf_data_store_watershed_name'))
+        ecmwf_data_store_subbasin_name = format_name(post_info.get('ecmwf_data_store_subbasin_name'))
+        
+        if not ecmwf_data_store_watershed_name or not ecmwf_data_store_subbasin_name:
+            ecmwf_data_store_watershed_name = ""
+            ecmwf_data_store_subbasin_name = ""
+        else:
+            ecmwf_ready = True
+        
+        #check wrf-hydro inputs
+        wrf_hydro_ready = False
+        wrf_hydro_data_store_watershed_name = format_name(post_info.get('wrf_hydro_data_store_watershed_name'))
+        wrf_hydro_data_store_subbasin_name = format_name(post_info.get('wrf_hydro_data_store_subbasin_name'))
+        
+        if not wrf_hydro_data_store_watershed_name or not wrf_hydro_data_store_subbasin_name:
+            wrf_hydro_data_store_watershed_name = ""
+            wrf_hydro_data_store_subbasin_name = ""
+        else:
+            wrf_hydro_ready = True
 
-            
+        #need at least one to be OK to proceed
+        if not ecmwf_ready and not wrf_hydro_ready:
+            return JsonResponse({'error' : "Must have an ECMWF or WRF-Hydro watershed/subbasin name to continue." })
+
         #initialize session
         session = mainSessionMaker()
+        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
 
         #check to see if duplicate exists
         num_similar_watersheds  = session.query(Watershed) \
@@ -948,39 +943,48 @@ def watershed_add(request):
             session.close()
             return JsonResponse({ 'error': "A watershed with the same name exists." })
 
-        #make sure one layer exists
+        #validate geoserver inputs
+        if not drainage_line_shp_file and not geoserver_drainage_line_layer_name:
+            session.close()
+            return JsonResponse({'error' : 'Missing geoserver drainage line.'})
+            
+        #get desired geoserver
+        try:
+            geoserver  = session.query(Geoserver).get(geoserver_id)
+        except ObjectDeletedError:
+            session.close()
+            return JsonResponse({ 'error': "The geoserver does not exist." })
+        try:
+            geoserver_manager = GeoServerDatasetManager(engine_url=geoserver.url,
+                                                        username=geoserver.username,
+                                                        password=geoserver.password,
+                                                        app_instance_id=main_settings.app_instance_id)
+        except Exception as ex:
+            session.close()
+            return JsonResponse({'error' : "GeoServer Error: %s" % ex})
+
         #GEOSERVER UPLOAD
+        #check geoserver input before upload
         if drainage_line_shp_file:
-            #check input
-            if not drainage_line_shp_file and not geoserver_drainage_line_layer_name:
-                session.close()
-                return JsonResponse({'error' : 'Missing geoserver drainage line.'})
-
-            #check shapefiles
-            geoserver = session.query(Geoserver).get(geoserver_id)
-            main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
+            geoserver_drainage_line_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'drainage_line')
+            #check shapefles
             try:
-                geoserver_manager = GeoServerDatasetManager(engine_url=geoserver.url,
-                                                            username=geoserver.username,
-                                                            password=geoserver.password,
-                                                            app_instance_id=main_settings.app_instance_id)
+                geoserver_manager.check_shapefile_input_files(drainage_line_shp_file)
             except Exception as ex:
                 session.close()
-                return JsonResponse({'error' : "GeoServer Error: %s" % ex})
+                return JsonResponse({'error' : 'Drainage Line Error: %s.' % ex })
 
-            #create shapefile
-            resource_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'drainage_line')
-            try:
-                geoserver_drainage_line_layer = upload_geoserver_layer(geoserver_manager, 
-                                                                       resource_name,
-                                                                       drainage_line_shp_file)
-
-            except Exception as ex:
-                session.close()
-                return JsonResponse({'error' : "Drainage Line upload error: %s" % ex})
-                                               
-            if geoserver_drainage_line_layer == None:
-                return JsonResponse({'error' : "Error uploading drainage line ..."})
+        #UPLOAD DRAINAGE LINE
+        try:
+            geoserver_drainage_line_layer = update_geoserver_layer(None, 
+                                                                   geoserver_drainage_line_layer_name, 
+                                                                   drainage_line_shp_file,
+                                                                   geoserver_manager, 
+                                                                   session, 
+                                                                   layer_required=True)
+        except Exception as ex:
+            session.close()
+            return JsonResponse({'error' : "Drainage Line layer upload error: %s" % ex})
                 
 
         
@@ -1006,14 +1010,14 @@ def watershed_add(request):
         session.commit()
         
         #get watershed_id
-        watershed_id = watershed.id
+        response = {
+                    'success': "Watershed Sucessfully Added!",
+                    'watershed_id' : watershed.id,
+                    'geoserver_drainage_line_layer': geoserver_drainage_line_layer.name if geoserver_drainage_line_layer else geoserver_drainage_line_layer_name,
+                    }
         session.close()
         
-        return JsonResponse({
-                            'success': "Watershed Sucessfully Added!",
-                            'watershed_id' : watershed_id,
-                            'geoserver_drainage_line_layer': geoserver_drainage_line_layer,
-                            })
+        return JsonResponse(response)
 
     return JsonResponse({ 'error': "A problem with your request exists." })
 
@@ -1242,11 +1246,11 @@ def watershed_update(request):
 
         #check geoserver input before upload
         if drainage_line_shp_file:
-            drainage_line_resource_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'drainage_line')
+            geoserver_drainage_line_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'drainage_line')
             #check permissions to upload file
             if watershed.geoserver_drainage_line_layer:
                 if not watershed.geoserver_drainage_line_layer.uploaded and \
-                    watershed.geoserver_drainage_line_layer.name == geoserver_manager.get_layer_name(drainage_line_resource_name):
+                    watershed.geoserver_drainage_line_layer.name == geoserver_manager.get_layer_name(geoserver_drainage_line_layer_name):
                     session.close()
                     return JsonResponse({'error' : 'You do not have permissions to overwrite the drainage line layer ...' })
                 
@@ -1258,11 +1262,11 @@ def watershed_update(request):
                 return JsonResponse({'error' : 'Drainage Line Error: %s.' % ex })
                 
         if catchment_shp_file:
-            catchment_resource_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'catchment')
+            geoserver_catchment_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'catchment')
             #check permissions to upload file
             if watershed.geoserver_catchment_layer:
                 if not watershed.geoserver_catchment_layer.uploaded and \
-                    watershed.geoserver_catchment_layer.name == geoserver_manager.get_layer_name(catchment_resource_name):
+                    watershed.geoserver_catchment_layer.name == geoserver_manager.get_layer_name(geoserver_catchment_layer_name):
                     session.close()
                     return JsonResponse({'error' : 'You do not have permissions to overwrite the catchment layer ...' })
 
@@ -1272,13 +1276,13 @@ def watershed_update(request):
             except Exception as ex:
                 session.close()
                 return JsonResponse({'error' : 'Catchment Error: %s.' % ex })
-
+                
         if gage_shp_file:
-            gage_resource_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'gage')
+            geoserver_gage_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'gage')
             #check permissions to upload file
             if watershed.geoserver_gage_layer:
                 if not watershed.geoserver_gage_layer.uploaded and \
-                    watershed.geoserver_gage_layer.name == geoserver_manager.get_layer_name(gage_resource_name):
+                    watershed.geoserver_gage_layer.name == geoserver_manager.get_layer_name(geoserver_gage_layer_name):
                     session.close()
                     return JsonResponse({'error' : 'You do not have permissions to overwrite the gage layer ...' })
 
@@ -1288,13 +1292,13 @@ def watershed_update(request):
             except Exception as ex:
                 session.close()
                 return JsonResponse({'error' : 'Gage Error: %s.' % ex })
-
+                
         if ahps_station_shp_file:
-            ahps_station_resource_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'ahps_station')
+            geoserver_ahps_station_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'ahps_station')
             #check permissions to upload file
             if watershed.geoserver_ahps_station_layer:
                 if not watershed.geoserver_ahps_station_layer.uploaded and \
-                    watershed.geoserver_ahps_station_layer.name == geoserver_manager.get_layer_name(ahps_station_resource_name):
+                    watershed.geoserver_ahps_station_layer.name == geoserver_manager.get_layer_name(geoserver_ahps_station_layer_name):
                     session.close()
                     return JsonResponse({'error' : 'You do not have permissions to overwrite the AHPS station layer ...' })
 
@@ -1306,142 +1310,74 @@ def watershed_update(request):
                 return JsonResponse({'error' : 'AHPS Station Error: %s.' % ex })
         
         #UPDATE DRAINAGE LINE
-        if drainage_line_shp_file:
-            #UPLOAD NEW SHAPEFILE
-            #remove old geoserver layer
-            if watershed.geoserver_drainage_line_layer and watershed.geoserver_drainage_line_layer.uploaded:
-                geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_drainage_line_layer)
-
-            #create shapefile
-            try:
-                geoserver_drainage_line_layer = upload_geoserver_layer(geoserver_manager, 
-                                                                       drainage_line_resource_name,
-                                                                       drainage_line_shp_file)
-
-            except Exception as ex:
-                session.close()
-                return JsonResponse({'error' : "Drainage Line upload error: %s" % ex})
-                                               
-        elif geoserver_drainage_line_layer_name and watershed.geoserver_drainage_line_layer \
-            and geoserver_drainage_line_layer != watershed.geoserver_drainage_line_layer \
-            and watershed.geoserver_drainage_line_layer.uploaded:
-            #RENAME SHAPEFILE WITH OLD FILE UPLOADED
-            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_drainage_line_layer)
-            delete_from_database(session, watershed.geoserver_drainage_line_layer)
-        #elif #DON'T ALLOW USER TO NOT HAVE DRAINAGE LINE LAYER
-            
+        try:
+            watershed.geoserver_drainage_line_layer = update_geoserver_layer(watershed.geoserver_drainage_line_layer, 
+                                                                             geoserver_drainage_line_layer_name, 
+                                                                             drainage_line_shp_file,
+                                                                             geoserver_manager, 
+                                                                             session, 
+                                                                             layer_required=True)
+        except Exception as ex:
+            session.close()
+            return JsonResponse({'error' : "Drainage Line layer update error: %s" % ex})
             
 
         #UPDATE CATCHMENT
-        geoserver_catchment_layer_name = "" if not geoserver_catchment_layer_name else geoserver_catchment_layer_name
-        geoserver_catchment_layer = None    
-        if catchment_shp_file:
-            #UPLOAD NEW SHAPEFILE
-            #remove old geoserver layer
-            if watershed.geoserver_catchment_layer:
-                if watershed.geoserver_catchment_layer.uploaded:
-                    geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_catchment_layer)
-
-            #create shapefile
-            try:
-                geoserver_catchment_layer = upload_geoserver_layer(geoserver_manager, 
-                                                                   catchment_resource_name,
-                                                                   catchment_shp_file)
-
-            except Exception as ex:
-                session.close()
-                return JsonResponse({'error' : "Catchment upload error: %s" % ex})
-
-        elif geoserver_catchment_layer_name and watershed.geoserver_catchment_layer:
-            if geoserver_catchment_layer_name != watershed.geoserver_catchment_layer.name \
-                and watershed.geoserver_catchment_layer.uploaded:
-                #RENAME SHAPEFILE WITH OLD FILE UPLOADED
-                geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_catchment_layer)
-                delete_from_database(session, watershed.geoserver_catchment_layer)
-
-        elif not geoserver_catchment_layer_name and watershed.geoserver_catchment_layer:
-            if watershed.geoserver_catchment_layer.uploaded:
-                #USER DELETE LAYER
-                geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_catchment_layer)
-                delete_from_database(session, watershed.geoserver_catchment_layer)
-            
+        try:
+            watershed.geoserver_catchment_layer = update_geoserver_layer(watershed.geoserver_catchment_layer, 
+                                                                         geoserver_catchment_layer_name, 
+                                                                         catchment_shp_file,
+                                                                         geoserver_manager, 
+                                                                         session, 
+                                                                         layer_required=False)
+        except Exception as ex:
+            session.close()
+            return JsonResponse({'error' : "Catchment layer update error: %s" % ex})
 
         #UPDATE GAGE
-        geoserver_gage_layer_name = "" if not geoserver_gage_layer_name else geoserver_gage_layer_name
-        geoserver_gage_layer = None        
-        if gage_shp_file:
-            #remove old geoserver layer
-            if watershed.geoserver_gage_layer and watershed.geoserver_gage_layer.uploaded:
-                geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_gage_layer)
+        try:
+            watershed.geoserver_gage_layer = update_geoserver_layer(watershed.geoserver_gage_layer, 
+                                                                    geoserver_gage_layer_name, 
+                                                                    gage_shp_file,
+                                                                    geoserver_manager, 
+                                                                    session, 
+                                                                    layer_required=False)
+        except Exception as ex:
+            session.close()
+            return JsonResponse({'error' : "Gage layer update error: %s" % ex})
 
-            #create shapefile
-            try:
-                geoserver_gage_layer = upload_geoserver_layer(geoserver_manager, 
-                                                              gage_resource_name,
-                                                              gage_shp_file)
-
-            except Exception as ex:
-                session.close()
-                return JsonResponse({'error' : "Gage upload error: %s" % ex})
-
-
-        #RENAME SHAPEFILE WITH OLD FILE UPLOADED
-        if geoserver_gage_layer_name and watershed.geoserver_gage_layer:
-            if geoserver_gage_layer != watershed.geoserver_gage_layer \
-            and watershed.geoserver_gage_layer.uploaded:
-                geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_gage_layer)
-                delete_from_database(session, watershed.geoserver_gage_layer)
-        #delete old layer from geoserver if removed by user
-        if not geoserver_gage_layer_name and watershed.geoserver_gage_layer:
-            if watershed.geoserver_gage_layer.uploaded:
-                geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_gage_layer)
-                delete_from_database(session, watershed.geoserver_gage_layer)
-            
         #UPDATE AHPS STATION
-        geoserver_ahps_station_layer_name = "" if not geoserver_ahps_station_layer_name else geoserver_ahps_station_layer_name
-        geoserver_ahps_station_layer = None
-        if ahps_station_shp_file:
-            #remove old geoserver layer
-            if watershed.geoserver_ahps_station_layer and watershed.geoserver_ahps_station_layer.uploaded:
-                geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_ahps_station_layer)
-
-            #create shapefile
-            try:
-                geoserver_ahps_station_layer = upload_geoserver_layer(geoserver_manager, 
-                                                                      ahps_station_resource_name,
-                                                                      ahps_station_shp_file)
-
-            except Exception as ex:
-                session.close()
-                return JsonResponse({'error' : "AHPS Station upload error: %s" % ex})
-
-        if geoserver_ahps_station_layer_name and watershed.geoserver_ahps_station_layer:
-            if geoserver_ahps_station_layer_name != watershed.geoserver_ahps_station_layer.name \
-            and watershed.geoserver_ahps_station_layer.uploaded:
-                #RENAME SHAPEFILE WITH OLD FILE UPLOADED
-                geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_ahps_station_layer)
-                delete_from_database(session, watershed.geoserver_ahps_station_layer)
-
-        if not geoserver_ahps_station_layer_name and watershed.geoserver_ahps_station_layer:
-            if watershed.geoserver_ahps_station_layer.uploaded:
-                #delete old layer from geoserver if removed by user
-                geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_ahps_station_layer)
-                delete_from_database(session, watershed.geoserver_ahps_station_layer)
+        try:
+            watershed.geoserver_ahps_station_layer = update_geoserver_layer(watershed.geoserver_ahps_station_layer, 
+                                                                            geoserver_ahps_station_layer_name, 
+                                                                            ahps_station_shp_file,
+                                                                            geoserver_manager, 
+                                                                            session, 
+                                                                            layer_required=False)
+        except Exception as ex:
+            session.close()
+            return JsonResponse({'error' : "AHPS Station layer update error: %s" % ex})
+            
 
 
         #remove old prediction files if watershed/subbasin name changed
         if(ecmwf_data_store_watershed_name != watershed.ecmwf_data_store_watershed_name or 
            ecmwf_data_store_subbasin_name != watershed.ecmwf_data_store_subbasin_name):
             delete_old_watershed_prediction_files(watershed,forecast="ecmwf")
-            #delete old ecmwf-rapid input files
-            #get dataset manager
-            data_manager = RAPIDInputDatasetManager(watershed.data_store.api_endpoint,
-                                                    watershed.data_store.api_key,
-                                                    "ecmwf",
-                                                    main_settings.app_instance_id)
-
             #remove RAPID input files on CKAN if exists
-            if watershed.ecmwf_rapid_input_resource_id.strip():
+            if watershed.ecmwf_rapid_input_resource_id.strip() \
+            and watershed.data_store.data_store_type_id>0:
+                #get dataset manager
+                try:
+                    data_manager = RAPIDInputDatasetManager(watershed.data_store.api_endpoint,
+                                                            watershed.data_store.api_key,
+                                                            "ecmwf",
+                                                            main_settings.app_instance_id)
+                except Exception as ex:
+                    session.close()
+                    return JsonResponse({'error' : "Invalid CKAN instance %s. Cannot delete RAPID input files on CKAN: %s" \
+                                                    % (watershed.data_store.api_endpoint, ex)})
+
                 data_manager.dataset_engine.delete_resource(watershed.ecmwf_rapid_input_resource_id)
                 watershed.ecmwf_rapid_input_resource_id = ""
 
@@ -1460,21 +1396,26 @@ def watershed_update(request):
         watershed.wrf_hydro_data_store_watershed_name = wrf_hydro_data_store_watershed_name
         watershed.wrf_hydro_data_store_subbasin_name = wrf_hydro_data_store_subbasin_name
         watershed.geoserver_id = geoserver_id
-        watershed.geoserver_drainage_line_layer = geoserver_drainage_line_layer
-        watershed.geoserver_catchment_layer = geoserver_catchment_layer
-        watershed.geoserver_gage_layer = geoserver_gage_layer
-        watershed.geoserver_ahps_station_layer = geoserver_ahps_station_layer
+        watershed.geoserver_search_for_flood_map = geoserver_search_for_flood_map
+        
+        
+        response = {
+                    'success': "Watershed sucessfully updated!", 
+                    'geoserver_drainage_line_layer': watershed.geoserver_drainage_line_layer.name \
+                                                     if watershed.geoserver_drainage_line_layer else "",
+                    'geoserver_catchment_layer': watershed.geoserver_catchment_layer.name \
+                                                 if watershed.geoserver_catchment_layer else "",
+                    'geoserver_gage_layer': watershed.geoserver_gage_layer.name \
+                                            if watershed.geoserver_gage_layer else "",
+                    'geoserver_ahps_station_layer': watershed.geoserver_ahps_station_layer.name \
+                                                    if watershed.geoserver_ahps_station_layer else "",
+                    }
         
         #update database
         session.commit()
         session.close()
         
-        return JsonResponse({ 'success': "Watershed sucessfully updated!", 
-                              'geoserver_drainage_line_layer': geoserver_drainage_line_layer,
-                              'geoserver_catchment_layer': geoserver_catchment_layer,
-                              'geoserver_gage_layer': geoserver_gage_layer,
-                              'geoserver_ahps_station_layer': geoserver_ahps_station_layer,
-                              })
+        return JsonResponse(response)
 
     return JsonResponse({ 'error': "A problem with your request exists." })
 
