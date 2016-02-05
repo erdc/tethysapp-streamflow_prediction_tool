@@ -59,7 +59,7 @@ $ git submodule update
 ```
 Reset the database if changes are made to the database (this will delete your old database and regenerate a new app instance id):
 ```
-$ tethys syncstores erfp_tool -r
+$ tethys syncstores streamflow_prediction_tool -r
 ```
 Restart the Apache Server:
 See: http://tethys-platform.readthedocs.org/en/1.0.0/production.html#enable-site-and-restart-apache
