@@ -384,7 +384,7 @@ def ecmwf_get_avaialable_dates(request):
                         "output_directories" : output_directories,                   
                     })
         else:
-            return JsonResponse({'error' : 'Recent ECMWF forecasts for %s, %s not found.' % (watershed, subbasin)})
+            return JsonResponse({'error' : 'Recent ECMWF forecasts for %s, %s not found.' % (watershed_name, subbasin_name)})
 
 @login_required      
 def wrf_hydro_get_avaialable_dates(request):
