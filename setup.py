@@ -8,7 +8,7 @@ release_package = 'tethysapp-' + app_package
 app_class = 'streamflow_prediction_tool.app:StreamflowPredictionTool'
 app_package_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tethysapp', app_package)
 ### Python Dependencies ###
-dependencies = ['netCDF4', 'numpy', 'python-crontab', 'requests', 'sqlalchemy']
+dependencies = ['RAPIDpy', 'python-crontab', 'sqlalchemy']
 
 setup(
     name=release_package,
@@ -16,9 +16,9 @@ setup(
     description='Display streamflow from ECMWF predicted runoff routed with RAPID. Also, floodmaping with AutoRoute is available.',
     long_description='',
     keywords='',
-    author='Alan Snow',
+    author='Alan D. Snow',
     author_email='alan.d.snow@usace.army.mil',
-    url='127.0.0.1',
+    url='https://github.com/erdc-cm/tethysapp-streamflow_prediction_tool',
     license='MIT',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     namespace_packages=['tethysapp', 'tethysapp.' + app_package],
