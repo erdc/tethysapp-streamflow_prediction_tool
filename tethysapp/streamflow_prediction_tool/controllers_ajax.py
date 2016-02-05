@@ -18,6 +18,8 @@ from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import ObjectDeletedError
 from django.http import JsonResponse
+from RAPIDpy.dataset import RAPIDDataset
+
 
 #django imports
 from django.contrib.auth.decorators import user_passes_test, login_required
@@ -31,10 +33,10 @@ from functions import (delete_from_database,
                        delete_old_watershed_files, 
                        delete_old_watershed_geoserver_files,
                        ecmwf_find_most_current_files,
+                       get_reach_index,
                        wrf_hydro_find_most_current_file,
                        format_name,
                        get_cron_command,
-                       get_reach_index,
                        handle_uploaded_file,
                        update_geoserver_layer,
                        user_permission_test)
@@ -346,10 +348,9 @@ def ecmwf_get_avaialable_dates(request):
         get_info = request.GET
         watershed_name = format_name(get_info['watershed_name']) if 'watershed_name' in get_info else None
         subbasin_name = format_name(get_info['subbasin_name']) if 'subbasin_name' in get_info else None
-        reach_id = get_info.get('reach_id')
-        if not reach_id or not watershed_name or not subbasin_name:
+        if not watershed_name or not subbasin_name:
             return JsonResponse({'error' : 'ECMWF AJAX request input faulty'})
-    
+            
         #find/check current output datasets    
         path_to_watershed_files = os.path.join(path_to_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
 
@@ -368,7 +369,7 @@ def ecmwf_get_avaialable_dates(request):
             if os.path.exists(path_to_files):
                 basin_files = glob(os.path.join(path_to_files,"*.nc"))
                 #only add directory to the list if valid                                    
-                if len(basin_files) >0: # and get_reach_index(reach_id, basin_files):
+                if len(basin_files) >0:
                     output_directories.append({
                         'id' : directory, 
                         'text' : str(date + datetime.timedelta(hours=int(hour)))
@@ -383,7 +384,7 @@ def ecmwf_get_avaialable_dates(request):
                         "output_directories" : output_directories,                   
                     })
         else:
-            return JsonResponse({'error' : 'Recent ECMWF forecasts for reach with id: %s not found.' % reach_id})
+            return JsonResponse({'error' : 'Recent ECMWF forecasts for %s, %s not found.' % (watershed, subbasin)})
 
 @login_required      
 def wrf_hydro_get_avaialable_dates(request):
@@ -458,35 +459,38 @@ def ecmwf_get_hydrograph(request):
         watershed_name = format_name(get_info['watershed_name']) if 'watershed_name' in get_info else None
         subbasin_name = format_name(get_info['subbasin_name']) if 'subbasin_name' in get_info else None
         reach_id = get_info.get('reach_id')
-        guess_index = get_info.get('guess_index')
         start_folder = get_info.get('start_folder')
         if not reach_id or not watershed_name or not subbasin_name or not start_folder:
             return JsonResponse({'error' : 'ECMWF AJAX request input faulty.'})
     
+        #make sure reach id is integet
+        try:
+            reach_id = int(reach_id)
+        except TypeError, ValueError:
+            return JsonResponse({'error' : 'Invalid Reach ID %s.' % reach_id})
+
         #find/check current output datasets
         path_to_output_files = os.path.join(path_to_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
         basin_files, start_date = ecmwf_find_most_current_files(path_to_output_files, start_folder)
         if not basin_files or not start_date:
             return JsonResponse({'error' : 'ECMWF forecast for %s (%s) not found.' % (watershed_name, subbasin_name)})
     
-        #get/check the index of the reach
-        reach_index = get_reach_index(reach_id, basin_files[0], guess_index)
-        if reach_index == None:
-            return JsonResponse({'error' : 'ECMWF reach with id: %s not found.' % reach_id})
+        with RAPIDDataset(basin_files[0]) as qout_nc_example:
+            #get/check the index of the reach
+            try:
+                reach_index = qout_nc_example.get_river_index(reach_id)
+            except Exception:
+                return JsonResponse({'error' : 'ECMWF reach with id: %s not found.' % reach_id})
 
-        data_nc = NET.Dataset(basin_files[0], mode="r")
-    
-        first_half_size = 40 #run 6-hr resolution for all
-        if 'time' in data_nc.variables.keys():
-            time_length = len(data_nc.variables['time'][:])
-            if time_length == 41 or time_length == 61:
-                #run at full resolution for high res and 6-hr for low res
-                first_half_size = 41
-            elif time_length == 85 or time_length == 125:
-                #run at full resolution for all
-                first_half_size = 65
+            first_half_size = 40 #run 6-hr resolution for all
+            if qout_nc_example.is_time_variable_valid():
+                if qout_nc_example.size_time == 41 or qout_nc_example.size_time == 61:
+                    #run at full resolution for high res and 6-hr for low res
+                    first_half_size = 41
+                elif qout_nc_example.size_time == 85 or qout_nc_example.size_time == 125:
+                    #run at full resolution for all
+                    first_half_size = 65
 
-        data_nc.close()
 
         #get information from datasets
         all_data_first_half = []
@@ -500,68 +504,41 @@ def ecmwf_get_hydrograph(request):
                 index = int(index_str)
 
                 #Get hydrograph data from ECMWF Ensemble
-                data_nc = NET.Dataset(in_nc, mode="r")
-                qout_dimensions = data_nc.variables['Qout'].dimensions
-                if qout_dimensions[0].lower() == 'time' and \
-                    qout_dimensions[1].lower() == 'comid':
-                    data_values = data_nc.variables['Qout'][:,reach_index]
-                elif qout_dimensions[0].lower() == 'comid' and \
-                    qout_dimensions[1].lower() == 'time':
-                    data_values = data_nc.variables['Qout'][reach_index,:]
-                else:
-                    print "Invalid ECMWF forecast file", in_nc
-                    data_nc.close()
-                    continue
-
-
-                if(index < 52):
-                    #get time
-                    if (len(data_values)>len(low_res_time)):
-                        variables = data_nc.variables.keys()
-                        if 'time' in variables:
-                            low_res_time = [t*1000 for t in data_nc.variables['time'][:]]
+                with RAPIDDataset(in_nc) as qout_nc:
+                    #get streamflow for reach
+                    data_values = qout_nc.get_qout_index(reach_index)
+    
+                    if(index < 52):
+                        #get time
+                        if low_res_time == []:
+                            low_res_time = [t*1000 for t in qout_nc.get_time_array(datetime_simulation_start=start_date,
+                                                                                   simulation_time_step_seconds=6*60*60)]
+                        all_data_first_half.append(data_values[:first_half_size])
+                        all_data_second_half.append(data_values[first_half_size:])
+                    if(index == 52):
+                        high_res_time = [t*1000 for t in qout_nc.get_time_array(datetime_simulation_start=start_date,
+                                                                                simulation_time_step_seconds=6*60*60)]
+                        if first_half_size == 65:
+                            #convert to 3hr-6hr
+                            streamflow_1hr = data_values[:90:3]
+                            # calculate time series of 6 hr data from 3 hr data
+                            streamflow_3hr_6hr = data_values[90:]
+                            # get the time series of 6 hr data
+                            all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr_6hr]))
+                        elif qout_nc.size_time == 125:
+                            #convert to 6hr
+                            streamflow_1hr = data_values[:90:6]
+                            # calculate time series of 6 hr data from 3 hr data
+                            streamflow_3hr = data_values[90:109:2]
+                            # get the time series of 6 hr data
+                            streamflow_6hr = data_values[109:]
+                            # concatenate all time series
+                            all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr, streamflow_6hr]))
                         else:
-                            low_res_time = []
-                            for i in range(0,len(data_values)):
-                                next_time = int((start_date+datetime.timedelta(hours=i*6+6)) \
-                                                .strftime('%s'))*1000
-                                low_res_time.append(next_time)
-                    all_data_first_half.append(data_values[:first_half_size])
-                    all_data_second_half.append(data_values[first_half_size:])
-                if(index == 52):
-                    if (len(data_values)>len(high_res_time)):
-                        variables = data_nc.variables.keys()
-                        if 'time' in variables:
-                            high_res_time = [t*1000 for t in data_nc.variables['time'][:]]
-                        else:
-                            high_res_time = []
-                            for i in range(0,len(data_values)):
-                                next_time = int((start_date+datetime.timedelta(hours=i*6+6)) \
-                                                .strftime('%s'))*1000
-                                high_res_time.append(next_time)
-                    if first_half_size == 65:
-                        #convert to 3hr-6hr
-                        streamflow_1hr = data_values[:90:3]
-                        # calculate time series of 6 hr data from 3 hr data
-                        streamflow_3hr_6hr = data_values[90:]
-                        # get the time series of 6 hr data
-                        all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr_6hr]))
-                    elif len(high_res_time) == 125:
-                        #convert to 6hr
-                        streamflow_1hr = data_values[:90:6]
-                        # calculate time series of 6 hr data from 3 hr data
-                        streamflow_3hr = data_values[90:109:2]
-                        # get the time series of 6 hr data
-                        streamflow_6hr = data_values[109:]
-                        # concatenate all time series
-                        all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr, streamflow_6hr]))
-                    else:
-                        
-                        all_data_first_half.append(data_values)
-                    high_res_data = data_values
-                data_nc.close()
+                            
+                            all_data_first_half.append(data_values)
+                        high_res_data = data_values
             except Exception, e:
-                data_nc.close()
                 print e
                 pass
         return_data = {}
@@ -621,6 +598,12 @@ def era_interim_get_hydrograph(request):
         if not reach_id or not watershed_name or not subbasin_name:
             return JsonResponse({'error' : 'ERA Interim AJAX request input faulty.'})
 
+        #make sure reach id is integet
+        try:
+            reach_id = int(reach_id)
+        except TypeError, ValueError:
+            return JsonResponse({'error' : 'Invalid Reach ID %s.' % reach_id})
+            
         #----------------------------------------------
         # HISTORICAL DATA SECTION
         #----------------------------------------------
@@ -629,32 +612,28 @@ def era_interim_get_hydrograph(request):
         path_to_output_files = os.path.join(path_to_era_interim_data, "{0}-{1}".format(watershed_name, subbasin_name))
         historical_data_files = glob(os.path.join(path_to_output_files, "Qout*.nc"))
         if historical_data_files:
-            historical_data_file = historical_data_files[0]
-            #get/check the index of the reach
-            reach_index = get_reach_index(reach_id, historical_data_file)
-            if reach_index != None:
-                #get information from dataset
-                data_nc = NET.Dataset(historical_data_file, mode="r")
-                qout_dimensions = data_nc.variables['Qout'].dimensions
-                
-                if qout_dimensions[0].lower() == 'comid' and \
-                    qout_dimensions[1].lower() == 'time':
-                    data_values = data_nc.variables['Qout'][reach_index,:]
-                    variables = data_nc.variables.keys()
-                    if 'time' in variables:
-                        time = [t*1000 for t in data_nc.variables['time'][:]]
-                        data_nc.close()
+            try:
+                #get/check the index of the reach
+                with RAPIDDataset(historical_data_files[0]) as qout_nc:
+                    error_found = False
+                    #get/check the index of the reach
+                    try:
+                        reach_index = qout_nc.get_river_index(reach_id)
+                    except Exception:
+                        era_interim_return_data['error'] = 'ERA Interim reach with id: %s not found.' % reach_id
+                        error_found = True
+                        raise
+    
+                    if not error_found:
+                        #get information from dataset
+                        data_values = qout_nc.get_qout_index(reach_index)
+                        time = [t*1000 for t in qout_nc.get_time_array()]
                         era_interim_return_data['series'] = zip(time, data_values.tolist())
-                    else:
-                        data_nc.close()
-                        era_interim_return_data['error'] = "Invalid ERA-Interim file"
-                else:
-                    data_nc.close()
-                    era_interim_return_data['error'] = "Invalid ERA-Interim file"
+            except Exception:
+                era_interim_return_data['error'] = "Invalid ERA-Interim file ..."
+                pass
+                        
         
-            else:
-                era_interim_return_data['error'] = 'ERA Interim reach with id: %s not found.' % reach_id
-
         else:
             era_interim_return_data['error'] = 'ERA Interim data for %s (%s) not found.' % (watershed_name, subbasin_name)
 
@@ -667,9 +646,15 @@ def era_interim_get_hydrograph(request):
             
             return_period_file = return_period_files[0]
             #get/check the index of the reach
-            rp_reach_index = get_reach_index(reach_id, return_period_file)
-            if rp_reach_index != None:
-    
+            error_found = False
+            try:
+                rp_reach_index = get_reach_index(return_period_file, reach_id)
+            except Exception:
+                return_period_return_data['error'] = 'Return period for reach with id: %s not found.' % reach_id
+                error_found = True
+                pass
+                
+            if not error_found:
                 #get information from dataset
                 try:
                     return_period_nc = NET.Dataset(return_period_file, mode="r")
@@ -687,8 +672,6 @@ def era_interim_get_hydrograph(request):
                     return_period_return_data['error'] = "Invalid return period file"
                     pass
                     
-            else:
-                return_period_return_data['error'] = 'Return period for reach with id: %s not found.' % reach_id
         else:
             return_period_return_data['error'] = 'ERA Interim return period data for %s (%s) not found.' % (watershed_name, subbasin_name)
 
@@ -729,28 +712,24 @@ def wrf_hydro_get_hydrograph(request):
         if not forecast_file:
             return JsonResponse({'error' : 'WRF-Hydro forecast for %s (%s) not found.' % (watershed_name, subbasin_name)})
 
-        #get/check the index of the reach
-        reach_index = get_reach_index(reach_id, forecast_file)
-        if reach_index == None:
-            return JsonResponse({'error' : 'WRF-Hydro reach with id: %s not found.' % reach_id})
-
         #get information from dataset
-        data_nc = NET.Dataset(forecast_file, mode="r")
-        qout_dimensions = data_nc.variables['Qout'].dimensions
-        if qout_dimensions[0].lower() == 'comid' and \
-            qout_dimensions[1].lower() == 'time':
-            data_values = data_nc.variables['Qout'][reach_index,:]
-        else:
-            data_nc.close()
-            return JsonResponse({'error' : "Invalid WRF-Hydro forecast file"})
+        try:
+            #get/check the index of the reach
+            with RAPIDDataset(forecast_file) as qout_nc:
+                error_found = False
+                #get/check the index of the reach
+                try:
+                    reach_index = qout_nc.get_river_index(reach_id)
+                except Exception:
+                    return JsonResponse({'error' : 'WRF-Hydro reach with id: %s not found.' % reach_id})
 
-        variables = data_nc.variables.keys()
-        if 'time' in variables:
-            time = [t*1000 for t in data_nc.variables['time'][:]]
-        else:
-            data_nc.close()
+                if not error_found:
+                    #get information from dataset
+                    data_values = qout_nc.get_qout_index(reach_index)
+                    time = [t*1000 for t in qout_nc.get_time_array()]
+        except Exception:
             return JsonResponse({'error' : "Invalid WRF-Hydro forecast file"})
-        data_nc.close()
+            pass
 
         return JsonResponse({
                 "success" : "WRF-Hydro data analysis complete!",

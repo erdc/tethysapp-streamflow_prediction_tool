@@ -186,6 +186,19 @@ def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
     #there are no files found
     return None, None
 
+def get_reach_index(prediction_file, reach_id):
+    """
+    Gets the index of the reach from the COMID 
+    """
+    data_nc = NET.Dataset(prediction_file, mode="r")
+    river_id = 'rivid'
+    if 'COMID' in data_nc.variables.keys():
+        river_id = 'COMID'
+    com_ids = data_nc.variables[river_id][:]
+    data_nc.close()
+    
+    return np.where(com_ids==int(reach_id))[0][0]
+
 def wrf_hydro_find_most_current_file(path_to_watershed_files, date_string):
     """""
     Finds the current output from downscaled WRF-Hydro forecasts
@@ -257,42 +270,6 @@ def get_cron_command():
         return command
     else:
         return None
-
-def get_reach_index(reach_id, prediction_file, guess_index=None):
-    """
-    Gets the index of the reach from the COMID 
-    """
-    data_nc = NET.Dataset(prediction_file, mode="r")
-    com_ids = data_nc.variables['COMID'][:]
-    data_nc.close()
-    try:
-        if guess_index:
-            if int(reach_id) == int(com_ids[int(guess_index)]):
-                return int(guess_index)
-    except Exception as ex:
-        print ex
-        pass
-    
-    try:
-        reach_index = np.where(com_ids==int(reach_id))[0][0]
-    except Exception as ex:
-        print ex
-        reach_index = None
-        pass
-    return reach_index                
-
-def get_comids_in_lookup_comid_list(search_reach_id_list, lookup_reach_id_list):
-    """
-    Gets the subset comid_index_list, reordered_comid_list from the netcdf file
-    """
-    try:
-        #get where comids are in search_list
-        search_reach_indices_list = np.where(np.in1d(search_reach_id_list, 
-                                                     lookup_reach_id_list))[0]
-    except Exception as ex:
-        print ex
-
-    return search_reach_indices_list, lookup_reach_id_list[search_reach_indices_list]
 
 def handle_uploaded_file(f, file_path, file_name):
     """

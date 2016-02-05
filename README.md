@@ -9,28 +9,18 @@ separately. See: https://github.com/erdc-cm/spt_ecmwf_autorapid_process*
 
 ##Prerequisites:
 - Tethys Platform (CKAN, PostgresQL, GeoServer)
-- netCDF4-python (Python package)
+- RAPIDpy (Python package).
 
-###Install netCDF4-python on Ubuntu:
+###Install RAPIDpy:
+For instructions, go to: https://github.com/erdc-cm/RAPIDpy.
+
+Note: before installing RAPIDpy into your python site-packages,
+activate your Tethys python environment:
+
 ```
-$ sudo apt-get install python-dev zlib1g-dev libhdf5-serial-dev libnetcdf-dev
 $ . /usr/lib/tethys/bin/activate
-$ pip install numpy netCDF4
 ```
-###Install netCDF4-python on OSX:
-*Note: this app was desgined and tested in Ubuntu*
-```
-$ brew install homebrew/science/netcdf
-$ . /usr/lib/tethys/bin/activate
-$ pip install numpy netCDF4
-```
-###Install netCDF4-python on Redhat:
-*Note: this app was desgined and tested in Ubuntu*
-```
-$ yum install netcdf4-python hdf5-devel netcdf-devel
-$ . /usr/lib/tethys/bin/activate
-$ pip install numpy netCDF4
-```
+
 ##Installation:
 Clone the app into the directory you want:
 ```
