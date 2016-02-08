@@ -1,4 +1,4 @@
-<!--  add_data_store.html -->
+<!--  home.html -->
 <!--  streamflow_prediction_tool -->
 <!--  Created by Alan D. Snow 2015. -->
 <!--  Copyright © 2015 Alan D Snow. All rights reserved. -->
@@ -9,11 +9,6 @@
 {% load tethys_gizmos %}
 
 {% block app_content %}
-    {% if user.is_superuser or user.is_staff %}
-        {% if redirect %}
-            <p id="redirect" class="hidden">Redirecting...</p>
-        {% endif %}
-    {% endif %}
     {% if watersheds_length > 0 %}
         <h1>Select a Watershed</h1>
         <form action="{% url 'streamflow_prediction_tool:map' %}" method="get">
