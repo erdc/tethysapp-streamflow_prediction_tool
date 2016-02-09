@@ -184,6 +184,7 @@ def map(request):
                 if watershed.geoserver_ahps_station_layer:
                     #LOAD AHPS STATION
                     geoserver_info['ahps_station'] = {'name': watershed.geoserver_ahps_station_layer.name,
+                                                      'geojson': watershed.geoserver_ahps_station_layer.wfs_url,
                                                       'latlon_bbox': json.loads(watershed.geoserver_ahps_station_layer.latlon_bbox),
                                                       'projection': watershed.geoserver_ahps_station_layer.projection,
                                                       }
