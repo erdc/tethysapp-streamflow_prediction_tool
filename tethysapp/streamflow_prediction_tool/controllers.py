@@ -53,7 +53,7 @@ def home(request):
                                    options=watershed_list,
                                    multiple=True,)
                                    
-    watershed_group_select = SelectInput(display_text='Select a Watershed Group',
+    watershed_group_select = SelectInput(display_text='Select Watershed Group(s)',
                                          name='watershed_group_select',
                                          options=watershed_groups,
                                          multiple=True,)
@@ -1003,7 +1003,7 @@ def manage_geoservers(request):
     """
     #initialize session
     session = mainSessionMaker()
-    num_geoservers = session.query(Geoserver).count() - 1
+    num_geoservers = session.query(Geoserver).count()
     session.close()
 
     context = {
@@ -1025,7 +1025,6 @@ def manage_geoservers_table(request):
 
     # Query DB for data store types
     geoservers = session.query(Geoserver)\
-                        .filter(Geoserver.id>1) \
                         .order_by(Geoserver.name, Geoserver.url) \
                         .all()[(page * RESULTS_PER_PAGE):((page + 1)*RESULTS_PER_PAGE)]
 
