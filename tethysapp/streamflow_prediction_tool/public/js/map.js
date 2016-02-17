@@ -323,17 +323,16 @@ var ERFP_MAP = (function() {
                         if (reach_id_attr_name != null) {
                             //TODO: Make query more robust
                             var url = drainage_line_layer.get('geoserver_url') + 
-                                  '&format_options=callback:searchFeatures' +
                                   '&CQL_FILTER='+ drainage_line_layer.get('reach_id_attr_name') +' =' + reach_id +
                                   '&srsname=' + m_map_projection;
                             jQuery.ajax({
                                 url: encodeURI(url),
-                                dataType: 'jsonp',
-                                jsonpCallback: 'searchFeatures',
+                                dataType: 'json',
                             })
                             .done(function(response) {
                                 if (response.totalFeatures > 0) {
-                                    var features = drainage_line_layer.getSource().readFeatures(response);
+                                    var geojsonFormat = new ol.format.GeoJSON();
+                                    var features = geojsonFormat.readFeatures(response);
                                     m_map.getView().fit(features[0].getGeometry().getExtent(), m_map.getSize());
                                     m_select_interaction.getFeatures().clear();
                                     m_select_interaction.getFeatures().push(features[0]);
