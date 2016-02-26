@@ -343,13 +343,10 @@ def map(request):
                                            "%s:%s" % (watershed.watershed_clean_name, watershed.subbasin_clean_name)))
 
         #set up the inputs            
-        watershed_select = {
-                            'display_text': 'Select Watershed',
-                            'name': 'watershed_select',
-                            'options': watershed_list,
-                            'placeholder': 'Select Watershed',
-                           }          
-
+        watershed_select = SelectInput(display_text='Select Watershed',
+                                       name='watershed_select',
+                                       options=watershed_list,)
+                                       
         units_toggle_switch = ToggleSwitch(display_text='Units',
                                            name='units-toggle',
                                            on_label='Metric',
@@ -416,12 +413,11 @@ def settings(request):
     #Query DB for settings
     main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
 
-    base_layer_select_input = { 'display_text':'Select a Base Layer',
-                                'name':'base-layer-select',
-                                'multiple':False,
-                                'options':base_layer_list,
-                                'initial':main_settings.base_layer.name,
-                                }
+    base_layer_select_input = SelectInput(display_text='Select a Base Layer',
+                                          name='base-layer-select',
+                                          multiple=False,
+                                          options=base_layer_list,
+                                          initial=main_settings.base_layer.name,)
 
     base_layer_api_key_input = TextInput(display_text='Base Layer API Key',
                                          name='api-key-input',
@@ -497,10 +493,9 @@ def add_watershed(request):
         data_store_list.append(("%s (%s)" % (data_store.name, data_store.api_endpoint),
                                  data_store.id))
 
-    data_store_select = {'display_text':'Select a Data Store',
-                         'name':'data-store-select',
-                         'options':data_store_list,
-                         'placeholder':'Select a Data Store'}
+    data_store_select = SelectInput(display_text='Select a Data Store',
+                                    name='data-store-select',
+                                    options=data_store_list,)
               
     ecmwf_data_store_watershed_name_input = TextInput(display_text='ECMWF Watershed Data Store Name',
                                                       name='ecmwf-data-store-watershed-name-input',
@@ -530,10 +525,9 @@ def add_watershed(request):
                                geoserver.id))
     session.close()
     if geoserver_list:
-        geoserver_select = {'display_text':'Select a Geoserver',
-                            'name':'geoserver-select',
-                            'options':geoserver_list,
-                            'placeholder':'Select a Geoserver'}
+        geoserver_select = SelectInput(display_text='Select a Geoserver',
+                                       name='geoserver-select',
+                                       options=geoserver_list,)
     else:
         geoserver_select = None
                                    
@@ -716,13 +710,10 @@ def edit_watershed(request):
             data_store_list.append(("%s (%s)" % (data_store.name, data_store.api_endpoint),
                                      data_store.id))
 
-        data_store_select = {
-                    'display_text': 'Select a Data Store',
-                    'name': 'data-store-select',
-                    'options': data_store_list,
-                    'placeholder': 'Select a Data Store',
-                    'initial' : ["%s (%s)" % (watershed.data_store.name, watershed.data_store.api_endpoint)]
-                    }
+        data_store_select = SelectInput(display_text='Select a Data Store',
+                                        name='data-store-select',
+                                        options=data_store_list,
+                                        initial=["%s (%s)" % (watershed.data_store.name, watershed.data_store.api_endpoint)],)
 
         ecmwf_data_store_watershed_name_input = TextInput(display_text='ECMWF Watershed Data Store Name',
                                                           name='ecmwf-data-store-watershed-name-input',
@@ -755,13 +746,10 @@ def edit_watershed(request):
             geoserver_list.append(( "%s (%s)" % (geoserver.name, geoserver.url),
                                    geoserver.id))
 
-        geoserver_select= {
-                    'display_text': 'Select a Geoserver',
-                    'name': 'geoserver-select',
-                    'options': geoserver_list,
-                    'placeholder': 'Select a Geoserver',
-                    'initial' : ["%s (%s)" % (watershed.geoserver.name, watershed.geoserver.url)]
-                    }
+        geoserver_select= SelectInput(display_text='Select a Geoserver',
+                                      name='geoserver-select',
+                                      options=geoserver_list,
+                                      initial=["%s (%s)" % (watershed.geoserver.name, watershed.geoserver.url)],)
 
         geoserver_drainage_line_input = TextInput(display_text='Geoserver Drainage Line Layer',
                                                   name='geoserver-drainage-line-input',
@@ -861,12 +849,10 @@ def add_data_store(request):
 
     session.close()
 
-    data_store_type_select_input = {
-                'display_text': 'Data Store Type',
-                'name': 'data-store-type-select',
-                'options': data_store_type_list,
-                'initial': data_store_type_list[0][0]
-                }          
+    data_store_type_select_input = SelectInput(display_text='Data Store Type',
+                                               name='data-store-type-select',
+                                               options=data_store_type_list,
+                                               initial=data_store_type_list[0][0],)
 
     data_store_endpoint_input = TextInput(display_text='Data Store API Endpoint',
                                           name='data-store-endpoint-input',
@@ -1077,13 +1063,10 @@ def add_watershed_group(request):
                               
     session.close()
     
-    watershed_select = {
-                'display_text': 'Select Watershed(s) to Add to Group',
-                'name': 'watershed_select',
-                'options': watershed_list,
-                'multiple': True,
-                'placeholder': 'Select Watershed(s)',
-                }
+    watershed_select = SelectInput(display_text='Select Watershed(s) to Add to Group',
+                                   name='watershed_select',
+                                   options=watershed_list,
+                                   multiple=True,)
  
     add_button = {'buttons': [
                                  {'display_text': 'Add Watershed Group',
