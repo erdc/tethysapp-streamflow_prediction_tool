@@ -12,7 +12,6 @@
     {% if watersheds_length > 0 %}
         <h1>Select a Watershed</h1>
         <form action="{% url 'streamflow_prediction_tool:map' %}" method="get">
-            <p id="too-many-watersheds-alert" class="alert alert-warning hidden" role="alert"><em>Warning: Selecting too many watersheds can make the operation of the app slow.</em></p>
             {% gizmo select_input watershed_select %}
             <div class="btn-group ">
                 <a name="submit-go-to-map" class="btn btn-success" role="button" onclick="document.forms[0].submit();" id="submit-go-to-map">
