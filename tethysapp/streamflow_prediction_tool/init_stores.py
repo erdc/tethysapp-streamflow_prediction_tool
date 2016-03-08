@@ -3,8 +3,8 @@
 ##  init_stores.py
 ##  streamflow_prediction_tool
 ##
-##  Created by Alan D. Snow 2015.
-##  Copyright © 2015 Alan D Snow. All rights reserved.
+##  Created by Alan D. Snow.
+##  Copyright © 2015-2016 Alan D. Snow. All rights reserved.
 ##  License: BSD 2-Clause
 
 from .model import (Base, BaseLayer, DataStore, DataStoreType, MainSettings,

@@ -56,31 +56,33 @@
             <input id="drainage-line-shp-upload-input" name="drainage-line-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
             <p class="help-block hidden">Must select file to submit!</p>
         </div>
-        <p class="help-block">This is the shapefile file representing the river network. Need .shp, .shx, .prj, .dbf files.</p>
-        <!-- Catchments !-->
-        {% gizmo text_input geoserver_catchment_input %}
+        <p class="help-block geo_upload">This is the shapefile file representing the river network. Need .shp, .shx, .prj, .dbf files.</p>
+        <!-- Boundaries !-->
+        {% gizmo text_input geoserver_boundary_input %}
         <div class="form-group geo_upload">
-            <label class="control-label" for="catchment-shp-upload-input">Catchment Shapefile (Optional)</label>
-            <input id="catchment-shp-upload-input" name="catchment-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
+            <label class="control-label" for="boundary-shp-upload-input">Boundary Shapefile (Optional)</label>
+            <input id="boundary-shp-upload-input" name="boundary-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
         </div>
-        <p class="help-block">This is the shapefile file representing the watershed basin. Need .shp, .shx, .prj, .dbf files.</p>
+        <p class="help-block geo_upload">This is the shapefile file representing the watershed basin. Need .shp, .shx, .prj, .dbf files.</p>
         <!-- Gages !-->
         {% gizmo text_input geoserver_gage_input %}
         <div class="form-group geo_upload">
             <label class="control-label" for="gage-shp-upload-input">Gage Shapefile (Optional)</label>
             <input id="gage-shp-upload-input" name="gage-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
         </div>
-        <p class="help-block">This is the shapefile file representing the gage stations. Need .shp, .shx, .prj, .dbf files.</p>
+        <p class="help-block geo_upload">This is the shapefile file representing the gage stations. Need .shp, .shx, .prj, .dbf files.</p>
+        <!-- Historical Flood Map Layer Group !-->
+        {% gizmo text_input geoserver_historical_flood_map_input %}
         <!-- AHPS Stations !-->
         {% gizmo text_input geoserver_ahps_station_input %}
         <div class="form-group geo_upload">
             <label class="control-label" for="ahps-station-shp-upload-input">AHPS Station Shapefile (Optional)</label>
             <input id="ahps-station-shp-upload-input" name="ahps-station-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
         </div>
-        <p class="help-block">This is the shapefile file representing the AHPS stations. Need .shp, .shx, .prj, .dbf files.</p>
+        <p class="help-block geo_upload">This is the shapefile file representing the AHPS stations. Need .shp, .shx, .prj, .dbf files.</p>
         <!-- Flood Map Search !-->
-        {% gizmo toggle_switch search_floodmap_toggle_switch %}
-        {% gizmo button_group add_button %}
+        {% comment %} {% gizmo toggle_switch search_floodmap_toggle_switch %} {% endcomment %}
+        {% gizmo button add_button %}
     {% else %}
         <div class="alert alert-danger" role="alert">No GeoServers found. You cannot add a watershed until you do.</div>
         <p> The good news is that there is a simple solution. All you have to do is click <a href="{% url 'streamflow_prediction_tool:add-geoserver' %}">here</a> and add one.</p>

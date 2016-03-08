@@ -3,7 +3,7 @@
 ##  controllers.py
 ##  streamflow_prediction_tool
 ##
-##  Created by Alan D. Snow, Curtis Rae, Shawn Crawley 2015.
+##  Created by Alan D. Snow, Curtis Rae, Shawn Crawley.
 ##  Copyright © 2015-2016 Alan D Snow, Curtis Rae, Shawn Crawley. All rights reserved.
 ##  License: BSD 2-Clause
 
@@ -17,7 +17,8 @@ from django.contrib.auth.decorators import user_passes_test, login_required
 from django.shortcuts import render
 
 #tethys imports
-from tethys_sdk.gizmos import SelectInput, TextInput, ToggleSwitch
+from tethys_sdk.gizmos import (Button, MessageBox, SelectInput, 
+                               TextInput, ToggleSwitch)
 
 #local imports
 from spt_dataset_manager.dataset_manager import GeoServerDatasetManager
@@ -90,9 +91,10 @@ def map(request):
             This gets the information about the watershed layers
             """
             layers_info = []
-            catchment_exists = False
+            boundary_exists = False
             gage_exists = False
-            ahps_station_exists = False            
+            ahps_station_exists = False
+            historical_flood_map_exists = False            
             #add layer urls to list and add their navigation items as well
             for watershed in watershed_list:
                 ecmwf_watershed_name = watershed.ecmwf_data_store_watershed_name if \
@@ -166,13 +168,13 @@ def map(request):
                 else:
                     geoserver_info['drainage_line']['geoserver_method'] = "simple"
                 
-                if watershed.geoserver_catchment_layer:
-                    #LOAD CATCHMENT
-                    geoserver_info['catchment'] = {'name': watershed.geoserver_catchment_layer.name,
-                                                   'latlon_bbox': json.loads(watershed.geoserver_catchment_layer.latlon_bbox),
-                                                   'projection': watershed.geoserver_catchment_layer.projection,
+                if watershed.geoserver_boundary_layer:
+                    #LOAD BOUNDARY
+                    geoserver_info['boundary'] = {'name': watershed.geoserver_boundary_layer.name,
+                                                  'latlon_bbox': json.loads(watershed.geoserver_boundary_layer.latlon_bbox),
+                                                  'projection': watershed.geoserver_boundary_layer.projection,
                                                   }
-                    catchment_exists = True
+                    boundary_exists = True
                 if watershed.geoserver_gage_layer:
                     #LOAD GAGE
                     geoserver_info['gage'] = {'name': watershed.geoserver_gage_layer.name,
@@ -189,18 +191,17 @@ def map(request):
                                                       'projection': watershed.geoserver_ahps_station_layer.projection,
                                                       }
                     ahps_station_exists = True                                  
-    ##            TODO: Add historical flood map layer            
-    ##            if watershed.geoserver_historical_flood_map_layer:
-    ##                #LOAD HISTORICAL FLOOD MAP
-    ##                geoserver_info['historical_flood_map'] = {'name': watershed.geoserver_historical_flood_map_layer.name,
-    ##                                                          'latlon_bbox': json.loads(watershed.geoserver_historical_flood_map_layer.latlon_bbox),
-    ##                                                          'projection': watershed.geoserver_historical_flood_map_layer.projection,
-    ##                                                          }
-    ##                historical_flood_map_exists = True
+                if watershed.geoserver_historical_flood_map_layer:
+                    #LOAD HISTORICAL FLOOD MAP
+                    geoserver_info['historical_flood_map'] = {'name': watershed.geoserver_historical_flood_map_layer.name,
+                                                              'latlon_bbox': json.loads(watershed.geoserver_historical_flood_map_layer.latlon_bbox),
+                                                              'projection': watershed.geoserver_historical_flood_map_layer.projection,
+                                                              }
+                    historical_flood_map_exists = True
                 
                 """
                 #LOAD IN PREDICTION FLOOD MAPS
-                if watershed.geoserver_search_for_flood_map and \
+                if watershed.geoserver_search_for_predicted_flood_map and \
                     watershed.ecmwf_data_store_watershed_name and \
                     watershed.ecmwf_data_store_subbasin_name:
                     #get geoserver manager
@@ -214,7 +215,7 @@ def map(request):
                                                            watershed.ecmwf_data_store_subbasin_name)
                                                            
                     if os.path.exists(path_to_rapid_output) and os.path.exists(path_to_watershed_files):
-                        geoserver_info['flood_maps'] = {'watershed': watershed.ecmwf_data_store_watershed_name,
+                        geoserver_info['predicted_flood_maps'] = {'watershed': watershed.ecmwf_data_store_watershed_name,
                                                         'subbasin': watershed.ecmwf_data_store_subbasin_name,
                                                         'geoserver_info_list': []}
                         flood_map_layer_name_beginning = "%s-%s-floodmap-" % (watershed.ecmwf_data_store_watershed_name,
@@ -237,7 +238,7 @@ def map(request):
                                         latlon_bbox = floodmap_info['result']['bounds'][:4]
                                         if (abs(float(latlon_bbox[0])-float(latlon_bbox[2]))>0.001 and\
                                             abs(float(latlon_bbox[1])-float(latlon_bbox[3]))>0.001):
-                                            geoserver_info['flood_maps']['geoserver_info_list'].append({'name': resource_name,
+                                            geoserver_info['predicted_flood_maps']['geoserver_info_list'].append({'name': resource_name,
                                                                                  'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
                                                                                  'projection': floodmap_info['result']['bounds'][-1],
                                                                                  'forecast_directory' : directory,
@@ -245,26 +246,26 @@ def map(request):
                                                                                 })
                                             flood_map_count += 1
                                         else:
-                                            geoserver_info['flood_maps']['geoserver_info_list'].append({'error': "Invalid bounding box ...",
+                                            geoserver_info['predicted_flood_maps']['geoserver_info_list'].append({'error': "Invalid bounding box ...",
                                                                                                      'forecast_directory' : directory,
                                                                                                      })
                                         #limit number of flood maps
                                         if flood_map_count >= 7:
                                             break
                                     else:
-                                        geoserver_info['flood_maps']['geoserver_info_list'].append({'error': floodmap_info['error'],
+                                        geoserver_info['predicted_flood_maps']['geoserver_info_list'].append({'error': floodmap_info['error'],
                                                                                                  'forecast_directory' : directory,
                                                                                                  })
                                         
                                 except Exception:
                                     error_msg = "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984."
-                                    geoserver_info['flood_maps']['geoserver_info_list'].append({'error': error_msg })
+                                    geoserver_info['predicted_flood_maps']['geoserver_info_list'].append({'error': error_msg })
                                     pass
                 """
                 if geoserver_info:                
                     layers_info.append(geoserver_info)
                 
-            return layers_info, catchment_exists, gage_exists, ahps_station_exists
+            return layers_info, boundary_exists, gage_exists, historical_flood_map_exists, ahps_station_exists
 
         #get/check information from AJAX request
         post_info = request.GET
@@ -298,7 +299,7 @@ def map(request):
 
             for watershed_layers_info in watershed_layers_info_array:
                 valid_date_list = []
-                flood_map_info = watershed_layers_info.get('flood_maps')
+                flood_map_info = watershed_layers_info.get('predicted_flood_maps')
                 if flood_map_info:
                     geoserver_info_list = flood_map_info.get('geoserver_info_list')
                     if geoserver_info_list:
@@ -328,13 +329,15 @@ def map(request):
                     
                 watershed_group  = session.query(WatershedGroup).get(group_id)
                 
-                layers_info, catchment_exists, gage_exists, ahps_station_exists = get_watershed_layers_info(watershed_group.watersheds)
+                layers_info, boundary_exists, gage_exists, historical_flood_map_exists, ahps_station_exists =\
+                    get_watershed_layers_info(watershed_group.watersheds)
                 
                 watershed_group_info_array.append({'group_id' : group_id,
                                                    'group_name' : watershed_group.name,
                                                    'watershed_layers_info' : layers_info,
-                                                   'catchment_exists' : catchment_exists,
+                                                   'boundary_exists' : boundary_exists,
                                                    'gage_exists' : gage_exists,
+                                                   'historical_flood_map_exists' : historical_flood_map_exists,
                                                    'ahps_station_exists' : ahps_station_exists,
                                                   })
 
@@ -443,14 +446,9 @@ def settings(request):
                                                 icon_append='glyphicon glyphicon-folder-open',
                                                 initial=main_settings.wrf_hydro_rapid_prediction_directory,)
               
-    submit_button = {'buttons': [
-                                 {'display_text': 'Submit',
-                                  'name': 'submit-changes-settings',
-                                  'attributes': 'id=submit-changes-settings',
-                                  'type': 'submit'
-                                  }
-                                ],
-                 }
+    submit_button = Button(display_text='Submit',
+                           name='submit-changes-settings',
+                           attributes={'id':'submit-changes-settings'},)
               
     context = {
                 'base_layer_select_input': base_layer_select_input,
@@ -536,28 +534,33 @@ def add_watershed(request):
                                               placeholder='e.g.: erfp:streams',
                                               icon_append='glyphicon glyphicon-link')
               
-    geoserver_catchment_input = TextInput(display_text='Geoserver Catchment Layer',
-                                          name='geoserver-catchment-input',
-                                          placeholder='e.g.: erfp:catchment',
-                                          icon_append='glyphicon glyphicon-link')
+    geoserver_boundary_input = TextInput(display_text='Geoserver Boundary Layer (Optional)',
+                                         name='geoserver-boundary-input',
+                                         placeholder='e.g.: erfp:boundary',
+                                         icon_append='glyphicon glyphicon-link')
               
-    geoserver_gage_input = TextInput(display_text='Geoserver Gage Layer',
+    geoserver_gage_input = TextInput(display_text='Geoserver Gage Layer  (Optional)',
                                      name='geoserver-gage-input',
                                      placeholder='e.g.: erfp:gage',
                                      icon_append='glyphicon glyphicon-link')
 
-    geoserver_ahps_station_input = TextInput(display_text='Geoserver AHPS Station Layer',
+    geoserver_historical_flood_map_input = TextInput(display_text='Geoserver Historical Flood Map Layer Group (Optional)',
+                                                     name='geoserver-historical-flood-map-input',
+                                                     placeholder='e.g.: erfp:historical_flood_map',
+                                                     icon_append='glyphicon glyphicon-link')
+
+    geoserver_ahps_station_input = TextInput(display_text='Geoserver AHPS Station Layer  (Optional)',
                                              name='geoserver-ahps-station-input',
                                              placeholder='e.g.: erfp:ahps-station',
                                              icon_append='glyphicon glyphicon-link')
               
-    search_floodmap_toggle_switch = ToggleSwitch(display_text='Search for Flood Maps?',
-                                                 name='search-floodmap-toggle',
-                                                 on_label='Yes',
-                                                 off_label='No',
-                                                 on_style='success',
-                                                 off_style='danger',
-                                                 initial=False,)
+##    search_floodmap_toggle_switch = ToggleSwitch(display_text='Search for Predicted Flood Maps?',
+##                                                 name='search-floodmap-toggle',
+##                                                 on_label='Yes',
+##                                                 off_label='No',
+##                                                 on_style='success',
+##                                                 off_style='danger',
+##                                                 initial=False,)
 
     shp_upload_toggle_switch = ToggleSwitch(display_text='Upload Shapefile?',
                                             name='shp-upload-toggle',
@@ -567,16 +570,11 @@ def add_watershed(request):
                                             off_style='danger',
                                             initial=True,)
 
-    add_button = {'buttons': [
-                                 {'display_text': 'Add Watershed',
-                                  'icon': 'glyphicon glyphicon-plus',
-                                  'style': 'success',
-                                  'name': 'submit-add-watershed',
-                                  'attributes': 'id=submit-add-watershed',
-                                  'type': 'submit'
-                                  }
-                             ],
-                 }
+    add_button = Button(display_text='Add Watershed',
+                        icon='glyphicon glyphicon-plus',
+                        style='success',
+                        name='submit-add-watershed',
+                        attributes={'id':'submit-add-watershed'},)
 
     context = {
                 'watershed_name_input': watershed_name_input,
@@ -588,11 +586,12 @@ def add_watershed(request):
                 'wrf_hydro_data_store_subbasin_name_input': wrf_hydro_data_store_subbasin_name_input,
                 'geoserver_select': geoserver_select,
                 'geoserver_drainage_line_input': geoserver_drainage_line_input,
-                'geoserver_catchment_input': geoserver_catchment_input,
+                'geoserver_boundary_input': geoserver_boundary_input,
                 'geoserver_gage_input': geoserver_gage_input,
+                'geoserver_historical_flood_map_input': geoserver_historical_flood_map_input,
                 'geoserver_ahps_station_input': geoserver_ahps_station_input,
                 'shp_upload_toggle_switch': shp_upload_toggle_switch,
-                'search_floodmap_toggle_switch': search_floodmap_toggle_switch,
+##                'search_floodmap_toggle_switch': search_floodmap_toggle_switch,
                 'add_button': add_button,
               }
 
@@ -608,12 +607,13 @@ def manage_watersheds(request):
     session = mainSessionMaker()
     num_watersheds = session.query(Watershed).count()
     session.close()
-    edit_modal = {'name': 'edit_watershed_modal',
-               'title': 'Edit Watershed',
-               'message': 'Loading ...',
-               'dismiss_button': 'Nevermind',
-               'affirmative_button': 'Save Changes',
-               'width': 500}
+    edit_modal = MessageBox(name='edit_watershed_modal',
+                            title='Edit Watershed',
+                            message='Loading ...',
+                            dismiss_button='Nevermind',
+                            affirmative_button='Save Changes',
+                            affirmative_attributes='id=edit_modal_submit',
+                            width=500)
     context = {
         'initial_page': 0,
         'num_watersheds': num_watersheds,
@@ -648,19 +648,13 @@ def manage_watersheds_table(request):
                                             off_style='danger',
                                             initial=False,)
                                             
-    prev_button = {'buttons': [
-                {'display_text' : 'Previous',
-                 'name' : 'prev_button',
-                 'type' : 'submit',
-                 'attributes': 'class=nav_button'}],
-                }
+    prev_button = Button(display_text='Previous',
+                         name='prev_button',
+                         attributes={'class' :'nav_button'})
 
-    next_button = {'buttons':[
-                {'display_text' : 'Next',
-                 'name' : 'next_button',
-                 'type' : 'submit',
-                 'attributes': 'class=nav_button'}],
-                }
+    next_button = Button(display_text='Next',
+                         name='next_button',
+                         attributes={'class':'nav_button'})
 
     context = {
                 'watersheds': watersheds,
@@ -757,11 +751,11 @@ def edit_watershed(request):
                                                   icon_append='glyphicon glyphicon-link',
                                                   initial=watershed.geoserver_drainage_line_layer.name if watershed.geoserver_drainage_line_layer else "",)
                                                   
-        geoserver_catchment_input = TextInput(display_text='Geoserver Catchment Layer (Optional)',
-                                              name='geoserver-catchment-input',
-                                              placeholder='e.g.: erfp:catchment',
+        geoserver_boundary_input = TextInput(display_text='Geoserver Boundary Layer (Optional)',
+                                              name='geoserver-boundary-input',
+                                              placeholder='e.g.: erfp:boundary',
                                               icon_append='glyphicon glyphicon-link',
-                                              initial=watershed.geoserver_catchment_layer.name if watershed.geoserver_catchment_layer else "",)
+                                              initial=watershed.geoserver_boundary_layer.name if watershed.geoserver_boundary_layer else "",)
                                               
         geoserver_gage_input = TextInput(display_text='Geoserver Gage Layer (Optional)',
                                          name='geoserver-gage-input',
@@ -769,19 +763,25 @@ def edit_watershed(request):
                                          icon_append='glyphicon glyphicon-link',
                                          initial=watershed.geoserver_gage_layer.name if watershed.geoserver_gage_layer else "",)
                                          
+        geoserver_historical_flood_map_input = TextInput(display_text='Geoserver Historical Flood Map Layer Group (Optional)',
+                                                         name='geoserver-historical-flood-map-input',
+                                                         placeholder='e.g.: erfp:historical_flood_map',
+                                                         icon_append='glyphicon glyphicon-link',
+                                                         initial=watershed.geoserver_historical_flood_map_layer.name if watershed.geoserver_historical_flood_map_layer else "",)
+
         geoserver_ahps_station_input = TextInput(display_text='Geoserver AHPS Station Layer (Optional)',
                                                  name='geoserver-ahps-station-input',
                                                  placeholder='e.g.: erfp:ahps-station',
                                                  icon_append='glyphicon glyphicon-link',
                                                  initial=watershed.geoserver_ahps_station_layer.name if watershed.geoserver_ahps_station_layer else "",)
 
-        search_floodmap_toggle_switch = ToggleSwitch(display_text='Search for Flood Maps?',
-                                                     name='search-floodmap-toggle',
-                                                     on_label='Yes',
-                                                     off_label='No',
-                                                     on_style='success',
-                                                     off_style='danger',
-                                                     initial=watershed.geoserver_search_for_flood_map,)
+##        search_floodmap_toggle_switch = ToggleSwitch(display_text='Search for Predicted Flood Maps?',
+##                                                     name='search-floodmap-toggle',
+##                                                     on_label='Yes',
+##                                                     off_label='No',
+##                                                     on_style='success',
+##                                                     off_style='danger',
+##                                                     initial=watershed.geoserver_search_for_predicted_flood_map,)
 
         shp_upload_toggle_switch = ToggleSwitch(display_text='Upload Shapefile?',
                                                 name='shp-upload-toggle',
@@ -791,16 +791,11 @@ def edit_watershed(request):
                                                 off_style='danger',
                                                 initial=False,)
 
-        add_button = {'buttons': [
-                                     {'display_text': 'Add Watershed',
-                                      'icon': 'glyphicon glyphicon-plus',
-                                      'style': 'success',
-                                      'name': 'submit-add-watershed',
-                                      'attributes': 'id=submit-add-watershed',
-                                      'type': 'submit'
-                                      }
-                                 ],
-                     }
+        add_button = Button(display_text='Add Watershed',
+                            icon='glyphicon glyphicon-plus',
+                            style='success',
+                            name='submit-add-watershed',
+                            attributes={'id':'submit-add-watershed'},)
 
         context = {
                     'watershed_name_input': watershed_name_input,
@@ -812,11 +807,12 @@ def edit_watershed(request):
                     'wrf_hydro_data_store_subbasin_name_input': wrf_hydro_data_store_subbasin_name_input,
                     'geoserver_select': geoserver_select,
                     'geoserver_drainage_line_input': geoserver_drainage_line_input,
-                    'geoserver_catchment_input': geoserver_catchment_input,
+                    'geoserver_boundary_input': geoserver_boundary_input,
                     'geoserver_gage_input': geoserver_gage_input,
+                    'geoserver_historical_flood_map_input': geoserver_historical_flood_map_input,
                     'geoserver_ahps_station_input': geoserver_ahps_station_input,
                     'shp_upload_toggle_switch': shp_upload_toggle_switch,
-                    'search_floodmap_toggle_switch': search_floodmap_toggle_switch,
+##                    'search_floodmap_toggle_switch': search_floodmap_toggle_switch,
                     'add_button': add_button,
                     'watershed' : watershed,
                   }
@@ -833,12 +829,10 @@ def add_data_store(request):
     #initialize session
     session = mainSessionMaker()
 
-    data_store_name_input = {
-                'display_text': 'Data Store Server Name',
-                'name': 'data-store-name-input',
-                'placeholder': 'e.g.: My CKAN Server',
-                'icon_append':'glyphicon glyphicon-tag',
-              }
+    data_store_name_input = TextInput(display_text='Data Store Server Name',
+                                      name='data-store-name-input',
+                                      placeholder='e.g.: My CKAN Server',
+                                      icon_append='glyphicon glyphicon-tag',)
 
     # Query DB for data store types
     data_store_types = session.query(DataStoreType).filter(DataStoreType.id>1).all()
@@ -864,16 +858,11 @@ def add_data_store(request):
                                          placeholder='e.g.: a1b2c3-d4e5d6-f7g8h9',
                                          icon_append='glyphicon glyphicon-lock',)
 
-    add_button = {'buttons': [
-                                 {'display_text': 'Add Data Store',
-                                  'icon': 'glyphicon glyphicon-plus',
-                                  'style': 'success',
-                                  'name': 'submit-add-data-store',
-                                  'attributes': 'id=submit-add-data-store',
-                                  'type': 'submit'
-                                  }
-                                ],
-                 }
+    add_button = Button(display_text='Add Data Store',
+                        icon='glyphicon glyphicon-plus',
+                        style='success',
+                        name='submit-add-data-store',
+                        attributes={'id':'submit-add-data-store'},)
 
     context = {
                 'data_store_name_input': data_store_name_input,
@@ -882,6 +871,7 @@ def add_data_store(request):
                 'data_store_api_key_input': data_store_api_key_input,
                 'add_button': add_button,
               }
+              
     return render(request, 'streamflow_prediction_tool/add_data_store.html', context)
 
 @user_passes_test(user_permission_test)
@@ -916,19 +906,13 @@ def manage_data_stores_table(request):
                         .order_by(DataStore.name) \
                         .all()[(page * RESULTS_PER_PAGE):((page + 1)*RESULTS_PER_PAGE)]
 
-    prev_button = {'buttons': [
-                {'display_text' : 'Previous',
-                 'name' : 'prev_button',
-                 'type' : 'submit',
-                 'attributes': 'class=nav_button'}],
-                }
+    prev_button = Button(display_text='Previous',
+                         name='prev_button',
+                         attributes={'class':'nav_button'},)
 
-    next_button = {'buttons':[
-                {'display_text' : 'Next',
-                 'name' : 'next_button',
-                 'type' : 'submit',
-                 'attributes': 'class=nav_button'}],
-                }
+    next_button = Button(display_text='Next',
+                         name='next_button',
+                         attributes={'class':'nav_button'},)
 
     context = {
                 'prev_button' : prev_button,
@@ -962,16 +946,11 @@ def add_geoserver(request):
                                          placeholder='e.g.: admin',
                                          icon_append='glyphicon glyphicon-user',)
         
-    add_button = {'buttons': [
-                                 {'display_text': 'Add Geoserver',
-                                  'icon': 'glyphicon glyphicon-plus',
-                                  'style': 'success',
-                                  'name': 'submit-add-geoserver',
-                                  'attributes': 'id=submit-add-geoserver',
-                                  'type': 'submit'
-                                  }
-                                ],
-                 }
+    add_button = Button(display_text='Add Geoserver',
+                        icon='glyphicon glyphicon-plus',
+                        style='success',
+                        name='submit-add-geoserver',
+                        attributes={'id':'submit-add-geoserver'},)
 
     context = {
                 'geoserver_name_input': geoserver_name_input,
@@ -1014,19 +993,13 @@ def manage_geoservers_table(request):
                         .order_by(Geoserver.name, Geoserver.url) \
                         .all()[(page * RESULTS_PER_PAGE):((page + 1)*RESULTS_PER_PAGE)]
 
-    prev_button = {'buttons': [
-                {'display_text' : 'Previous',
-                 'name' : 'prev_button',
-                 'type' : 'submit',
-                 'attributes': 'class=nav_button'}],
-                }
+    prev_button = Button(display_text='Previous',
+                         name='prev_button',
+                         attributes={'class':'nav_button'},)
 
-    next_button = {'buttons':[
-                {'display_text' : 'Next',
-                 'name' : 'next_button',
-                 'type' : 'submit',
-                 'attributes': 'class=nav_button'}],
-                }
+    next_button = Button(display_text='Next',
+                         name='next_button',
+                         attributes={'class':'nav_button'},)
 
     context = {
                 'prev_button' : prev_button,
@@ -1068,16 +1041,11 @@ def add_watershed_group(request):
                                    options=watershed_list,
                                    multiple=True,)
  
-    add_button = {'buttons': [
-                                 {'display_text': 'Add Watershed Group',
-                                  'icon': 'glyphicon glyphicon-plus',
-                                  'style': 'success',
-                                  'name': 'submit-add-watershed-group',
-                                  'attributes': 'id=submit-add-watershed-group',
-                                  'type': 'submit'
-                                  }
-                                ],
-                 }
+    add_button = Button(display_text='Add Watershed Group',
+                        icon='glyphicon glyphicon-plus',
+                        style='success',
+                        name='submit-add-watershed-group',
+                        attributes={'id':'submit-add-watershed-group'},)
 
     context = {
                 'watershed_group_name_input': watershed_group_name_input,
@@ -1122,19 +1090,13 @@ def manage_watershed_groups_table(request):
                         .all()
 
 
-    prev_button = {'buttons': [
-                {'display_text' : 'Previous',
-                 'name' : 'prev_button',
-                 'type' : 'submit',
-                 'attributes': 'class=nav_button'}],
-                }
+    prev_button = Button(display_text='Previous',
+                         name='prev_button',
+                         attributes={'class':'nav_button'},)
 
-    next_button = {'buttons':[
-                {'display_text' : 'Next',
-                 'name' : 'next_button',
-                 'type' : 'submit',
-                 'attributes': 'class=nav_button'}],
-                }
+    next_button = Button(display_text='Next',
+                         name='next_button',
+                         attributes={'class':'nav_button'},)
 
     context = {
                 'prev_button' : prev_button,

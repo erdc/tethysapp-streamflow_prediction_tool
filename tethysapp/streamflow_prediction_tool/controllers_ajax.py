@@ -241,24 +241,22 @@ def geoserver_delete(request):
         post_info = request.POST
         geoserver_id = post_info.get('geoserver_id')
     
-        if int(geoserver_id) != 1:
-            #initialize session
-            session = mainSessionMaker()
+        #initialize session
+        session = mainSessionMaker()
+        try:
+            #delete geoserver
             try:
-                #delete geoserver
-                try:
-                    geoserver = session.query(Geoserver).get(geoserver_id)
-                except ObjectDeletedError:
-                    session.close()
-                    return JsonResponse({ 'error': "The geoserver to delete does not exist." })
-                session.delete(geoserver)
-                session.commit()
+                geoserver = session.query(Geoserver).get(geoserver_id)
+            except ObjectDeletedError:
                 session.close()
-            except IntegrityError:
-                session.close()
-                return JsonResponse({ 'error': "This geoserver is connected with a watershed! Must remove connection to delete." })
-            return JsonResponse({ 'success': "Geoserver sucessfully deleted!" })
-        return JsonResponse({ 'error': "Cannot change this geoserver." })
+                return JsonResponse({ 'error': "The geoserver to delete does not exist." })
+            session.delete(geoserver)
+            session.commit()
+            session.close()
+        except IntegrityError:
+            session.close()
+            return JsonResponse({ 'error': "This geoserver is connected with a watershed! Must remove connection to delete." })
+        return JsonResponse({ 'success': "Geoserver sucessfully deleted!" })
     return JsonResponse({ 'error': "A problem with your request exists." })
 
 @user_passes_test(user_permission_test)
@@ -861,13 +859,21 @@ def watershed_add(request):
         subbasin_clean_name = format_name(subbasin_name)
         data_store_id = post_info.get('data_store_id')
         geoserver_id = post_info.get('geoserver_id')
-        geoserver_search_for_flood_map = post_info.get('geoserver_search_for_flood_map')
+        geoserver_search_for_predicted_flood_map = post_info.get('geoserver_search_for_predicted_flood_map')
         #REQUIRED TO HAVE drainage_line from one of these
         #layer names
         geoserver_drainage_line_layer_name = post_info.get('geoserver_drainage_line_layer')
+        geoserver_boundary_layer_name = post_info.get('geoserver_boundary_layer')
+        geoserver_gage_layer_name = post_info.get('geoserver_gage_layer')
+        geoserver_historical_flood_map_layer_name = post_info.get('geoserver_historical_flood_map_layer')
+        geoserver_ahps_station_layer_name = post_info.get('geoserver_ahps_station_layer')
         #shape files
         drainage_line_shp_file = request.FILES.getlist('drainage_line_shp_file')
         geoserver_drainage_line_layer = None
+        geoserver_boundary_layer = None
+        geoserver_gage_layer = None
+        geoserver_historical_flood_map_layer = None
+        geoserver_ahps_station_layer = None
         
         #CHECK DATA
         #make sure information exists 
@@ -951,7 +957,7 @@ def watershed_add(request):
                 geoserver_manager.check_shapefile_input_files(drainage_line_shp_file)
             except Exception as ex:
                 session.close()
-                return JsonResponse({'error' : 'Drainage Line Error: %s.' % ex })
+                return JsonResponse({'error' : 'Drainage Line layer upload error: %s.' % ex })
 
         #UPLOAD DRAINAGE LINE
         try:
@@ -963,10 +969,58 @@ def watershed_add(request):
                                                                    layer_required=True)
         except Exception as ex:
             session.close()
-            return JsonResponse({'error' : "Drainage Line layer upload error: %s" % ex})
+            return JsonResponse({'error' : "Drainage Line layer update error: %s" % ex})
                 
 
-        
+        #UPDATE BOUNDARY
+        try:
+            geoserver_boundary_layer = update_geoserver_layer(None, 
+                                                              geoserver_boundary_layer_name, 
+                                                              None,
+                                                              geoserver_manager, 
+                                                              session, 
+                                                              layer_required=False)
+        except Exception as ex:
+            session.close()
+            return JsonResponse({'error' : "Boundary layer update error: %s" % ex})
+
+        #UPDATE GAGE
+        try:
+            geoserver_gage_layer = update_geoserver_layer(None, 
+                                                          geoserver_gage_layer_name, 
+                                                          None,
+                                                          geoserver_manager, 
+                                                          session, 
+                                                          layer_required=False)
+        except Exception as ex:
+            session.close()
+            return JsonResponse({'error' : "Gage layer update error: %s" % ex})
+
+        #UPDATE HISTORICAL FLOOD MAP LAYER GROUP
+        try:
+            geoserver_historical_flood_map_layer = update_geoserver_layer(None, 
+                                                                          geoserver_historical_flood_map_layer_name, 
+                                                                          None,
+                                                                          geoserver_manager, 
+                                                                          session, 
+                                                                          layer_required=False,
+                                                                          is_layer_group=True)
+        except Exception as ex:
+            session.close()
+            return JsonResponse({'error' : "Historical Flood Map layer update error: %s" % ex})
+
+        #UPDATE AHPS STATION
+        try:
+            geoserver_ahps_station_layer = update_geoserver_layer(None, 
+                                                                  geoserver_ahps_station_layer_name, 
+                                                                  None,
+                                                                  geoserver_manager, 
+                                                                  session, 
+                                                                  layer_required=False)
+        except Exception as ex:
+            session.close()
+            return JsonResponse({'error' : "AHPS Station layer update error: %s" % ex})
+
         #add watershed
         watershed = Watershed(watershed_name.strip(), 
                               subbasin_name.strip(), 
@@ -980,10 +1034,11 @@ def watershed_add(request):
                               wrf_hydro_data_store_subbasin_name.strip(),
                               geoserver_id, 
                               geoserver_drainage_line_layer,
-                              None,
-                              None,
-                              None,
-                              geoserver_search_for_flood_map,
+                              geoserver_boundary_layer,
+                              geoserver_gage_layer,
+                              geoserver_historical_flood_map_layer,
+                              geoserver_ahps_station_layer,
+                              geoserver_search_for_predicted_flood_map,
                               )
         session.add(watershed)
         session.commit()
@@ -1085,14 +1140,11 @@ def watershed_delete(request):
             delete_old_watershed_files(watershed, main_settings.ecmwf_rapid_prediction_directory,
                                        main_settings.wrf_hydro_rapid_prediction_directory)
                                        
-            #delete associated geoserver database info
-            delete_from_database(session, watershed.geoserver_drainage_line_layer)
-            delete_from_database(session, watershed.geoserver_catchment_layer)
-            delete_from_database(session, watershed.geoserver_gage_layer)
-            delete_from_database(session, watershed.geoserver_ahps_station_layer)
+                                       
+            delete_from_database(session, watershed)
+            #NOTE: CASCADE removes associated geoserver layers
             
             #delete watershed from database
-            session.delete(watershed)
             session.commit()
             session.close()
 
@@ -1115,16 +1167,17 @@ def watershed_update(request):
         subbasin_clean_name = format_name(subbasin_name)
         data_store_id = post_info.get('data_store_id')
         geoserver_id = post_info.get('geoserver_id')
-        geoserver_search_for_flood_map = post_info.get('geoserver_search_for_flood_map')
+        geoserver_search_for_predicted_flood_map = post_info.get('geoserver_search_for_predicted_flood_map')
         #REQUIRED TO HAVE drainage_line from one of these
         #layer names
         geoserver_drainage_line_layer_name = post_info.get('geoserver_drainage_line_layer')
-        geoserver_catchment_layer_name = post_info.get('geoserver_catchment_layer')
+        geoserver_boundary_layer_name = post_info.get('geoserver_boundary_layer')
         geoserver_gage_layer_name = post_info.get('geoserver_gage_layer')
+        geoserver_historical_flood_map_layer_name = post_info.get('geoserver_historical_flood_map_layer')
         geoserver_ahps_station_layer_name = post_info.get('geoserver_ahps_station_layer')
         #shape files
         drainage_line_shp_file = request.FILES.getlist('drainage_line_shp_file')
-        catchment_shp_file = request.FILES.getlist('catchment_shp_file')
+        boundary_shp_file = request.FILES.getlist('boundary_shp_file')
         gage_shp_file = request.FILES.getlist('gage_shp_file')
         ahps_station_shp_file = request.FILES.getlist('ahps_station_shp_file')
         
@@ -1240,21 +1293,21 @@ def watershed_update(request):
                 session.close()
                 return JsonResponse({'error' : 'Drainage Line Error: %s.' % ex })
                 
-        if catchment_shp_file:
-            geoserver_catchment_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'catchment')
+        if boundary_shp_file:
+            geoserver_boundary_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'boundary')
             #check permissions to upload file
-            if watershed.geoserver_catchment_layer:
-                if not watershed.geoserver_catchment_layer.uploaded and \
-                    watershed.geoserver_catchment_layer.name == geoserver_manager.get_layer_name(geoserver_catchment_layer_name):
+            if watershed.geoserver_boundary_layer:
+                if not watershed.geoserver_boundary_layer.uploaded and \
+                    watershed.geoserver_boundary_layer.name == geoserver_manager.get_layer_name(geoserver_boundary_layer_name):
                     session.close()
-                    return JsonResponse({'error' : 'You do not have permissions to overwrite the catchment layer ...' })
+                    return JsonResponse({'error' : 'You do not have permissions to overwrite the boundary layer ...' })
 
             #check shapefiles
             try:
-                geoserver_manager.check_shapefile_input_files(catchment_shp_file)
+                geoserver_manager.check_shapefile_input_files(boundary_shp_file)
             except Exception as ex:
                 session.close()
-                return JsonResponse({'error' : 'Catchment Error: %s.' % ex })
+                return JsonResponse({'error' : 'Boundary Error: %s.' % ex })
                 
         if gage_shp_file:
             geoserver_gage_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'gage')
@@ -1301,17 +1354,17 @@ def watershed_update(request):
             return JsonResponse({'error' : "Drainage Line layer update error: %s" % ex})
             
 
-        #UPDATE CATCHMENT
+        #UPDATE Boundary
         try:
-            watershed.geoserver_catchment_layer = update_geoserver_layer(watershed.geoserver_catchment_layer, 
-                                                                         geoserver_catchment_layer_name, 
-                                                                         catchment_shp_file,
-                                                                         geoserver_manager, 
-                                                                         session, 
-                                                                         layer_required=False)
+            watershed.geoserver_boundary_layer = update_geoserver_layer(watershed.geoserver_boundary_layer, 
+                                                                        geoserver_boundary_layer_name, 
+                                                                        boundary_shp_file,
+                                                                        geoserver_manager, 
+                                                                        session, 
+                                                                        layer_required=False)
         except Exception as ex:
             session.close()
-            return JsonResponse({'error' : "Catchment layer update error: %s" % ex})
+            return JsonResponse({'error' : "Boundary layer update error: %s" % ex})
 
         #UPDATE GAGE
         try:
@@ -1324,6 +1377,19 @@ def watershed_update(request):
         except Exception as ex:
             session.close()
             return JsonResponse({'error' : "Gage layer update error: %s" % ex})
+
+        #UPDATE HISTORICAL FLOOD MAP LAYER GROUP
+        try:
+            watershed.geoserver_historical_flood_map_layer = update_geoserver_layer(watershed.geoserver_historical_flood_map_layer, 
+                                                                                    geoserver_historical_flood_map_layer_name, 
+                                                                                    None,
+                                                                                    geoserver_manager, 
+                                                                                    session, 
+                                                                                    layer_required=False,
+                                                                                    is_layer_group=True)
+        except Exception as ex:
+            session.close()
+            return JsonResponse({'error' : "Historical Flood Map layer update error: %s" % ex})
 
         #UPDATE AHPS STATION
         try:
@@ -1375,17 +1441,19 @@ def watershed_update(request):
         watershed.wrf_hydro_data_store_watershed_name = wrf_hydro_data_store_watershed_name
         watershed.wrf_hydro_data_store_subbasin_name = wrf_hydro_data_store_subbasin_name
         watershed.geoserver_id = geoserver_id
-        watershed.geoserver_search_for_flood_map = geoserver_search_for_flood_map
+        watershed.geoserver_search_for_predicted_flood_map = geoserver_search_for_predicted_flood_map
         
         
         response = {
                     'success': "Watershed sucessfully updated!", 
                     'geoserver_drainage_line_layer': watershed.geoserver_drainage_line_layer.name \
                                                      if watershed.geoserver_drainage_line_layer else "",
-                    'geoserver_catchment_layer': watershed.geoserver_catchment_layer.name \
-                                                 if watershed.geoserver_catchment_layer else "",
+                    'geoserver_boundary_layer': watershed.geoserver_boundary_layer.name \
+                                                 if watershed.geoserver_boundary_layer else "",
                     'geoserver_gage_layer': watershed.geoserver_gage_layer.name \
                                             if watershed.geoserver_gage_layer else "",
+                    'geoserver_historical_flood_map_layer': watershed.geoserver_historical_flood_map_layer.name \
+                                            if watershed.geoserver_historical_flood_map_layer else "",
                     'geoserver_ahps_station_layer': watershed.geoserver_ahps_station_layer.name \
                                                     if watershed.geoserver_ahps_station_layer else "",
                     }

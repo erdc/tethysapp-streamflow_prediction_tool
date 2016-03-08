@@ -1,7 +1,7 @@
 /*****************************************************************************
  * FILE:    manage_watersheds.js
- * AUTHOR:  Alan Snow
- * COPYRIGHT: © 2015 Alan D Snow. All rights reserved.
+ * AUTHOR:  Alan D. Snow, Curtis Rae, and Shawn Crawley
+ * COPYRIGHT: © 2015-2016 Alan D. Snow, Curtis Rae, and Shawn Crawley. All rights reserved.
  * LICENSE: BSD 2-Clause
  *****************************************************************************/
 
@@ -58,8 +58,9 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
 
         //initialize gizmo classes
         $('#geoserver-drainage-line-input').parent().parent().addClass('geo_input');
-        $('#geoserver-catchment-input').parent().parent().addClass('geo_input');
+        $('#geoserver-boundary-input').parent().parent().addClass('geo_input');
         $('#geoserver-gage-input').parent().parent().addClass('geo_input');
+        $('#geoserver-historical-flood-map-input').parent().parent().addClass('geo_input');
         $('#geoserver-ahps-station-input').parent().parent().addClass('geo_input');
         $('.geo_upload').addClass('hidden');
 
@@ -90,7 +91,7 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
         });
 
         //handle the submit event
-        $('.modal-footer').find('.btn-success').off().click(function () {
+        $('#edit_modal_submit').off().click(function () {
              //scroll back to top
             window.scrollTo(0,0);
             //clear messages
@@ -117,12 +118,13 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
             var wrf_hydro_data_store_watershed_name = "";
             var wrf_hydro_data_store_subbasin_name = "";
             var geoserver_drainage_line_layer = "";
-            var geoserver_catchment_layer = "";
+            var geoserver_boundary_layer = "";
             var geoserver_gage_layer = "";
+            var geoserver_historical_flood_map_layer = "";
             var geoserver_ahps_station_layer = "";
-            var geoserver_search_for_flood_map = false;
+            var geoserver_search_for_predicted_flood_map = false;
             var drainage_line_shp_files = [];
-            var catchment_shp_files = [];
+            var boundary_shp_files = [];
             var gage_shp_files = [];
             var ahps_station_shp_files = [];
 
@@ -167,10 +169,11 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
 
             //geoserver update
             geoserver_drainage_line_layer = $('#geoserver-drainage-line-input').val();
-            geoserver_catchment_layer = $('#geoserver-catchment-input').val(); //optional
+            geoserver_boundary_layer = $('#geoserver-boundary-input').val(); //optional
             geoserver_gage_layer = $('#geoserver-gage-input').val(); //optional
+            geoserver_historical_flood_map_layer = $('#geoserver-historical-flood-map-input').val(); //optional
             geoserver_ahps_station_layer = $('#geoserver-ahps-station-input').val(); //optional
-            geoserver_search_for_flood_map = $('#search-floodmap-toggle').bootstrapSwitch('state');
+            //geoserver_search_for_predicted_flood_map = $('#search-floodmap-toggle').bootstrapSwitch('state');
             //geoserver upload
             drainage_line_shp_files = $('#drainage-line-shp-upload-input')[0].files;
             if (drainage_line_shp_files.length > 0) {
@@ -180,12 +183,12 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                     $('#drainage-line-shp-upload-input').parent().removeClass('has-error');
                 }
             }
-            catchment_shp_files = $('#catchment-shp-upload-input')[0].files;
-            if (catchment_shp_files.length > 0) {
-                if(!checkShapefile(catchment_shp_files, safe_to_submit)) {
-                    $('#catchment-shp-upload-input').parent().addClass('has-error');
+            boundary_shp_files = $('#boundary-shp-upload-input')[0].files;
+            if (boundary_shp_files.length > 0) {
+                if(!checkShapefile(boundary_shp_files, safe_to_submit)) {
+                    $('#boundary-shp-upload-input').parent().addClass('has-error');
                 } else {
-                    $('#catchment-shp-upload-input').parent().removeClass('has-error');
+                    $('#boundary-shp-upload-input').parent().removeClass('has-error');
                 }
             }
             gage_shp_files = $('#gage-shp-upload-input')[0].files;
@@ -215,7 +218,7 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                     var submit_button_html = submit_button.html();
                     var xhr = null;
                     var xhr_no_files = null;
-                    var xhr_catchment = null;
+                    var xhr_boundary = null;
                     var xhr_gage = null;
                     var xhr_ahps_station = null;
                     var xhr_ecmwf_rapid = null;
@@ -238,10 +241,11 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                             data.append("wrf_hydro_data_store_watershed_name",wrf_hydro_data_store_watershed_name);
                             data.append("wrf_hydro_data_store_subbasin_name",wrf_hydro_data_store_subbasin_name);
                             data.append("geoserver_id", geoserver_id);
-                            data.append("geoserver_search_for_flood_map", geoserver_search_for_flood_map);
+                            data.append("geoserver_search_for_predicted_flood_map", geoserver_search_for_predicted_flood_map);
                             data.append("geoserver_drainage_line_layer", geoserver_drainage_line_layer);
-                            data.append("geoserver_catchment_layer", geoserver_catchment_layer);
+                            data.append("geoserver_boundary_layer", geoserver_boundary_layer);
                             data.append("geoserver_gage_layer", geoserver_gage_layer);
+                            data.append("geoserver_historical_flood_map_layer", geoserver_historical_flood_map_layer);
                             data.append("geoserver_ahps_station_layer", geoserver_ahps_station_layer);
                             for (var i = 0; i < drainage_line_shp_files.length; i++) {
                                 data.append("drainage_line_shp_file", drainage_line_shp_files[i]);
@@ -259,16 +263,16 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                                 drainage_success_message,
                                 "message_drainage_line");
 
-                            //upload catchment when drainage line finishes if catchment exist
+                            //upload boundary when drainage line finishes if boundary exist
                             jQuery.when(xhr).done(function (return_data) {
                                 if (return_data != null && typeof return_data != 'undefined') {
                                     if ('geoserver_drainage_line_layer' in return_data) {
                                         geoserver_drainage_line_layer = return_data['geoserver_drainage_line_layer'];
                                     }
                                 }
-                                //upload catchment when  drainage line finishes if exists
-                                if (catchment_shp_files.length >= 4) {
-                                    appendInfoMessage("Uploading Catchment ...", "message_catchment");
+                                //upload boundary when  drainage line finishes if exists
+                                if (boundary_shp_files.length >= 4) {
+                                    appendInfoMessage("Uploading Boundary ...", "message_boundary");
                                     var data = new FormData();
                                     data.append("watershed_id", watershed_id);
                                     data.append("watershed_name", watershed_name);
@@ -279,24 +283,25 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                                     data.append("wrf_hydro_data_store_watershed_name",wrf_hydro_data_store_watershed_name);
                                     data.append("wrf_hydro_data_store_subbasin_name",wrf_hydro_data_store_subbasin_name);
                                     data.append("geoserver_id", geoserver_id);
-                                    data.append("geoserver_search_for_flood_map", geoserver_search_for_flood_map);
+                                    data.append("geoserver_search_for_predicted_flood_map", geoserver_search_for_predicted_flood_map);
                                     data.append("geoserver_drainage_line_layer", geoserver_drainage_line_layer);
-                                    data.append("geoserver_catchment_layer", geoserver_catchment_layer);
+                                    data.append("geoserver_boundary_layer", geoserver_boundary_layer);
                                     data.append("geoserver_gage_layer", geoserver_gage_layer);
+                                    data.append("geoserver_historical_flood_map_layer", geoserver_historical_flood_map_layer);
                                     data.append("geoserver_ahps_station_layer", geoserver_ahps_station_layer);
-                                    for (var i = 0; i < catchment_shp_files.length; i++) {
-                                        data.append("catchment_shp_file", catchment_shp_files[i]);
+                                    for (var i = 0; i < boundary_shp_files.length; i++) {
+                                        data.append("boundary_shp_file", boundary_shp_files[i]);
                                     }
-                                    xhr_catchment = ajax_update_database_multiple_files("submit", 
+                                    xhr_boundary = ajax_update_database_multiple_files("submit", 
                                                                                         data,
-                                                                                        "Catchment Upload Success!",
-                                                                                        "message_catchment");
+                                                                                        "Boundary Upload Success!",
+                                                                                        "message_boundary");
                                 }
-                                //upload gage when catchment and drainage line finishes if gage exists
-                                jQuery.when(xhr_catchment).done(function (catchment_data) {
-                                    if (catchment_data != null && typeof catchment_data != 'undefined') {
-                                        if ('geoserver_catchment_layer' in catchment_data) {
-                                            geoserver_catchment_layer = catchment_data['geoserver_catchment_layer'];
+                                //upload gage when boundary and drainage line finishes if gage exists
+                                jQuery.when(xhr_boundary).done(function (boundary_data) {
+                                    if (boundary_data != null && typeof boundary_data != 'undefined') {
+                                        if ('geoserver_boundary_layer' in boundary_data) {
+                                            geoserver_boundary_layer = boundary_data['geoserver_boundary_layer'];
                                         }
                                     }
                                     if (gage_shp_files.length >= 4) {
@@ -311,10 +316,11 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                                         data.append("wrf_hydro_data_store_watershed_name",wrf_hydro_data_store_watershed_name);
                                         data.append("wrf_hydro_data_store_subbasin_name",wrf_hydro_data_store_subbasin_name);
                                         data.append("geoserver_id", geoserver_id);
-                                        data.append("geoserver_search_for_flood_map", geoserver_search_for_flood_map);
+                                        data.append("geoserver_search_for_predicted_flood_map", geoserver_search_for_predicted_flood_map);
                                         data.append("geoserver_drainage_line_layer", geoserver_drainage_line_layer);
-                                        data.append("geoserver_catchment_layer", geoserver_catchment_layer);
+                                        data.append("geoserver_boundary_layer", geoserver_boundary_layer);
                                         data.append("geoserver_gage_layer", geoserver_gage_layer);
+                                        data.append("geoserver_historical_flood_map_layer", geoserver_historical_flood_map_layer);
                                         data.append("geoserver_ahps_station_layer", geoserver_ahps_station_layer);
                                         for (var i = 0; i < gage_shp_files.length; i++) {
                                             data.append("gage_shp_file", gage_shp_files[i]);
@@ -342,10 +348,11 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                                             data.append("wrf_hydro_data_store_watershed_name",wrf_hydro_data_store_watershed_name);
                                             data.append("wrf_hydro_data_store_subbasin_name",wrf_hydro_data_store_subbasin_name);
                                             data.append("geoserver_id", geoserver_id);
-                                            data.append("geoserver_search_for_flood_map", geoserver_search_for_flood_map);
+                                            data.append("geoserver_search_for_predicted_flood_map", geoserver_search_for_predicted_flood_map);
                                             data.append("geoserver_drainage_line_layer", geoserver_drainage_line_layer);
-                                            data.append("geoserver_catchment_layer", geoserver_catchment_layer);
+                                            data.append("geoserver_boundary_layer", geoserver_boundary_layer);
                                             data.append("geoserver_gage_layer", geoserver_gage_layer);
+                                            data.append("geoserver_historical_flood_map_layer", geoserver_historical_flood_map_layer);
                                             data.append("geoserver_ahps_station_layer", geoserver_ahps_station_layer);
                                             for (var i = 0; i < ahps_station_shp_files.length; i++) {
                                                 data.append("ahps_station_shp_file", ahps_station_shp_files[i]);
@@ -360,9 +367,9 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                                             xhr_ecmwf_rapid = upload_AJAX_ECMWF_RAPID_input(watershed_id,
                                                                                             data_store_id);
                                             //when everything is finished
-                                            jQuery.when(xhr, xhr_catchment, xhr_gage,
+                                            jQuery.when(xhr, xhr_boundary, xhr_gage,
                                                         xhr_ahps_station, xhr_ecmwf_rapid)
-                                                .done(function(xhr_data, xhr_catchment_data, xhr_gage_data,
+                                                .done(function(xhr_data, xhr_boundary_data, xhr_gage_data,
                                                                xhr_ahps_station_data, xhr_ecmwf_rapid_data){
                                                 //update the input boxes to reflect change
                                                 getModalHTML(watershed_id, true);
@@ -390,10 +397,11 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                             wrf_hydro_data_store_watershed_name: wrf_hydro_data_store_watershed_name,
                             wrf_hydro_data_store_subbasin_name: wrf_hydro_data_store_subbasin_name,
                             geoserver_id: geoserver_id,
-                            geoserver_search_for_flood_map: geoserver_search_for_flood_map,
+                            geoserver_search_for_predicted_flood_map: geoserver_search_for_predicted_flood_map,
                             geoserver_drainage_line_layer: geoserver_drainage_line_layer,
-                            geoserver_catchment_layer: geoserver_catchment_layer,
+                            geoserver_boundary_layer: geoserver_boundary_layer,
                             geoserver_gage_layer: geoserver_gage_layer,
+                            geoserver_historical_flood_map_layer: geoserver_historical_flood_map_layer,
                             geoserver_ahps_station_layer: geoserver_ahps_station_layer,
                         };
 
@@ -523,6 +531,7 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
     $(function() {
         m_uploading_data = false;
         getTablePage();
+        $('#edit_modal_submit').removeAttr('data-dismiss');
         $('#edit_watershed_modal').on('hidden.bs.modal', function () {
             $("#edit_watershed_modal").find('.modal-body').html('<p class="lead">Loading ...</p>');
             getTablePage();

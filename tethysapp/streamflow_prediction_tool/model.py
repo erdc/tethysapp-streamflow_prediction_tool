@@ -3,8 +3,8 @@
 ##  model.py
 ##  streamflow_prediction_tool
 ##
-##  Created by Alan D. Snow 2015.
-##  Copyright © 2015 Alan D Snow. All rights reserved.
+##  Created by Alan D. Snow.
+##  Copyright © 2015-2016 Alan D Snow. All rights reserved.
 ##  License: BSD 2-Clause
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -148,8 +148,9 @@ class Watershed(Base):
     data_store_id = Column(Integer, ForeignKey('data_store.id'))
     geoserver_id = Column(Integer, ForeignKey('geoserver.id'))
     geoserver_drainage_line_layer_id = Column(Integer, ForeignKey('geoserver_layer.id'))
-    geoserver_catchment_layer_id = Column(Integer, ForeignKey('geoserver_layer.id'))
+    geoserver_boundary_layer_id = Column(Integer, ForeignKey('geoserver_layer.id'))
     geoserver_gage_layer_id = Column(Integer, ForeignKey('geoserver_layer.id'))
+    geoserver_historical_flood_map_layer_id = Column(Integer, ForeignKey('geoserver_layer.id'))
     geoserver_ahps_station_layer_id = Column(Integer, ForeignKey('geoserver_layer.id'))
     watershed_name = Column(String)
     subbasin_name = Column(String)
@@ -163,14 +164,26 @@ class Watershed(Base):
     wrf_hydro_data_store_subbasin_name = Column(String)
     geoserver = relationship("Geoserver")
     geoserver_drainage_line_layer = relationship("GeoServerLayer", 
-                                                 foreign_keys=[geoserver_drainage_line_layer_id])
-    geoserver_catchment_layer = relationship("GeoServerLayer", 
-                                             foreign_keys=[geoserver_catchment_layer_id])
+                                                 foreign_keys=[geoserver_drainage_line_layer_id],
+                                                 single_parent=True,
+                                                 cascade="save-update,merge,delete,delete-orphan")
+    geoserver_boundary_layer = relationship("GeoServerLayer", 
+                                            foreign_keys=[geoserver_boundary_layer_id],
+                                            single_parent=True,
+                                            cascade="save-update,merge,delete,delete-orphan")
     geoserver_gage_layer = relationship("GeoServerLayer", 
-                                        foreign_keys=[geoserver_gage_layer_id])
+                                        foreign_keys=[geoserver_gage_layer_id],
+                                        single_parent=True,
+                                        cascade="save-update,merge,delete,delete-orphan")
+    geoserver_historical_flood_map_layer = relationship("GeoServerLayer", 
+                                                        foreign_keys=[geoserver_historical_flood_map_layer_id],
+                                                        single_parent=True,
+                                                        cascade="save-update,merge,delete,delete-orphan")
     geoserver_ahps_station_layer = relationship("GeoServerLayer", 
-                                                foreign_keys=[geoserver_ahps_station_layer_id])
-    geoserver_search_for_flood_map = Column(Boolean)
+                                                foreign_keys=[geoserver_ahps_station_layer_id],
+                                                single_parent=True,
+                                                cascade="save-update,merge,delete,delete-orphan")
+    geoserver_search_for_predicted_flood_map = Column(Boolean)
     watershed_groups = relationship("WatershedGroup", 
                                     secondary='watershed_watershed_group_link')
                               
@@ -178,9 +191,9 @@ class Watershed(Base):
                  subbasin_clean_name, data_store_id, ecmwf_rapid_input_resource_id, 
                  ecmwf_data_store_watershed_name, ecmwf_data_store_subbasin_name,
                  wrf_hydro_data_store_watershed_name, wrf_hydro_data_store_subbasin_name,
-                 geoserver_id, geoserver_drainage_line_layer, geoserver_catchment_layer, 
-                 geoserver_gage_layer, geoserver_ahps_station_layer,
-                 geoserver_search_for_flood_map):
+                 geoserver_id, geoserver_drainage_line_layer, geoserver_boundary_layer, 
+                 geoserver_gage_layer, geoserver_historical_flood_map_layer,
+                 geoserver_ahps_station_layer, geoserver_search_for_predicted_flood_map):
 
         self.watershed_name = watershed_name
         self.subbasin_name = subbasin_name
@@ -194,10 +207,11 @@ class Watershed(Base):
         self.wrf_hydro_data_store_subbasin_name = wrf_hydro_data_store_subbasin_name
         self.geoserver_id = geoserver_id
         self.geoserver_drainage_line_layer = geoserver_drainage_line_layer
-        self.geoserver_catchment_layer = geoserver_catchment_layer
+        self.geoserver_boundary_layer = geoserver_boundary_layer
         self.geoserver_gage_layer = geoserver_gage_layer
+        self.geoserver_historical_flood_map_layer = geoserver_historical_flood_map_layer
         self.geoserver_ahps_station_layer = geoserver_ahps_station_layer
-        self.geoserver_search_for_flood_map = geoserver_search_for_flood_map
+        self.geoserver_search_for_predicted_flood_map = geoserver_search_for_predicted_flood_map
 
 class WatershedWatershedGroupLink(Base):
     '''

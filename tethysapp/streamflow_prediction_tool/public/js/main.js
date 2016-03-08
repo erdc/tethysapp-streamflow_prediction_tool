@@ -1,7 +1,7 @@
 /*****************************************************************************
  * FILE:    main.js
- * AUTHOR:  Alan Snow
- * COPYRIGHT: © 2015 Alan D Snow. All rights reserved.
+ * AUTHOR:  Alan D. Snow
+ * COPYRIGHT: © 2015-2016 Alan D Snow. All rights reserved.
  * LICENSE: BSD 2-Clause
  *****************************************************************************/
 
@@ -27,6 +27,7 @@ function csrfSafeMethod(method) {
     // these HTTP methods do not require CSRF protection
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
+
 //add csrf token to appropriate ajax requests
 $(function() {
     $.ajaxSetup({
@@ -37,6 +38,7 @@ $(function() {
         }
     });
 }); //document ready
+
 //FUNCTION: Check shapefile inputs to make sure required files are attached
 function checkShapefile(shapefile, safe_to_submit) {
     var required_extensions = ['shp', 'shx', 'prj','dbf'];
@@ -105,6 +107,7 @@ function checkInputWithError(input, safe_to_submit, one_parent, select_two) {
         return null;
     }
 }
+
 //form submission check function
 function checkTableCellInputWithError(input, safe_to_submit, error_msg) {
     var data_value = input.text();
@@ -128,6 +131,7 @@ function checkTableCellInputWithError(input, safe_to_submit, error_msg) {
         return null;
     }
 }
+
 //add error message to #message div
 function addErrorMessage(error, div_id) {
     var div_id_string = '#message';
@@ -146,6 +150,7 @@ function addErrorMessage(error, div_id) {
     .addClass('alert-danger');
  
 }
+
 //add warning message to #message div
 function addWarningMessage(error, div_id) {
     var div_id_string = '#message';
@@ -164,6 +169,7 @@ function addWarningMessage(error, div_id) {
     .addClass('alert-warning');
  
 }
+
 //add information message to #message div
 function addInfoMessage(message, div_id) {
     var div_id_string = '#message';
@@ -182,6 +188,7 @@ function addInfoMessage(message, div_id) {
     .addClass('alert-info');
  
 }
+
 //add success message to #message div
 function addSuccessMessage(message, div_id) {
     var div_id_string = '#message';
@@ -219,6 +226,7 @@ function appendErrorMessage(message, div_id, message_div_id) {
     )
     .removeClass('hidden');
 }
+
 //add error message to #message div
 function appendWarningMessage(message, div_id, message_div_id) {
     var div_id_string = '';
@@ -239,6 +247,7 @@ function appendWarningMessage(message, div_id, message_div_id) {
     )
     .removeClass('hidden');
 }
+
 //add info message to #message div
 function appendInfoMessage(message, div_id) {
     var div_id_string = '';
@@ -254,6 +263,7 @@ function appendInfoMessage(message, div_id) {
     )
     .removeClass('hidden');
 }
+
 //add success message to #message div
 function appendSuccessMessage(message, div_id) {
     var div_id_string = '';
@@ -280,7 +290,7 @@ function ajax_update_database(ajax_url, ajax_data, div_id) {
         url: ajax_url,
         dataType: "json",
         data: ajax_data
-    })
+    });
     xhr.done(function(data) {
         if("success" in data) {
             appendSuccessMessage(data['success'], div_id);
@@ -404,6 +414,7 @@ function submitRowData(submit_button, data, safe_to_submit) {
         return null;
     }
 }
+
 //delete row data
 function deleteRowData(submit_button, data, div_id) {
     if (window.confirm("Are you sure?")) {

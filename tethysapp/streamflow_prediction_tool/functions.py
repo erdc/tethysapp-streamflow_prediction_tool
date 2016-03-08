@@ -3,8 +3,8 @@
 ##  functions.py
 ##  streamflow_prediction_tool
 ##
-##  Created by Alan D. Snow 2015.
-##  Copyright © 2015 Alan D Snow. All rights reserved.
+##  Created by Alan D. Snow.
+##  Copyright © 2015-2016 Alan D. Snow. All rights reserved.
 ##  License: BSD 2-Clause
 
 import datetime
@@ -126,9 +126,9 @@ def delete_old_watershed_geoserver_files(watershed):
         if watershed.geoserver_drainage_line_layer.uploaded:
             geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_drainage_line_layer.name)
                                      
-    if watershed.geoserver_catchment_layer:
-        if watershed.geoserver_catchment_layer.uploaded:
-            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_catchment_layer.name)
+    if watershed.geoserver_boundary_layer:
+        if watershed.geoserver_boundary_layer.uploaded:
+            geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_boundary_layer.name)
                                      
     if watershed.geoserver_gage_layer:
         if watershed.geoserver_gage_layer.uploaded:
@@ -288,7 +288,8 @@ def handle_uploaded_file(f, file_path, file_name):
         for chunk in f.chunks():
             destination.write(chunk)
 
-def upload_geoserver_layer(geoserver_manager, resource_name, shp_file_list):
+def upload_geoserver_layer(geoserver_manager, resource_name, 
+                           shp_file_list, geoserver_layer):
     """
     Upload a geoserver layer and return associated result
     """
@@ -299,12 +300,12 @@ def upload_geoserver_layer(geoserver_manager, resource_name, shp_file_list):
         raw_latlon_bbox = layer_info['latlon_bbox'][:4]
         latlon_bbox=json_dumps([raw_latlon_bbox[0],raw_latlon_bbox[2],
                                 raw_latlon_bbox[1],raw_latlon_bbox[3]])
-        return GeoServerLayer(name=layer_name.strip(),
-                              uploaded=True, 
-                              latlon_bbox=latlon_bbox,
-                              projection=layer_info['projection'],
-                              attribute_list=json_dumps(layer_info['attributes']), 
-                              wfs_url=layer_info['wfs']['geojson'])
+        geoserver_layer.name = layer_name.strip()
+        geoserver_layer.uploaded = True
+        geoserver_layer.latlon_bbox = latlon_bbox
+        geoserver_layer.projection = layer_info['projection']
+        geoserver_layer.attribute_list = json_dumps(layer_info['attributes'])
+        geoserver_layer.wfs_url = layer_info['wfs']['geojson']
     else:
         raise Exception("Problems uploading {}".format(resource_name))
 
@@ -313,6 +314,7 @@ def update_geoserver_layer_information(geoserver_manager, geoserver_layer):
     Update information about geoserver layer
     """
     layer_info = geoserver_manager.dataset_engine.get_resource(resource_id=geoserver_layer.name)
+        
     if layer_info['success']:
         raw_latlon_bbox = layer_info['result']['latlon_bbox'][:4]
         latlon_bbox=json_dumps([raw_latlon_bbox[0],raw_latlon_bbox[2],
@@ -322,34 +324,60 @@ def update_geoserver_layer_information(geoserver_manager, geoserver_layer):
         geoserver_layer.attribute_list = json_dumps(layer_info['result']['attributes'])
         geoserver_layer.wfs_url = layer_info['result']['wfs']['geojson']
     else:
-        raise Exception("Problems uploading {0}: {1}".format(geoserver_layer.name, 
+        raise Exception("Problems uploading {0}: {1} ...".format(geoserver_layer.name, 
+                                                             layer_info['error']))
+
+def update_geoserver_layer_group_information(geoserver_manager, geoserver_layer):
+    """
+    Update information about geoserver layer
+    """
+    layer_info = geoserver_manager.dataset_engine.get_layer_group(geoserver_layer.name)
+        
+    if layer_info['success']:
+        raw_latlon_bbox = layer_info['result']['bounds'][:4]
+        if (abs(float(raw_latlon_bbox[0])-float(raw_latlon_bbox[2]))>0.001 and\
+            abs(float(raw_latlon_bbox[1])-float(raw_latlon_bbox[3]))>0.001):
+            latlon_bbox=json_dumps([raw_latlon_bbox[0],raw_latlon_bbox[2],
+                                    raw_latlon_bbox[1],raw_latlon_bbox[3]])
+            geoserver_layer.latlon_bbox = latlon_bbox
+            geoserver_layer.projection = layer_info['result']['bounds'][-1]
+        else:
+            raise Exception("Layer group ({0}) has invalid bounding box ...".format(geoserver_layer.name))
+    else:
+        raise Exception("Problems uploading {0}: {1} ...".format(geoserver_layer.name, 
                                                              layer_info['error']))
 
 def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
-                           geoserver_manager, session, layer_required=False):
+                           geoserver_manager, session, layer_required=False,
+                           is_layer_group=False):
     """
     This function performs the geoserver layer update based on ajax request
     """
     
     geoserver_layer_name = "" if not geoserver_layer_name else geoserver_layer_name.strip()
-    geoserver_layer = None
     #ADD NEW SHAPEFILE TO GEOSERVER
-    if shp_file:
+    if shp_file and not is_layer_group:
         #remove old geoserver layer
         if geoserver_layer and geoserver_layer.uploaded:
             geoserver_manager.purge_remove_geoserver_layer(geoserver_layer.name)
-
-        #create shapefile
-        geoserver_layer = upload_geoserver_layer(geoserver_manager, 
-                                                 geoserver_layer_name,
-                                                 shp_file)
+            
+        if not geoserver_layer:
+            #create new layer in database
+            geoserver_layer = GeoServerLayer("")
+            
+        #upload shapefile
+        upload_geoserver_layer(geoserver_manager, 
+                               geoserver_layer_name,
+                               shp_file,
+                               geoserver_layer)
+                               
     #CONNECT TO EXISTING LAYER ON GEOSERVER
     elif geoserver_layer_name:
         if geoserver_layer:
             #if the name of the layer changed, and was previously uploaded, 
             #delete from geoserver
             if geoserver_layer_name != geoserver_layer.name \
-            and geoserver_layer.uploaded:
+            and geoserver_layer.uploaded and not is_layer_group:
                 geoserver_manager.purge_remove_geoserver_layer(geoserver_layer.name)
             
             geoserver_layer.name = geoserver_layer_name
@@ -362,13 +390,15 @@ def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
     elif not geoserver_layer_name and geoserver_layer and not layer_required:
         if geoserver_layer.uploaded:
             geoserver_manager.purge_remove_geoserver_layer(geoserver_layer.name)
-            delete_from_database(session, geoserver_layer)
-            geoserver_layer = None
+        delete_from_database(session, geoserver_layer)
+        geoserver_layer = None
         
     #UPDATE LAYER INFORMATION
     if geoserver_layer and not shp_file:
-        update_geoserver_layer_information(geoserver_manager, geoserver_layer)
-    
+        if is_layer_group:
+            update_geoserver_layer_group_information(geoserver_manager, geoserver_layer)
+        else:
+            update_geoserver_layer_information(geoserver_manager, geoserver_layer)
     return geoserver_layer
 
 def user_permission_test(user):
