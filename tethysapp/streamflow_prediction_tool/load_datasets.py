@@ -139,7 +139,8 @@ def load_datasets():
                                                      wrf_hydro_rapid_prediction_directory)
     else:
         print "WRF-Hydro prediction location invalid. Please set to continue."
-
+    session.close()
+    
 def load_watershed(watershed):
     """
     Loads prediction datasets from data store for one watershed
@@ -164,7 +165,8 @@ def load_watershed(watershed):
     else:
         print "WRF-Hydro prediction location invalid. Please set to continue."
     
-        
+    session.close()
+    
 if __name__ == "__main__":
     load_datasets()
     #engine_url = 'https://ckan.test'
