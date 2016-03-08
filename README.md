@@ -8,13 +8,13 @@ See: https://github.com/CI-WATER/tethys and http://docs.tethys.ci-water.org**
 separately. See: https://github.com/erdc-cm/spt_ecmwf_autorapid_process*
 
 ##Prerequisites:
-- Tethys Platform (CKAN, PostgresQL, GeoServer)
+- Tethys Platform v1.3 (CKAN, PostgresQL, GeoServer)
 - RAPIDpy (Python package).
 
 ###Install RAPIDpy:
 For instructions, go to: https://github.com/erdc-cm/RAPIDpy.
 
-Note: before installing RAPIDpy into your python site-packages,
+Note: Before installing RAPIDpy into your python site-packages,
 activate your Tethys python environment:
 
 ```
