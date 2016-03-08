@@ -21,6 +21,12 @@ class StreamflowPredictionTool(TethysAppBase):
     package = 'streamflow_prediction_tool'
     root_url = 'streamflow-prediction-tool'
     color = '#34495e'
+    description = 'Provides 15-day streamflow predicted estimates by using ' \
+                  'ECMWF (ecmwf.int) runoff predictions routed with the RAPID ' \
+                  '(rapid-hub.org) program. Return period estimates ' \
+                  'and warning flags aid in determining the severity.'
+    enable_feedback = False
+    feedback_emails = []
         
     def url_maps(self):
         """
