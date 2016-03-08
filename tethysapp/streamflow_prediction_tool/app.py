@@ -156,7 +156,7 @@ class StreamflowPredictionTool(TethysAppBase):
         Add one or more persistent stores
         """
         stores = (PersistentStore(name='main_db',
-                                  initializer='init_stores:init_main_db',
+                                  initializer='streamflow_prediction_tool.init_stores.init_main_db',
                                   spatial=False
                 ),
         )
