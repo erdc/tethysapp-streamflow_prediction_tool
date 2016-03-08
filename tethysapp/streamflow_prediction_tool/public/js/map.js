@@ -1,7 +1,7 @@
 /*****************************************************************************
  * FILE:    map.js
- * AUTHOR:  Alan Snow
- * COPYRIGHT: © 2015 Alan D Snow. All rights reserved.
+ * AUTHOR:  Alan D. Snow
+ * COPYRIGHT: © 2015-2016 Alan D. Snow. All rights reserved.
  * LICENSE: BSD 2-Clause
  *****************************************************************************/
 
@@ -53,7 +53,7 @@ var ERFP_MAP = (function() {
         m_return_20_features_source,
         m_return_10_features_source,
         m_return_2_features_source,
-        m_flood_maps;
+        m_predicted_flood_maps;
 
 
 
@@ -430,7 +430,7 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: gets Drainage Line layer from attributes
     getDrainageLineLayer = function(watershed_layers_info) {
-        var drainage_line_layer_id = 'layer' + watershed_layers_info.id + 'g' + 0;
+        var drainage_line_layer_id = 'layer-' + watershed_layers_info.id + '-drainage_line';
         if ("error" in watershed_layers_info.drainage_line) {
             appendErrorMessage("Drainage Line Layer: " + watershed_layers_info.title + 
                                ": " + watershed_layers_info.drainage_line.error, 
@@ -1600,7 +1600,7 @@ var ERFP_MAP = (function() {
 
         var all_watershed_layers = [];
         m_drainage_line_layers = [];
-        m_flood_maps = [];
+        m_predicted_flood_maps = [];
 
         var watershed_group_iteration_array = [];
         var divide_into_groups = false;
@@ -1618,40 +1618,41 @@ var ERFP_MAP = (function() {
         watershed_group_iteration_array.forEach(function(watershed_group_info, group_iteration_index) {
 
             var group_drainage_line_layers = [];
-            var group_catchment_layers = [];
+            var group_boundary_layers = [];
             var group_gage_layers = [];
+            var group_historical_flood_map_layers = [];
             var group_ahps_station_layers = [];
             var group_return_20_layers = [];
             var group_return_10_layers = [];
             var group_return_2_layers = [];
-
+            
             //add watershed layers
             watershed_group_info.watershed_layers_info.forEach(function(watershed_layers_info) {
-                //add catchment if exists
-                if('catchment' in watershed_layers_info) {
-                    var catchment_layer_id = 'layer' + watershed_layers_info.id + 'g' + 1
-                    if ("error" in watershed_layers_info.catchment) {
-                        appendErrorMessage("Catchment Layer: " + watershed_layers_info.title + 
-                                            ": " + watershed_layers_info.catchment.error, 
-                                           "error_" + catchment_layer_id, "message-error");
+                //add boundary if exists
+                if('boundary' in watershed_layers_info) {
+                    var boundary_layer_id = 'layer-' + watershed_layers_info.id + '-boundary';
+                    if ("error" in watershed_layers_info.boundary) {
+                        appendErrorMessage("Boundary Layer: " + watershed_layers_info.title + 
+                                            ": " + watershed_layers_info.boundary.error, 
+                                           "error_" + boundary_layer_id, "message-error");
                     } else {
-                        var catchment_layer = getTileLayer(watershed_layers_info.catchment, watershed_layers_info.geoserver_url, catchment_layer_id, 0.5);
-                        if (catchment_layer != null) {
+                        var boundary_layer = getTileLayer(watershed_layers_info.boundary, watershed_layers_info.geoserver_url, boundary_layer_id, 0.5);
+                        if (boundary_layer != null) {
                             if (divide_into_groups) {
-                                group_catchment_layers.push(catchment_layer);
+                                group_boundary_layers.push(boundary_layer);
                             } else {
-                                all_watershed_layers.push(catchment_layer);
+                                all_watershed_layers.push(boundary_layer);
                             }
                             
                         } else {
-                            appendErrorMessage("Catchment Layer Invalid ... ", 
-                                               "error_" + catchment_layer_id, "message-error");
+                            appendErrorMessage("Boundary Layer Invalid ... ", 
+                                               "error_" + boundary_layer_id, "message-error");
                         }
                     }
                 }
                 //add gage if exists
                 if('gage' in watershed_layers_info) {
-                    var gage_layer_id = 'layer' + watershed_layers_info.id + 'g' + 2;
+                    var gage_layer_id = 'layer-' + watershed_layers_info.id + '-gage';
                     if ("error" in watershed_layers_info.gage) {
                         appendErrorMessage("Gage Layer: " + watershed_layers_info.title + 
                                            ": " + watershed_layers_info.gage.error, 
@@ -1670,16 +1671,42 @@ var ERFP_MAP = (function() {
                         }
                     }
                 }
+                //add historical flood map if exists
+                if('historical_flood_map' in watershed_layers_info) {
+                    var historical_flood_map_layer_id = 'layer-' + watershed_layers_info.id + '-historical_flood_map';
+                    if ("error" in watershed_layers_info.historical_flood_map) {
+                        appendErrorMessage("Historical Flood Map Layer: " + watershed_layers_info.title + 
+                                           ": " + watershed_layers_info.historical_flood_map.error, 
+                                           'error_' + historical_flood_map_layer_id, "message-error");
+                    } else {
+                        var historical_flood_map_layer = getTileLayer(watershed_layers_info.historical_flood_map, 
+                                                                      watershed_layers_info.geoserver_url, 
+                                                                      historical_flood_map_layer_id, 
+                                                                      0.5);
+
+                        historical_flood_map_layer.setMaxResolution(1000);
+                        if (historical_flood_map_layer != null) {
+                            if (divide_into_groups) {
+                                group_historical_flood_map_layers.push(historical_flood_map_layer);
+                            } else {
+                                all_watershed_layers.push(historical_flood_map_layer);
+                            }
+                        } else {
+                            appendErrorMessage("Historical Flood Map Layer Invalid ... ", 
+                                               "error_" + historical_flood_map_layer_id, "message-error");
+                        }
+                    }
+                }
                 //add flood maps if they exist
-                if('flood_maps' in watershed_layers_info) {
-                    var flood_maps = [];
-                    if ('geoserver_info_list' in watershed_layers_info.flood_maps) {
-                        var flood_map_dataset_id = 'layer' + watershed_layers_info.id + 'g' + 7;
-                        watershed_layers_info.flood_maps.geoserver_info_list.forEach(function(flood_map_info, flood_map_index){
+                if('predicted_flood_maps' in watershed_layers_info) {
+                    var predicted_flood_maps = [];
+                    if ('geoserver_info_list' in watershed_layers_info.predicted_flood_maps) {
+                        var flood_map_dataset_id = 'layer-' + watershed_layers_info.id + '-predicted_flood_maps';
+                        watershed_layers_info.predicted_flood_maps.geoserver_info_list.forEach(function(flood_map_info, flood_map_index){
                             var flood_map_sublayer_id = flood_map_dataset_id + "f" + flood_map_index;
                             if ("error" in flood_map_info) {
                                 
-                                appendErrorMessage("Flood Map Layer: " + watershed_layers_info.title + 
+                                appendErrorMessage("Predicted Flood Map Layer: " + watershed_layers_info.title + 
                                                     " " + flood_map_info.forecast_directory +
                                                    ": " + flood_map_info.error, 
                                                    'error_' +flood_map_sublayer_id , "message-error");
@@ -1695,25 +1722,25 @@ var ERFP_MAP = (function() {
                                     layer.set('date_timestep', flood_map_info.forecast_directory);
                                     layer.set("flood_map_sublayer_id", flood_map_sublayer_id);
                                     layer.setMaxResolution(1000);
-                                    flood_maps.push(layer);
+                                    predicted_flood_maps.push(layer);
                                 }
                                 else {
-                                    console.log("Invalid Floodmap Layer: ");
+                                    console.log("Invalid Predicted Floodmap Layer: ");
                                     console.log(flood_map_info);
                                 }
                                 
                             }
                         });
-                        if (flood_maps.length > 0) {
-                            m_flood_maps.push(new ol.layer.Group({ 
-                                layers: flood_maps,
+                        if (predicted_flood_maps.length > 0) {
+                            m_predicted_flood_maps.push(new ol.layer.Group({ 
+                                layers: predicted_flood_maps,
                             }));
                         }
                     }
                 }
                 //add ahps station if exists
                 if('ahps_station' in watershed_layers_info) {
-                    var ahps_station_layer_id = 'layer' + watershed_layers_info.id + 'g' + 3;
+                    var ahps_station_layer_id = 'layer-' + watershed_layers_info.id + '-ahps_station';
                     if ("error" in watershed_layers_info.ahps_station) {
                         appendErrorMessage("AHPS Station Layer: " + watershed_layers_info.title + 
                                            ": " + watershed_layers_info.ahps_station.error, 
@@ -1780,7 +1807,7 @@ var ERFP_MAP = (function() {
                 var return_20_layer = getWarningPointsLayer('rgba(128,0,128,0.7)', 
                                                              twenty_symbols, 
                                                              20, 
-                                                             'layer' + watershed_layers_info.id + 'g' + 4, 
+                                                             'layer-' + watershed_layers_info.id + '-20_year_warnings', 
                                                               watershed_layers_info.ecmwf_watershed,
                                                               watershed_layers_info.ecmwf_subbasin);
 
@@ -1788,14 +1815,14 @@ var ERFP_MAP = (function() {
                 var return_10_layer = getWarningPointsLayer('rgba(255,0,0,0.6)', 
                                                             ten_symbols, 
                                                             10, 
-                                                            'layer' + watershed_layers_info.id + 'g' + 5, 
+                                                            'layer-' + watershed_layers_info.id + '-10_year_warnings', 
                                                              watershed_layers_info.ecmwf_watershed,
                                                              watershed_layers_info.ecmwf_subbasin);
         
                 var return_2_layer = getWarningPointsLayer('rgba(255,255,0,0.3)', 
                                                            two_symbols, 
                                                            2, 
-                                                           'layer' + watershed_layers_info.id + 'g' + 6, 
+                                                           'layer-' + watershed_layers_info.id + '-2_year_warnings', 
                                                            watershed_layers_info.ecmwf_watershed,
                                                            watershed_layers_info.ecmwf_subbasin);
     
@@ -1819,11 +1846,11 @@ var ERFP_MAP = (function() {
                     all_watershed_layers.push(drainage_line_layer);
                 }
     
-                var catchment_layer = determineGeoServerLayerOrGroup(group_catchment_layers, divide_into_groups, 
-                                                                     "watershed_group-" + watershed_group_info.group_id + "-catchment_layer", 
+                var boundary_layer = determineGeoServerLayerOrGroup(group_boundary_layers, divide_into_groups, 
+                                                                     "watershed_group-" + watershed_group_info.group_id + "-boundary_layer", 
                                                                      "geoserver");
-                if (catchment_layer != null) {
-                    all_watershed_layers.push(catchment_layer);
+                if (boundary_layer != null) {
+                    all_watershed_layers.push(boundary_layer);
                 }
     
                 var gage_layer = determineGeoServerLayerOrGroup(group_gage_layers, divide_into_groups, 
@@ -1831,6 +1858,14 @@ var ERFP_MAP = (function() {
                                                                 "geoserver");
                 if (gage_layer != null) {
                     all_watershed_layers.push(gage_layer);
+                }
+
+                var historical_flood_map_layer = determineGeoServerLayerOrGroup(group_historical_flood_map_layers, 
+                                                                                divide_into_groups, 
+                                                                                "watershed_group-" + watershed_group_info.group_id + "-historical_flood_map_layer", 
+                                                                                "geoserver");
+                if (historical_flood_map_layer != null) {
+                    all_watershed_layers.push(historical_flood_map_layer);
                 }
     
                 var ahps_station_layer = determineGeoServerLayerOrGroup(group_ahps_station_layers, divide_into_groups, 
@@ -1877,8 +1912,8 @@ var ERFP_MAP = (function() {
 
         var all_map_layers = [m_basemap_layer].concat(all_watershed_layers);
 
-        if(m_flood_maps.length > 0) {
-            all_map_layers = all_map_layers.concat(m_flood_maps);
+        if(m_predicted_flood_maps.length > 0) {
+            all_map_layers = all_map_layers.concat(m_predicted_flood_maps);
         }
 
         //create map
@@ -1932,7 +1967,7 @@ var ERFP_MAP = (function() {
         });
 
         //bind flood maps
-        m_flood_maps.forEach(function(layer_group, j) {
+        m_predicted_flood_maps.forEach(function(layer_group, j) {
             layer_group.getLayers().forEach(function(layer, j) {
                 if (j==0){
                     bindInputs('#'+layer.get('layer_id'), layer);
@@ -1958,7 +1993,7 @@ var ERFP_MAP = (function() {
             var subbasin_name = $(this).parent().parent().parent().parent().attr('subbasin');
             var date_timestep = $(this).val();
 
-            m_flood_maps.forEach(function(layer_group, j) {
+            m_predicted_flood_maps.forEach(function(layer_group, j) {
                 layer_group.getLayers().forEach(function(layer, j) {
                     if (layer.get('watershed_name') == watershed_name && 
                         layer.get('subbasin_name') == subbasin_name) 
@@ -1968,7 +2003,7 @@ var ERFP_MAP = (function() {
                     }
                 });
             });
-            m_flood_maps.forEach(function(layer_group, j) {
+            m_predicted_flood_maps.forEach(function(layer_group, j) {
                 layer_group.getLayers().forEach(function(layer, j) {
                     if (layer.get('watershed_name') == watershed_name && 
                         layer.get('subbasin_name') == subbasin_name) 

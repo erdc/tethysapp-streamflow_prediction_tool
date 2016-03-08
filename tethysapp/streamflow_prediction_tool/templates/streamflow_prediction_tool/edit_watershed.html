@@ -1,7 +1,7 @@
 <!--  edit_watershed.html -->
 <!--  streamflow_prediction_tool -->
-<!--  Created by Alan D. Snow 2015. -->
-<!--  Copyright © 2015 Alan D Snow. All rights reserved. -->
+<!--  Created by Alan D. Snow, Curtis Rae, and Shawn Crawley. -->
+<!--  Copyright © 2015-2016 Alan D Snow, Curtis Rae, and Shawn Crawley. All rights reserved. -->
 <!--  License: BSD 2-Clause -->
 
 {% load tethys_gizmos %}
@@ -35,11 +35,11 @@
     <p class="help-block hidden">Must select file to submit!</p>
 </div>
 <p class="help-block geo_upload">Need .shp, .shx, .prj, .dbf files.</p>
-<!-- Catchments !-->
-{% gizmo text_input geoserver_catchment_input %}
+<!-- Boundaries !-->
+{% gizmo text_input geoserver_boundary_input %}
 <div class="form-group geo_upload">
-    <label class="control-label" for="catchment-shp-upload-input">Catchment Shapefile (Optional)</label>
-    <input id="catchment-shp-upload-input" name="catchment-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
+    <label class="control-label" for="boundary-shp-upload-input">Boundary Shapefile (Optional)</label>
+    <input id="boundary-shp-upload-input" name="boundary-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
 </div>
 <p class="help-block geo_upload">Need .shp, .shx, .prj, .dbf files.</p>
 <!-- Gages !-->
@@ -49,6 +49,8 @@
     <input id="gage-shp-upload-input" name="gage-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
 </div>
 <p class="help-block geo_upload">Need .shp, .shx, .prj, .dbf files.</p>
+<!-- Historical Flood Maps !-->
+{% gizmo text_input geoserver_historical_flood_map_input %}
 <!-- AHPS Stations !-->
 {% gizmo text_input geoserver_ahps_station_input %}
 <div class="form-group geo_upload">

@@ -1,7 +1,7 @@
 <!--  add_data_store.html -->
 <!--  streamflow_prediction_tool -->
-<!--  Created by Alan D. Snow 2015. -->
-<!--  Copyright © 2015 Alan D Snow. All rights reserved. -->
+<!--  Created by Alan D. Snow. -->
+<!--  Copyright © 2015-2016 Alan D Snow. All rights reserved. -->
 <!--  License: BSD 2-Clause -->
 
 {% extends "streamflow_prediction_tool/base.html" %}
@@ -18,7 +18,7 @@
     {% gizmo select_input data_store_type_select_input %}
     {% gizmo text_input data_store_endpoint_input %}
     {% gizmo text_input data_store_api_key_input %}
-    {% gizmo button_group add_button %}
+    {% gizmo button add_button %}
 {% endblock %}
 
 {% block scripts %}

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * FILE:    manage_watershed_groups.js
- * AUTHOR:  Alan Snow
- * COPYRIGHT: © 2015 Alan D Snow. All rights reserved.
+ * AUTHOR:  Alan D. Snow
+ * COPYRIGHT: © 2015-2016 Alan D Snow. All rights reserved.
  * LICENSE: BSD 2-Clause
  *****************************************************************************/
 

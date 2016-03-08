@@ -1,7 +1,7 @@
 <!--  map.html -->
 <!--  streamflow_prediction_tool -->
-<!--  Created by Alan D. Snow 2015. -->
-<!--  Copyright © 2015 Alan D Snow. All rights reserved. -->
+<!--  Created by Alan D. Snow. -->
+<!--  Copyright © 2015-2016 Alan D Snow. All rights reserved. -->
 <!--  License: BSD 2-Clause -->
 
 {% extends "streamflow_prediction_tool/base.html" %}
@@ -116,7 +116,7 @@
             {% if "drainage_line" in watershed_layers_info %}
                     <li class="dropdown">
                         <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Drainage Line<span class="caret"></span></a>
-                        <ul id="layer{{watershed_layers_info.id}}g0" class="dropdown-menu" role="menu">
+                        <ul id="layer-{{watershed_layers_info.id}}-drainage_line" class="dropdown-menu" role="menu">
                             <li><a class="zoom-to-layer" href="#">Zoom To Layer</a></li>
                             <li class="divider"></li>
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
@@ -126,10 +126,10 @@
                         </ul>
                     </li>
             {% endif%}
-            {% if "catchment" in watershed_layers_info %}
+            {% if "boundary" in watershed_layers_info %}
                     <li class="dropdown">
-                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Catchment<span class="caret"></span></a>
-                        <ul id="layer{{watershed_layers_info.id}}g1" class="dropdown-menu" role="menu">
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Boundary<span class="caret"></span></a>
+                        <ul id="layer-{{watershed_layers_info.id}}-boundary" class="dropdown-menu" role="menu">
                             <li><a class="zoom-to-layer" href="#">Zoom To Layer</a></li>
                             <li class="divider"></li>
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
@@ -142,7 +142,7 @@
             {% if "gage" in watershed_layers_info %}
                     <li class="dropdown">
                         <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Gage<span class="caret"></span></a>
-                        <ul id="layer{{watershed_layers_info.id}}g2" class="dropdown-menu" role="menu">
+                        <ul id="layer-{{watershed_layers_info.id}}-gage" class="dropdown-menu" role="menu">
                             <li><a class="zoom-to-layer" href="#">Zoom To Layer</a></li>
                             <li class="divider"></li>
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
@@ -155,7 +155,20 @@
             {% if "ahps_station" in watershed_layers_info %}
                     <li class="dropdown">
                         <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">AHPS Station<span class="caret"></span></a>
-                        <ul id="layer{{watershed_layers_info.id}}g3" class="dropdown-menu" role="menu">
+                        <ul id="layer-{{watershed_layers_info.id}}-ahps_station" class="dropdown-menu" role="menu">
+                            <li><a class="zoom-to-layer" href="#">Zoom To Layer</a></li>
+                            <li class="divider"></li>
+                            <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
+                            <li><label style="margin-left:15px;">Opacity</label>
+                                <input style="margin-left:15px; width:80%;" class="opacity" type="range" min="0" max="1" step="0.01">
+                            </li>
+                        </ul>
+                    </li>
+            {% endif%}
+            {% if "historical_flood_map" in watershed_layers_info %}
+                    <li class="dropdown">
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Historical Flood Map<span class="caret"></span></a>
+                        <ul id="layer-{{watershed_layers_info.id}}-historical_flood_map" class="dropdown-menu" role="menu">
                             <li><a class="zoom-to-layer" href="#">Zoom To Layer</a></li>
                             <li class="divider"></li>
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
@@ -167,10 +180,10 @@
             {% endif%}
             {% if flood_map_date_selectors_len > forloop.counter0 %}
                 {% with flood_map_date_selector=flood_map_date_selectors|slice:"forloop.counter0"|first %} 
-                {% if "flood_maps" in watershed and flood_map_date_selector %}
+                {% if "predicted_flood_maps" in watershed and flood_map_date_selector %}
                     <li class="dropdown" watershed="{{watershed_layers_info.flood_maps.watershed}}" subbasin="{{watershed_layers_info.flood_maps.subbasin}}">
-                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Flood Map<span class="caret"></span></a>
-                        <ul id="layer{{watershed_layers_info.id}}g7" class="dropdown-menu" role="menu">
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Predicted Flood Maps<span class="caret"></span></a>
+                        <ul id="layer-{{watershed_layers_info.id}}-predicted_flood_maps" class="dropdown-menu" role="menu">
                             <li><a class="zoom-to-layer" href="#">Zoom To Layer</a></li>
                             <li class="divider"></li>
                             <li>{% gizmo select_input flood_map_date_selector %}</li>
@@ -186,7 +199,7 @@
             {% endif%}
                     <li class="dropdown hidden">
                         <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">20-Year Warnings<span class="caret"></span></a>
-                        <ul id="layer{{watershed_layers_info.id}}g4" class="dropdown-menu" role="menu">
+                        <ul id="layer-{{watershed_layers_info.id}}-20_year_warnings" class="dropdown-menu" role="menu">
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
                             <li><label style="margin-left:15px;">Opacity</label>
                                 <input style="margin-left:15px; width:80%;" class="opacity" type="range" min="0" max="1" step="0.01">
@@ -195,7 +208,7 @@
                     </li>
                     <li class="dropdown hidden">
                         <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">10-Year Warinings<span class="caret"></span></a>
-                        <ul id="layer{{watershed_layers_info.id}}g5" class="dropdown-menu" role="menu">
+                        <ul id="layer-{{watershed_layers_info.id}}-10_year_warnings" class="dropdown-menu" role="menu">
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
                             <li><label style="margin-left:15px;">Opacity</label>
                                 <input style="margin-left:15px; width:80%;" class="opacity" type="range" min="0" max="1" step="0.01">
@@ -204,7 +217,7 @@
                     </li>
                     <li class="dropdown hidden">
                         <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">2-Year Warnings<span class="caret"></span></a>
-                        <ul id="layer{{watershed_layers_info.id}}g6" class="dropdown-menu" role="menu">
+                        <ul id="layer-{{watershed_layers_info.id}}-2_year_warnings" class="dropdown-menu" role="menu">
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
                             <li><label style="margin-left:15px;">Opacity</label>
                                 <input style="margin-left:15px; width:80%;" class="opacity" type="range" min="0" max="1" step="0.01">
@@ -246,10 +259,10 @@
                             </li>
                         </ul>
                     </li>
-            {% if watershed_group_info.catchment_exists %}
+            {% if watershed_group_info.boundary_exists %}
                     <li class="dropdown">
-                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Catchment<span class="caret"></span></a>
-                        <ul id="watershed_group-{{watershed_group_info.group_id}}-catchment_layer" class="dropdown-menu" role="menu">
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Boundary<span class="caret"></span></a>
+                        <ul id="watershed_group-{{watershed_group_info.group_id}}-boundary_layer" class="dropdown-menu" role="menu">
                             <li><a class="zoom-to-layer" href="#">Zoom To Group</a></li>
                             <li class="divider"></li>
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
@@ -276,6 +289,19 @@
                     <li class="dropdown">
                         <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">AHPS Station<span class="caret"></span></a>
                         <ul id="watershed_group-{{watershed_group_info.group_id}}-ahps_station_layer" class="dropdown-menu" role="menu">
+                            <li><a class="zoom-to-layer" href="#">Zoom To Group</a></li>
+                            <li class="divider"></li>
+                            <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
+                            <li><label style="margin-left:15px;">Opacity</label>
+                                <input style="margin-left:15px; width:80%;" class="opacity" type="range" min="0" max="1" step="0.01">
+                            </li>
+                        </ul>
+                    </li>
+            {% endif %}
+            {% if watershed_group_info.historical_flood_map_exists %}
+                    <li class="dropdown">
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Historical Flood Map<span class="caret"></span></a>
+                        <ul id="watershed_group-{{watershed_group_info.group_id}}-historical_flood_map_layer" class="dropdown-menu" role="menu">
                             <li><a class="zoom-to-layer" href="#">Zoom To Group</a></li>
                             <li class="divider"></li>
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
