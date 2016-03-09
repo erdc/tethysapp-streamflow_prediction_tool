@@ -3,6 +3,8 @@
 
 [![License (3-Clause BSD)](https://img.shields.io/badge/license-BSD%203--Clause-yellow.svg)](https://github.com/erdc-cm/tethysapp-streamflow_prediction_tool/blob/master/LICENSE)
 
+[![DOI](https://zenodo.org/badge/19918/erdc-cm/tethysapp-streamflow_prediction_tool.svg)](https://zenodo.org/badge/latestdoi/19918/erdc-cm/tethysapp-streamflow_prediction_tool)
+
 *This app requires you to have the ECMWF AutoRAPID preprocessing completed 
 separately. See: https://github.com/erdc-cm/spt_ecmwf_autorapid_process*
 
