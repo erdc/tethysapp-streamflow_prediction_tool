@@ -3,14 +3,11 @@
 
 [![License (3-Clause BSD)](https://img.shields.io/badge/license-BSD%203--Clause-yellow.svg)](https://github.com/erdc-cm/tethysapp-streamflow_prediction_tool/blob/master/LICENSE)
 
-**This app is created to run in the Teyths Platform programming environment.
-See: https://github.com/CI-WATER/tethys and http://docs.tethys.ci-water.org**
-
 *This app requires you to have the ECMWF AutoRAPID preprocessing completed 
 separately. See: https://github.com/erdc-cm/spt_ecmwf_autorapid_process*
 
 ##Prerequisites:
-- Tethys Platform v1.3 (CKAN, PostgresQL, GeoServer)
+- Tethys Platform v1.3 (CKAN, PostgresQL, GeoServer): See: http://docs.tethysplatform.org/en/1.3.0/
 - RAPIDpy (Python package).
 
 ###Install RAPIDpy:
