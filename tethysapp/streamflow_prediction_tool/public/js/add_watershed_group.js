@@ -2,7 +2,7 @@
  * FILE:    add_Watershed_group.js
  * AUTHOR:  Alan D. Snow
  * COPYRIGHT: © 2015-2016 Alan D Snow. All rights reserved.
- * LICENSE: BSD 2-Clause
+ * LICENSE: BSD 3-Clause
  *****************************************************************************/
 
 //initialize help blockss

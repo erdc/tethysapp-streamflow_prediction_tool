@@ -2,7 +2,7 @@
  * FILE:    manage_watersheds.js
  * AUTHOR:  Alan D. Snow, Curtis Rae, and Shawn Crawley
  * COPYRIGHT: © 2015-2016 Alan D. Snow, Curtis Rae, and Shawn Crawley. All rights reserved.
- * LICENSE: BSD 2-Clause
+ * LICENSE: BSD 3-Clause
  *****************************************************************************/
 
 /*****************************************************************************
