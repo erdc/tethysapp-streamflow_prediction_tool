@@ -25,16 +25,6 @@
     <strong>Click <a href="#" target="_blank">here</a> to open a new window.</strong>
 </p>
 <p>
-    <b>Jump to:</b>
-    <ol>
-        <li><a href="#" id="adjust-settings-link" class="t-o-c">Adjust App Settings</a></li>
-        <li><a href="#" id="add-geoserver-link" class="t-o-c" >Add a Geoserver</a></li>
-        <li><a href="#" id="add-data-store-link" class="t-o-c">Add a Data Store</a></li>
-        <li><a href="#" id="add-watershed-link" class="t-o-c">Add a Watershed</a></li>
-        <li><a href="#" id="view-watershed-link" class="t-o-c">View a Watershed</a></li>
-    </ol>
-</p>
-<p>
 <ol>
     <li id="adjust-settings" class="how-to-steps">Adjust App Settings</li>
     <p>Before you can do anything, you must make sure that your app settings are correct. On the <strong>left menu bar</strong>
@@ -74,7 +64,7 @@
                     Each folder must have read and write permissions granted. To change permissions, locate the folder, right click on it
                     and select either "Get Info" (MAC users), or "Properties" (Linux or Windows users). There will be a tab containing
                     "Permissions" in its heading. Choose to change or edit these permissions and set them to both Read and Write.
-                    Or, if you are using a command prompt terminal simply type: <code>chmod - R 666 [directory path]</code>.
+                    If you are using a command prompt simply type (assuming the server user is <em>apache</em>): <code>#chown -r apache:apache [directory path]; chmod -R u+rx [directory path]</code>.
                 </p>
         </ul>
     <li id="add-geoserver" class="how-to-steps">Add a Geoserver</li>
@@ -203,68 +193,38 @@
             <h4><li>Select a Geoserver</li></h4>
                 <p>
                     Whether you added a new data store or not, there is always at least one option: "Local Server (media)". This is a geoserver that cannot be tampered
-                    with (changed/removed) since it corresponds to the computer you are currently on. There are three dynamic fields associated with this option.
+                    with (changed/removed) since it corresponds to the computer you are currently on. There are two dynamic fields associated with this option.
                 </p>
                 <ul>
-                    <h5><li> Local Server (media)</li></h5>
-                    <ul>
-                        <h6><li>Drainage Line KML File</li></h6>
-                            <p>You can upload a drainage line KML by choosing the file from your computer. This drainage line file is required as a bare minimum.</p>
-                        <h6><li>Catchment KML File (Optional)</li></h6>
-                            <p>You can upload a catchment KML by choosing the file from your computer. This is optional, as a watershed is funcional without it.</p>
-                        <h6><li>Gage KML File (Optional)</li></h6>
-                            <p>You can upload a gage KML by choosing the file from your computer. This is optional, as a watershed is funcional without it.</p>
-                    </ul>
-                    The other options in the drop-down will correspond to the geoservers that you have added previously. If one of these geoservers added by you is selected, there are
-                    various dynamic fields that appear.
-                    <h5><li> (Custom Geoserver)<br></h5>
-                    <ul>
-                        <h6><li>Upload Shapefile?</li></h6>
-                            <p> You can upload your own shapefiles to the selected geoserver if you have the files on your computer.
+                    <h5><li>Upload Shapefile?</li></h5>
+                        <p> You can upload your own shapefiles to the selected geoserver if you have the files on your computer.
+                        <ul>
+                            <h6><li>Yes</li></h6>
                             <ul>
-                                <h6><li>Yes</li></h6>
-                                    <p>If "Yes" is selected, you will get the following options:</p>
-                                        <ul>
-                                            <h6><li>Drainage Line Shapefile</li></h6>
-                                                <p>You can upload a drainage line shapefile by choosing the file from your computer. This drainage line file is required as a bare minimum.</p>
-                                            <h6><li>Catchment Shapefile (Optional)</li></h6>
-                                                <p>You can upload a catchment shapefile by choosing the file from your computer. This is optional, as a watershed is funcional without it.</p>
-                                            <h6><li>Gage Shapefile (Optional)</li></h6>
-                                                <p>You can upload a gage shapefile by choosing the file from your computer. This is optional, as a watershed is funcional without it.</p>
-                                            <h6><li>AHPS Station Shapefile (Optional)</li></h6>
-                                                <p>You can upload an AHPS station shapefile by choosing the file from your computer. This is optional, as a watershed is funcional without it.</p>
-                                        </ul>
+                                <h6><li>Drainage Line Shapefile</li></h6>
+                                    <p>You can upload a drainage line shapefile by choosing the files from your computer. This drainage line file is REQUIRED as a bare minimum.</p>
+                                <h6><li>Boundary Shapefile (Optional)</li></h6>
+                                    <p>You can upload a boundary shapefile by choosing the files from your computer.</p>
+                                <h6><li>Gage Shapefile (Optional)</li></h6>
+                                    <p>You can upload a gage shapefile by choosing the files from your computer.</p>
+                                <h6><li>AHPS Station Shapefile (Optional)</li></h6>
+                                    <p>You can upload an AHPS station shapefile by choosing the files from your computer.</p>
                             </ul>
+                        </ul>
+                        <ul>
+                            <h6><li>No</li></h6>
+                            <p>This option is for layers that have already been uploaded previously to the selected geoserver. You specify the name of this layer as it is found on the geoserver.</p>
                             <ul>
-                                <h6><li>No</li></h6>
-                                    <p>If "No" is selected, you will get the following options:</p>
-                                        <ul>
-                                            <h6><li>Geoserver Drainage Line Layer</li></h6>
-                                                <p>If this layer has already been uploaded previously to the selected geoserver (either by you or by someone else), you can specify the name of this layer as it is found on the geoserver.</p>
-                                            <h6><li>Geoserver Catchment Layer</li></h6>
-                                                <p>If this layer has already been uploaded previously to the selected geoserver (either by you or by someone else), you can specify the name of this layer as it is found on the geoserver.</p>
-                                            <h6><li>Geoserver Gage Layer</li></h6>
-                                                <p>If this layer has already been uploaded previously to the selected geoserver (either by you or by someone else), you can specify the name of this layer as it is found on the geoserver.</p>
-                                            <h6><li>Geoserver AHPS Station Layer</li></h6>
-                                                <p>If this layer has already been uploaded previously to the selected geoserver (either by you or by someone else), you can specify the name of this layer as it is found on the geoserver.</p>
-                                        </ul>
+                                <h6><li>Geoserver Drainage Line Layer</li></h6>
+                                    <p>This drainage line layer is REQUIRED as a bare minimum.</p>
+                                <h6><li>Geoserver Boundary Layer (Optional)</li></h6>
+                                <h6><li>Geoserver Gage Layer (Optional)</li></h6>
+                                <h6><li>Geoserver Historical Flood Map Layer Group (Optional)</li></h6>
+                                    <p>Note: This is NOT a layer. It is a layer group.</p>
+                                <h6><li>Geoserver AHPS Station Layer (Optional)</li></h6>
                             </ul>
-                    </ul>
-                    </li>
+                        </ul>
                 </ul>
             </ul>
-    <li id="view-watershed" class="how-to-steps">View a Watershed</li>
-        <p>
-            On the <strong>left menu bar</strong> under the <strong>App Navigation</strong> heading click the <strong>Select Watershed(s)</strong> option.
-        </p>
-        <p>You should see the following screen:</p>
-        <img src="{% static 'streamflow_prediction_tool/images/screenshot_view_watershed.png' %}" class="screenshots">
-        <br><br>        
-        <p>
-            Under the Select a Watershed heading is an empty field that when clicked will create a drop-down list of all of the watersheds that you have added. Simply select one (or more if you would like to 
-            view multiple simultaneously) and then click View Watersheds.
-            <br><br>
-            NOTE: Viewing multiple watersheds simultaneously could cause the load time to increase significantly.
-            
 </ol>
 {% endblock %}

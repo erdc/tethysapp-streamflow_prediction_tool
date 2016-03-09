@@ -15,14 +15,8 @@
     width: 60px;
 }
 .screenshots {    
-    width: 90%;    
+    width: 700px;    
     border: 2px solid black;
-}
-.t-o-c:hover {
-    text-decoration: none;
-}
-.t-o-c {
-    font-weight: bold;
 }
 .how-to-steps {
     font-size: 36px;
