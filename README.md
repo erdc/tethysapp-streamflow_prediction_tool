@@ -35,7 +35,7 @@ Then install the app in Tethys Platform.
 $ . /usr/lib/tethys/bin/activate
 $ cd tethysapp-streamflow_prediction_tool
 $ python setup.py develop
-$ tethys syncstores erfp_tool
+$ tethys syncstores streamflow_prediction_tool
 ```
 ###Installation for Production:
 ```
