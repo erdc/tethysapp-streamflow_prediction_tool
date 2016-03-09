@@ -51,7 +51,7 @@ var ERFP_MANAGE_DATA_STORES = (function() {
             var data_store_id = parent_row.find('.data-store-id').text();
             var data_store_name = checkTableCellInputWithError(parent_row.find('.data-store-name'),safe_to_submit);
             var data_store_api_endpoint = checkTableCellInputWithError(parent_row.find('.data-store-api-endpoint'),safe_to_submit);
-            var data_store_api_key = checkTableCellInputWithError(parent_row.find('.data-store-api-key'),safe_to_submit);
+            var data_store_api_key = checkTableCellInputWithError(parent_row.find('.data-store-api-key-input'),safe_to_submit);
         
             var data = {
                     data_store_id: data_store_id,

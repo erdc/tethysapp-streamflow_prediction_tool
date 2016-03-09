@@ -17,7 +17,14 @@
     {% gizmo text_input data_store_name_input %}
     {% gizmo select_input data_store_type_select_input %}
     {% gizmo text_input data_store_endpoint_input %}
-    {% gizmo text_input data_store_api_key_input %}
+    <div class="form-group">
+        <label class="control-label" for="data-store-api-key-input">Data Store API Key</label>
+        <div class="input-group">
+            <input id="data-store-api-key-input" class="form-control" name="data-store-api-key-input" type="password" placeholder="e.g.: a1b2c3-d4e5d6-f7g8h9">
+            <div class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></div>
+        </div>
+        <p class="help-block hidden">No data store API key specified.</p>
+    </div>
     {% gizmo button add_button %}
 {% endblock %}
 
