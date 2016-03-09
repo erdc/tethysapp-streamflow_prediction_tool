@@ -46,7 +46,7 @@ $ tethys syncstores streamflow_prediction_tool
 $ tethys manage collectstatic
 ```
 Restart the Apache Server:
-See: http://docs.tethys.ci-water.org/en/1.1.0/production/installation.html#enable-site-and-restart-apache
+See: http://docs.tethysplatform.org/en/1.3.0/production/installation.html#enable-site-and-restart-apache
 
 ##Updating the App:
 Update the local repository and Tethys Platform instance.
@@ -61,7 +61,7 @@ Reset the database if changes are made to the database (this will delete your ol
 $ tethys syncstores streamflow_prediction_tool -r
 ```
 Restart the Apache Server:
-See: http://tethys-platform.readthedocs.org/en/1.0.0/production.html#enable-site-and-restart-apache
+See: http://docs.tethysplatform.org/en/1.3.0/production/installation.html#enable-site-and-restart-apache
 
 # Troubleshooting
 ## ImportError: No module named packages.urllib3.poolmanager
