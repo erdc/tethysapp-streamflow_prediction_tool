@@ -1,6 +1,8 @@
 #Streamflow Prediction Tool App
 *tethysapp-streamflow_prediction_tool*
 
+[![License (3-Clause BSD)](https://img.shields.io/badge/license-BSD%203--Clause-yellow.svg)](https://github.com/erdc-cm/tethysapp-streamflow_prediction_tool/blob/master/LICENSE)
+
 **This app is created to run in the Teyths Platform programming environment.
 See: https://github.com/CI-WATER/tethys and http://docs.tethys.ci-water.org**
 
