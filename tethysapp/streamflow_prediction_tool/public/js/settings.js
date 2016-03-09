@@ -1,8 +1,8 @@
 /*****************************************************************************
  * FILE:    settings.js
  * AUTHOR:  Alan Snow
- * COPYRIGHT: © 2015 Alan D Snow. All rights reserved.
- * LICENSE: BSD 2-Clause
+ * COPYRIGHT: © 2015-2016 Alan D Snow. All rights reserved.
+ * LICENSE: BSD 3-Clause
  *****************************************************************************/
 
 //initialize help blockss

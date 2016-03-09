@@ -5,7 +5,7 @@
 ##
 ##  Created by Alan D. Snow, Curtis Rae, Shawn Crawley 2015.
 ##  Copyright © 2015-2016 Alan D Snow, Curtis Rae, Shawn Crawley. All rights reserved.
-##  License: BSD 2-Clause
+##  License: BSD 3-Clause
 
 from crontab import CronTab
 import datetime

@@ -5,7 +5,7 @@
 ##
 ##  Created by Alan D. Snow.
 ##  Copyright © 2015-2016 Alan D. Snow. All rights reserved.
-##  License: BSD 2-Clause
+##  License: BSD 3-Clause
 
 import os
 from shutil import rmtree
