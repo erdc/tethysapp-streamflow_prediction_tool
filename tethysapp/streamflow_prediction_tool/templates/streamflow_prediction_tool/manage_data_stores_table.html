@@ -32,7 +32,15 @@
             <td class="data-store-name" contenteditable>{{data_store.name}}</td>
             <td class="data-store-type">{{data_store.data_store_type.human_readable_name}}</td>
             <td class="data-store-api-endpoint" contenteditable>{{data_store.api_endpoint}}</td>
-            <td class="data-store-api-key" contenteditable>{{data_store.api_key}}</td>
+            <td class="data-store-api-key">
+                <div class="form-group">
+                    <div class="input-group">
+                        <input class="form-control data-store-api-key-input" name="data-store-api-key-input" type="password" value="{{data_store.api_key}}" placeholder="e.g.: a1b2c3-d4e5d6-f7g8h9">
+                        <div class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></div>
+                    </div>
+                    <p class="help-block hidden">No data store API key specified.</p>
+                </div>
+            </td>
         </tr>
     {% endfor %}
     </tbody>
