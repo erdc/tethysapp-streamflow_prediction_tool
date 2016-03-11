@@ -822,7 +822,6 @@ def settings_update(request):
                 cron_job = cron_manager.new(command=cron_command, 
                                             comment="erfp-dataset-download")
                 cron_job.every(1).hours()
-                print cron_job
             else:
                JsonResponse({ 'error': "Location of virtual environment not found. No changes made." }) 
        
@@ -874,7 +873,6 @@ def watershed_add(request):
         geoserver_gage_layer = None
         geoserver_historical_flood_map_layer = None
         geoserver_ahps_station_layer = None
-        
         #CHECK DATA
         #make sure information exists 
         if not watershed_name or not subbasin_name or not data_store_id \
@@ -1180,7 +1178,6 @@ def watershed_update(request):
         boundary_shp_file = request.FILES.getlist('boundary_shp_file')
         gage_shp_file = request.FILES.getlist('gage_shp_file')
         ahps_station_shp_file = request.FILES.getlist('ahps_station_shp_file')
-        
         #CHECK INPUT
         #check if variables exist
         if not watershed_id or not watershed_name or not subbasin_name or not data_store_id \
@@ -1225,33 +1222,33 @@ def watershed_update(request):
         ecmwf_data_store_subbasin_name = ""
         wrf_hydro_data_store_watershed_name = ""
         wrf_hydro_data_store_subbasin_name = ""
-        if(int(data_store_id)>1):
-            #check ecmwf inputs
-            ecmwf_ready = False
-            ecmwf_data_store_watershed_name = format_name(post_info.get('ecmwf_data_store_watershed_name'))
-            ecmwf_data_store_subbasin_name = format_name(post_info.get('ecmwf_data_store_subbasin_name'))
-            
-            if not ecmwf_data_store_watershed_name or not ecmwf_data_store_subbasin_name:
-                ecmwf_data_store_watershed_name = ""
-                ecmwf_data_store_subbasin_name = ""
-            else:
-                ecmwf_ready = True
-            
-            #check wrf-hydro inputs
-            wrf_hydro_ready = False
-            wrf_hydro_data_store_watershed_name = format_name(post_info.get('wrf_hydro_data_store_watershed_name'))
-            wrf_hydro_data_store_subbasin_name = format_name(post_info.get('wrf_hydro_data_store_subbasin_name'))
-            
-            if not wrf_hydro_data_store_watershed_name or not wrf_hydro_data_store_subbasin_name:
-                wrf_hydro_data_store_watershed_name = ""
-                wrf_hydro_data_store_subbasin_name = ""
-            else:
-                wrf_hydro_ready = True
+        
+        #check ecmwf inputs
+        ecmwf_ready = False
+        ecmwf_data_store_watershed_name = format_name(post_info.get('ecmwf_data_store_watershed_name'))
+        ecmwf_data_store_subbasin_name = format_name(post_info.get('ecmwf_data_store_subbasin_name'))
+        
+        if not ecmwf_data_store_watershed_name or not ecmwf_data_store_subbasin_name:
+            ecmwf_data_store_watershed_name = ""
+            ecmwf_data_store_subbasin_name = ""
+        else:
+            ecmwf_ready = True
+        
+        #check wrf-hydro inputs
+        wrf_hydro_ready = False
+        wrf_hydro_data_store_watershed_name = format_name(post_info.get('wrf_hydro_data_store_watershed_name'))
+        wrf_hydro_data_store_subbasin_name = format_name(post_info.get('wrf_hydro_data_store_subbasin_name'))
+        
+        if not wrf_hydro_data_store_watershed_name or not wrf_hydro_data_store_subbasin_name:
+            wrf_hydro_data_store_watershed_name = ""
+            wrf_hydro_data_store_subbasin_name = ""
+        else:
+            wrf_hydro_ready = True
 
-            #need at least one to be OK to proceed
-            if not ecmwf_ready and not wrf_hydro_ready:
-                session.close()
-                return JsonResponse({'error' : "Must have an ECMWF or WRF-Hydro watershed/subbasin name to continue" })
+        #need at least one to be OK to proceed
+        if not ecmwf_ready and not wrf_hydro_ready:
+            session.close()
+            return JsonResponse({'error' : "Must have an ECMWF or WRF-Hydro watershed/subbasin name to continue" })
 
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
         
