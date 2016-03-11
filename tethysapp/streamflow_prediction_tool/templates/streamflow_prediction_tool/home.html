@@ -44,7 +44,7 @@
     {% else %}
         <div class="alert alert-warning" role="alert">Sorry. There appear to be no watersheds in the database at this time.</div>
         {% if user.is_superuser or user.is_staff %}
-            <p>To add one click <a href="{% url 'streamflow_prediction_tool:add-watershed' %}">here</a>
+            <p>To add one click <a href="{% url 'streamflow_prediction_tool:add-watershed' %}">here.</a>
             <br>Forgot how? Refresh yourself on the steps <a href="{% url 'streamflow_prediction_tool:getting-started' %}">here</a>.
         {% else %}
         {% endif %}
