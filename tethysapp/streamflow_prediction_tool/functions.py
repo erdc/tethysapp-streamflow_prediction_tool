@@ -296,7 +296,6 @@ def upload_geoserver_layer(geoserver_manager, resource_name,
     layer_name, layer_info = geoserver_manager.upload_shapefile(resource_name, 
                                                                 shp_file_list)
     if layer_name and layer_info:
-        print layer_info
         raw_latlon_bbox = layer_info['latlon_bbox'][:4]
         latlon_bbox=json_dumps([raw_latlon_bbox[0],raw_latlon_bbox[2],
                                 raw_latlon_bbox[1],raw_latlon_bbox[3]])
@@ -376,12 +375,11 @@ def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
         if geoserver_layer:
             #if the name of the layer changed, and was previously uploaded, 
             #delete from geoserver
-            if geoserver_layer_name != geoserver_layer.name \
-            and geoserver_layer.uploaded and not is_layer_group:
-                geoserver_manager.purge_remove_geoserver_layer(geoserver_layer.name)
-            
-            geoserver_layer.name = geoserver_layer_name
-            geoserver_layer.uploaded = False
+            if geoserver_layer_name != geoserver_layer.name:
+                if geoserver_layer.uploaded and not is_layer_group:
+                    geoserver_manager.purge_remove_geoserver_layer(geoserver_layer.name)
+                geoserver_layer.name = geoserver_layer_name
+                geoserver_layer.uploaded = False
         else:
             #create new layer in database
             geoserver_layer = GeoServerLayer(geoserver_layer_name)
