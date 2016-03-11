@@ -35,20 +35,18 @@
                 </div>
             </form>
         {% else %}
-            <h4> No watershed groups found ...</h4>
+            <div class="alert alert-warning" role="alert">No watershed groups found ...</div>
         {% endif %}
         {% if user.is_superuser or user.is_staff %}
         <p class="help-block">Don't see the watershed group you want? Add one
         <a href="{% url 'streamflow_prediction_tool:add-watershed-group' %}">here</a>.</p>
         {% endif %}
     {% else %}
+        <div class="alert alert-warning" role="alert">Sorry. There appear to be no watersheds in the database at this time.</div>
         {% if user.is_superuser or user.is_staff %}
-            <h2>There appear to be no watersheds in the database at this time.
-                <br>
-                To add one click <a href="{% url 'streamflow_prediction_tool:add-watershed' %}">here</a></h2>
+            <p>To add one click <a href="{% url 'streamflow_prediction_tool:add-watershed' %}">here</a>
             <br>Forgot how? Refresh yourself on the steps <a href="{% url 'streamflow_prediction_tool:getting-started' %}">here</a>.
         {% else %}
-            <h2>Sorry. There appear to be no watersheds in the database at this time.</h2>
         {% endif %}
     {% endif %}
 
