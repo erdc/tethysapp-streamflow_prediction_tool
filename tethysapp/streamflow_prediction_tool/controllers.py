@@ -9,7 +9,7 @@
 
 #from glob import glob
 import json
-#import os
+import os
 #from datetime import datetime, timedelta
 
 #django imports
@@ -25,7 +25,8 @@ from tethys_sdk.gizmos import (Button, MessageBox, SelectInput,
 from .model import (BaseLayer, DataStore, DataStoreType, Geoserver,
                     MainSettings, mainSessionMaker,
                     Watershed, WatershedGroup)
-from .functions import (format_watershed_title, 
+from .functions import (ecmwf_get_valid_forecast_folder_list,
+                        format_watershed_title, 
                         user_permission_test)
 @login_required
 def home(request):
@@ -279,10 +280,16 @@ def map(request):
             
         session = mainSessionMaker()
 
+        #get base layer info
+        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
+        base_layer = main_settings.base_layer
+        path_to_ecmwf_rapid_output = main_settings.ecmwf_rapid_prediction_directory
+        
         watershed_list = []
         watershed_layers_info_array = []
         watershed_group_info_array = []
         flood_map_date_selectors = []
+        available_forecast_dates = []
 
         if watershed_ids:
             watersheds  = session.query(Watershed) \
@@ -294,6 +301,11 @@ def map(request):
             for watershed in watersheds:
                 watershed_list.append(("%s (%s)" % (watershed.watershed_name, watershed.subbasin_name),
                                        "%s:%s" % (watershed.watershed_clean_name, watershed.subbasin_clean_name)))
+                #find/check current output datasets    
+                path_to_watershed_files = os.path.join(path_to_ecmwf_rapid_output, "{0}-{1}".format(watershed.ecmwf_data_store_watershed_name, 
+                                                                                                    watershed.ecmwf_data_store_subbasin_name))
+                if path_to_watershed_files and os.path.exists(path_to_watershed_files):                                                                                  
+                    available_forecast_dates = available_forecast_dates + ecmwf_get_valid_forecast_folder_list(path_to_watershed_files, ".txt")
 
             watershed_layers_info_array = get_watershed_layers_info(watersheds)[0]
 
@@ -344,11 +356,29 @@ def map(request):
                 for watershed in watershed_group.watersheds:
                     watershed_list.append(("%s (%s)" % (watershed.watershed_name, watershed.subbasin_name),
                                            "%s:%s" % (watershed.watershed_clean_name, watershed.subbasin_clean_name)))
+                                           
+                    #find/check current output datasets    
+                    path_to_watershed_files = os.path.join(path_to_ecmwf_rapid_output, "{0}-{1}".format(watershed.ecmwf_data_store_watershed_name, 
+                                                                                                        watershed.ecmwf_data_store_subbasin_name))
+                    if path_to_watershed_files and os.path.exists(path_to_watershed_files):                                                                                  
+                        available_forecast_dates = available_forecast_dates + ecmwf_get_valid_forecast_folder_list(path_to_watershed_files, ".txt")
+
 
         #set up the inputs            
         watershed_select = SelectInput(display_text='Select Watershed',
                                        name='watershed_select',
                                        options=watershed_list,)
+        warning_point_date_select = None                               
+        if available_forecast_dates:
+            available_forecast_dates = sorted(available_forecast_dates, key=lambda k: k['id'], reverse=True)
+            available_forecast_date_select_input = []
+            for available_forecast_date in available_forecast_dates:
+                next_row_info = (available_forecast_date['text'], available_forecast_date['id'])
+                if next_row_info not in available_forecast_date_select_input:
+                    available_forecast_date_select_input.append(next_row_info)
+            warning_point_date_select = SelectInput(display_text='Select Forecast Date',
+                                                    name='warning_point_date_select',
+                                                    options=available_forecast_date_select_input,)
                                        
         units_toggle_switch = ToggleSwitch(display_text='Units',
                                            name='units-toggle',
@@ -366,17 +396,12 @@ def map(request):
                                           on_style='warning',
                                           initial=False,)
 
-        #get base layer info
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        base_layer = main_settings.base_layer
      
         base_layer_info = {
                             'name': base_layer.name,
                             'api_key':base_layer.api_key,
                           }
                           
-        print watershed_group_info_array
-    
         context = {
                     'watershed_layers_info_array_json' : json.dumps(watershed_layers_info_array),
                     'watershed_layers_info_array': watershed_layers_info_array,
@@ -384,6 +409,7 @@ def map(request):
                     'watershed_group_info_array': watershed_group_info_array,
                     'base_layer_info' : json.dumps(base_layer_info),
                     'watershed_select' : watershed_select,
+                    'warning_point_date_select' : warning_point_date_select,
                     'units_toggle_switch' : units_toggle_switch,
                     'ecmwf_toggle_switch' : ecmwf_toggle_switch,
                     'wrf_toggle_switch' : wrf_toggle_switch,

@@ -33,6 +33,7 @@ from functions import (delete_from_database,
                        delete_old_watershed_files, 
                        delete_old_watershed_geoserver_files,
                        ecmwf_find_most_current_files,
+                       ecmwf_get_valid_forecast_folder_list,
                        get_reach_index,
                        wrf_hydro_find_most_current_file,
                        format_name,
@@ -355,27 +356,7 @@ def ecmwf_get_avaialable_dates(request):
         if not os.path.exists(path_to_watershed_files):
             return JsonResponse({'error' : 'ECMWF forecast for %s (%s) not found.' % (watershed_name, subbasin_name) })
        
-        directories = sorted([d for d in os.listdir(path_to_watershed_files) \
-                            if os.path.isdir(os.path.join(path_to_watershed_files, d))],
-                             reverse=True)
-        output_directories = []
-        directory_count = 0
-        for directory in directories:
-            date = datetime.datetime.strptime(directory.split(".")[0],"%Y%m%d")
-            hour = int(directory.split(".")[-1])/100
-            path_to_files = os.path.join(path_to_watershed_files, directory)
-            if os.path.exists(path_to_files):
-                basin_files = glob(os.path.join(path_to_files,"*.nc"))
-                #only add directory to the list if valid                                    
-                if len(basin_files) >0:
-                    output_directories.append({
-                        'id' : directory, 
-                        'text' : str(date + datetime.timedelta(hours=int(hour)))
-                    })
-                    directory_count += 1
-                #limit number of directories
-                if(directory_count>64):
-                    break                
+        output_directories = ecmwf_get_valid_forecast_folder_list(path_to_watershed_files, ".nc")
         if len(output_directories)>0:
             return JsonResponse({     
                         "success" : "Data analysis complete!",
@@ -754,6 +735,7 @@ def generate_warning_points(request):
         watershed_name = format_name(get_info['watershed_name']) if 'watershed_name' in get_info else None
         subbasin_name = format_name(get_info['subbasin_name']) if 'subbasin_name' in get_info else None
         return_period = get_info.get('return_period')
+        forecast_folder = get_info.get('forecast_folder')
         if not watershed_name or not subbasin_name or not return_period:
             return JsonResponse({'error' : 'Warning point request input faulty.'})
         
@@ -763,29 +745,29 @@ def generate_warning_points(request):
             return JsonResponse({'error' : 'Invalid return period.'})
         
         path_to_output_files = os.path.join(path_to_ecmwf_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
-        recent_directory = None
-        if os.path.exists(path_to_output_files):
-
-            directory_list = sorted([d for d in os.listdir(path_to_output_files) \
-                                    if os.path.isdir(os.path.join(path_to_output_files, d))],
-                                    reverse=True)
-            if directory_list:
-                recent_directory = directory_list[0]
-        else:
-            return JsonResponse({'error' : 'No files found for watershed.'})
+        if not forecast_folder:
+            if os.path.exists(path_to_output_files):
+    
+                directory_list = sorted([d for d in os.listdir(path_to_output_files) \
+                                        if os.path.isdir(os.path.join(path_to_output_files, d))],
+                                        reverse=True)
+                if directory_list:
+                    forecast_folder = directory_list[0]
+            else:
+                return JsonResponse({'error' : 'No files found for watershed.'})
             
-        if recent_directory:
+        if forecast_folder:
             if return_period == 20:
                 #get warning points to load in
-                warning_points_file = os.path.join(path_to_output_files,recent_directory, "return_20_points.txt")
+                warning_points_file = os.path.join(path_to_output_files,forecast_folder, "return_20_points.txt")
             elif return_period == 10:
-                warning_points_file = os.path.join(path_to_output_files,recent_directory, "return_10_points.txt")
+                warning_points_file = os.path.join(path_to_output_files,forecast_folder, "return_10_points.txt")
             elif return_period == 2:
-                warning_points_file = os.path.join(path_to_output_files,recent_directory, "return_2_points.txt")
+                warning_points_file = os.path.join(path_to_output_files,forecast_folder, "return_2_points.txt")
             else:
                 return JsonResponse({'error' : 'Invalid return period.'})
         else:
-            return JsonResponse({'error' : 'No forecasts found with warning points.'})
+            return JsonResponse({'error' : 'No forecasts found with {0} return period warning points.'.format(return_period)})
  
         warning_points = []
         if os.path.exists(warning_points_file):
