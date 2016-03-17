@@ -186,6 +186,33 @@ def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
     #there are no files found
     return None, None
 
+def ecmwf_get_valid_forecast_folder_list(main_watershed_forecast_folder, file_extension):
+    """
+    Retreives a list of valid forecast forlders for the watershed
+    """    
+    directories = sorted([d for d in os.listdir(main_watershed_forecast_folder) \
+                        if os.path.isdir(os.path.join(main_watershed_forecast_folder, d))],
+                         reverse=True)
+    output_directories = []
+    directory_count = 0
+    for directory in directories:
+        date = datetime.datetime.strptime(directory.split(".")[0],"%Y%m%d")
+        hour = int(directory.split(".")[-1])/100
+        path_to_files = os.path.join(main_watershed_forecast_folder, directory)
+        if os.path.exists(path_to_files):
+            basin_files = glob(os.path.join(path_to_files,"*{0}".format(file_extension)))
+            #only add directory to the list if valid                                    
+            if len(basin_files) >0:
+                output_directories.append({
+                    'id' : directory, 
+                    'text' : str(date + datetime.timedelta(hours=int(hour)))
+                })
+                directory_count += 1
+            #limit number of directories
+            if(directory_count>64):
+                break                
+    return output_directories
+
 def get_reach_index(prediction_file, reach_id):
     """
     Gets the index of the reach from the COMID 

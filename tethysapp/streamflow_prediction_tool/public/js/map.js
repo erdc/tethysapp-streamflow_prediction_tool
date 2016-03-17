@@ -70,7 +70,7 @@ var ERFP_MAP = (function() {
         addECMWFSeriesToCharts, addSeriesToCharts, isThereDataToLoad, 
         checkCleanString, dateToUTCDateTimeString, getValidSeries, 
         convertValueMetricToEnglish, unbindInputs, loadWarningPoints,
-        determineGeoServerLayerOrGroup;
+        updateWarningPoints, determineGeoServerLayerOrGroup;
 
 
     /************************************************************************
@@ -120,12 +120,6 @@ var ERFP_MAP = (function() {
             $('#wrf_toogle_col').addClass('col-sm-2');
         } else {
             $('#wrf_toogle_col').addClass('col-sm-3');
-        }
-        //resize highchart
-        var long_term_chart = $("#long-term-chart").highcharts();
-        if (typeof long_term_chart != 'undefined') {
-            var width = $("#long-term-chart-row").width();
-            long_term_chart.setSize(0.97*width,height_ratio*width);
         }
     };
 
@@ -1396,7 +1390,8 @@ var ERFP_MAP = (function() {
     };
 
     //FUNCTION: LOAD WARNING POINTS
-    loadWarningPoints = function(watershed_layer, layer_id) {
+    loadWarningPoints = function(watershed_layer, layer_id, datetime_string) {
+        var vector_source = watershed_layer.getSource().getSource();
         //get warning points for map
         jQuery.ajax({
             type: "GET",
@@ -1406,6 +1401,7 @@ var ERFP_MAP = (function() {
                 watershed_name: watershed_layer.get('ecmwf_watershed_name'),
                 subbasin_name: watershed_layer.get('ecmwf_subbasin_name'),
                 return_period: watershed_layer.get('return_period'),
+                forecast_folder: datetime_string,
             },
         })
         .done(function (data) {
@@ -1427,19 +1423,43 @@ var ERFP_MAP = (function() {
                                                 });
                       features.push(feature);
                     }
-                    var vector_source = watershed_layer.getSource().getSource();
-                    vector_source.addFeatures(features);
+                    vector_source.clear(); //remove old features
+                    vector_source.addFeatures(features); //add new features
                     m_map.render();
                 }
     
             } else {
-                console.log(data.error);
+                $(layer_id).parent().addClass('hidden');
+                vector_source.clear(); //remove old features
+                m_map.render();
+                //console.log(data.error);
                 //appendErrorMessage("Error: " + data["error"], "warning_points_error", "message-error");
             }
         })
         .fail(function (request, status, error) {
-            console.log(error);
+            $(layer_id).parent().addClass('hidden');
+            vector_source.clear(); //remove old features
+            m_map.render();
+            //console.log(error);
             //appendErrorMessage("Error: " + error, "warning_points_error", "message-error");
+        });
+    };
+
+    //FUNCTION: updates the warning points for all layers
+    updateWarningPoints = function(datetime_string) {
+        //wait for layers to load and then zoom to them
+        m_map.getLayers().forEach(function(layer, i){
+            if (layer instanceof ol.layer.Group) {
+                layer.getLayers().forEach(function(sublayer, j) {
+                    if (sublayer.get('layer_type') == "warning_points") {
+                        var group_id = '#'+layer.get('group_id');
+                        loadWarningPoints(sublayer, group_id, datetime_string);
+                    }
+                });
+            } else if (layer.get('layer_type') == "warning_points") {
+                var layer_id = '#'+layer.get('layer_id');
+                loadWarningPoints(layer, layer_id, datetime_string);
+            }
         });
     };
 
@@ -2051,9 +2071,15 @@ var ERFP_MAP = (function() {
 
         //function to zoom to feature by id
         $('#submit-search-reach-id').off().click(function() {
-            var watershed_info = $(this).parent().parent().find('#watershed_select').select2('val');
-            var reach_id = $(this).parent().parent().find('#reach-id-input').val();
+            var watershed_info = $('#watershed_select').select2('val');
+            var reach_id = $('#reach-id-input').val();
             zoomToFeature(watershed_info, reach_id);
+        });
+
+        //function to change warning points forecast date
+        $('#warning_point_date_select').on('change.select2', function () {
+            var forecast_folder = $(this).select2('data').id;
+            updateWarningPoints(forecast_folder);
         });
 
         //zoom to all
