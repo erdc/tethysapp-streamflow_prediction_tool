@@ -1391,7 +1391,6 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: LOAD WARNING POINTS
     loadWarningPoints = function(watershed_layer, layer_id, datetime_string) {
-        var vector_source = watershed_layer.getSource().getSource();
         //get warning points for map
         jQuery.ajax({
             type: "GET",
@@ -1423,22 +1422,17 @@ var ERFP_MAP = (function() {
                                                 });
                       features.push(feature);
                     }
-                    vector_source.clear(); //remove old features
-                    vector_source.addFeatures(features); //add new features
+                    watershed_layer.getSource().getSource().addFeatures(features); //add new features
                     m_map.render();
                 }
     
             } else {
-                $(layer_id).parent().addClass('hidden');
-                vector_source.clear(); //remove old features
                 m_map.render();
                 //console.log(data.error);
                 //appendErrorMessage("Error: " + data["error"], "warning_points_error", "message-error");
             }
         })
         .fail(function (request, status, error) {
-            $(layer_id).parent().addClass('hidden');
-            vector_source.clear(); //remove old features
             m_map.render();
             //console.log(error);
             //appendErrorMessage("Error: " + error, "warning_points_error", "message-error");
@@ -1453,11 +1447,20 @@ var ERFP_MAP = (function() {
                 layer.getLayers().forEach(function(sublayer, j) {
                     if (sublayer.get('layer_type') == "warning_points") {
                         var group_id = '#'+layer.get('group_id');
+                        $(group_id).parent().addClass('hidden'); //hide until reset
+                        sublayer.getSource().getSource().clear(); //remove previous elements
+                    }
+                });
+                layer.getLayers().forEach(function(sublayer, j) {
+                    if (sublayer.get('layer_type') == "warning_points") {
+                        var group_id = '#'+layer.get('group_id');
                         loadWarningPoints(sublayer, group_id, datetime_string);
                     }
                 });
             } else if (layer.get('layer_type') == "warning_points") {
                 var layer_id = '#'+layer.get('layer_id');
+                $(layer_id).parent().addClass('hidden'); //hide until reset
+                layer.getSource().getSource().clear(); //remove previous elements
                 loadWarningPoints(layer, layer_id, datetime_string);
             }
         });
