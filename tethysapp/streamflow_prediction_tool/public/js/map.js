@@ -1616,7 +1616,7 @@ var ERFP_MAP = (function() {
 
         //load base layer
         var base_layer_info = JSON.parse($("#map").attr('base-layer-info'));
-        
+        var warning_point_start_folder = $("#map").attr('warning-point-start-folder');
         m_basemap_layer = getBaseLayer(base_layer_info.name,base_layer_info.api_key);
         
         //load drainage line layers
@@ -1994,7 +1994,7 @@ var ERFP_MAP = (function() {
                     if (sublayer.get('layer_type') == "geoserver") {
                         ol.extent.extend(group_extent, sublayer.get('extent'));
                     } else if (sublayer.get('layer_type') == "warning_points") {
-                        loadWarningPoints(sublayer, group_id);
+                        loadWarningPoints(sublayer, group_id, warning_point_start_folder);
                     }
                 });
                 if (watershed_layer.get('layer_type') == "geoserver" &&
@@ -2011,7 +2011,7 @@ var ERFP_MAP = (function() {
             } else if (watershed_layer.get('layer_type') == "warning_points") {
                 var layer_id = '#'+watershed_layer.get('layer_id');
                 bindInputs(layer_id, watershed_layer);
-                loadWarningPoints(watershed_layer, layer_id);
+                loadWarningPoints(watershed_layer, layer_id, warning_point_start_folder);
             }
         });
 

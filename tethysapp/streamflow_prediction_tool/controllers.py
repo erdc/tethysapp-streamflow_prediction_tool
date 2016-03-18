@@ -368,9 +368,11 @@ def map(request):
         watershed_select = SelectInput(display_text='Select Watershed',
                                        name='watershed_select',
                                        options=watershed_list,)
-        warning_point_date_select = None                               
+        warning_point_date_select = None
+        warning_point_start_folder = None                               
         if available_forecast_dates:
             available_forecast_dates = sorted(available_forecast_dates, key=lambda k: k['id'], reverse=True)
+            warning_point_start_folder = available_forecast_dates[0]['id']
             available_forecast_date_select_input = []
             for available_forecast_date in available_forecast_dates:
                 next_row_info = (available_forecast_date['text'], available_forecast_date['id'])
@@ -407,6 +409,7 @@ def map(request):
                     'watershed_layers_info_array': watershed_layers_info_array,
                     'watershed_group_info_array_json': json.dumps(watershed_group_info_array),
                     'watershed_group_info_array': watershed_group_info_array,
+                    'warning_point_start_folder': warning_point_start_folder,
                     'base_layer_info' : json.dumps(base_layer_info),
                     'watershed_select' : watershed_select,
                     'warning_point_date_select' : warning_point_date_select,
