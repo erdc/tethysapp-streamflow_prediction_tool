@@ -61,19 +61,15 @@
                     <div class="tab-content">
                         <div role="tabpanel" class="tab-pane active" id="plot_tab">
                             <div class="row" id="long-term-chart-row">
-                                <div class="col-md-12">
-                                    <div class="row">
-                                        <label class="long-term-select hidden select-label" for="long-term-select">ECMWF Available Dates</label>
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        <label class="long-term-select select-label hidden" for="long-term-select">ECMWF Available Dates</label>
                                         <div id="long-term-select" class="hidden long-term-select sfpt-select"></div>
-                                    </div>
-                                    <div class="row">
                                         <label class="short-term-select hidden select-label" for="short-term-select">WRF-Hydro Available Dates</label>
                                         <div id="short-term-select" class="hidden short-term-select sfpt-select"></div>
+                                        <div id="long-term-chart" class="panel-body sfpt-chart" style="height: 50%;"></div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="panel panel-default">
-                                <div id="long-term-chart" class="panel-body sfpt-chart" style="height: 50%;"></div>
                             </div>
                         </div>
                         <div role="tabpanel" class="tab-pane" id="search">                    
