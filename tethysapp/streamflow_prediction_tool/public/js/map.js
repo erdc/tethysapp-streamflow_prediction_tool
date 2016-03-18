@@ -743,6 +743,7 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: gets all data for chart
     getChartData = function() {
+        $('#plot_tab_link').tab('show'); //switch to plot tab
         if(!isNotLoadingPastRequest()) {
             //updateInfoAlert
             addWarningMessage("Please wait for datasets to download before making another selection.");
