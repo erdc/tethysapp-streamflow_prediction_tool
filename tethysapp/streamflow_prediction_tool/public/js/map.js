@@ -504,7 +504,7 @@ var ERFP_MAP = (function() {
                 });
                 drainage_line = new ol.layer.Vector({
                     source: drainage_line_vector_source,
-                    maxResolution: 10000
+                    maxResolution: 7000
                 });
             } 
             else if(watershed_layers_info.drainage_line.geoserver_method == "river_order_query") {
@@ -567,7 +567,7 @@ var ERFP_MAP = (function() {
                 });
                 drainage_line = new ol.layer.Vector({
                     source: drainage_line_vector_source,
-                    maxResolution: 10000
+                    maxResolution: 7000
                 });
             } 
             else { //watershed_layers_info.drainage_line.geoserver_method == "simple"
@@ -1480,6 +1480,7 @@ var ERFP_MAP = (function() {
                         });
         } else if (layer_array.length > 0 && divide_into_groups){
             layer_array[0].set("layer_id", custom_group_id);
+            layer_array[0].setVisible(visible);
             return layer_array[0];
         } else if (layer_array.length > 0) {
             return layer_array[0];
@@ -1665,8 +1666,9 @@ var ERFP_MAP = (function() {
                         var boundary_layer = getTileLayer(watershed_layers_info.boundary, 
                                                           watershed_layers_info.geoserver_url, 
                                                           boundary_layer_id,
-                                                          divide_into_groups, 
+                                                          true, 
                                                           0.5);
+                        boundary_layer.setMinResolution(1000);
                         if (boundary_layer != null) {
                             if (divide_into_groups) {
                                 group_boundary_layers.push(boundary_layer);
@@ -1887,7 +1889,7 @@ var ERFP_MAP = (function() {
                                                                     divide_into_groups, 
                                                                     "watershed_group-" + watershed_group_info.group_id + "-boundary_layer", 
                                                                     "geoserver",
-                                                                    false);
+                                                                    true);
                 if (boundary_layer != null) {
                     all_watershed_layers.push(boundary_layer);
                 }
