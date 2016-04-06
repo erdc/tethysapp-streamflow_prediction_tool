@@ -6,7 +6,7 @@
 [![DOI](https://zenodo.org/badge/19918/erdc-cm/tethysapp-streamflow_prediction_tool.svg)](https://zenodo.org/badge/latestdoi/19918/erdc-cm/tethysapp-streamflow_prediction_tool)
 
 *This app requires you to have the ECMWF AutoRAPID preprocessing completed 
-separately. See: https://github.com/erdc-cm/spt_ecmwf_autorapid_process; https://github.com/erdc-cm/spt_lsm_autorapid_process*
+separately. See: https://github.com/erdc-cm/RAPIDpy; https://github.com/erdc-cm/spt_ecmwf_autorapid_process*
 
 ##Prerequisites:
 - Tethys Platform v1.3 (CKAN, PostgresQL, GeoServer): See: http://docs.tethysplatform.org/en/1.3.0/
