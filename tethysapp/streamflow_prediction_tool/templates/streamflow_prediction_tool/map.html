@@ -55,6 +55,7 @@
                         <li role="presentation" class="active"><a id="plot_tab_link" href="#plot_tab" aria-controls="plot_tab" role="tab" data-toggle="tab">Plot</a></li>
                         <li role="presentation"><a href="#search" aria-controls="search" role="tab" data-toggle="tab">Search</a></li>
                         <li role="presentation"><a href="#warnings" aria-controls="warnings" role="tab" data-toggle="tab">Warnings</a></li>
+                        <li role="presentation"><a href="#download" aria-controls="download" role="tab" data-toggle="tab">Download</a></li>
                     </ul>
                 
                     <!-- Tab panes -->
@@ -92,7 +93,7 @@
                         </div>
                         <div role="tabpanel" class="tab-pane" id="warnings">
                             <div class="panel panel-default">
-                                <div id="search_layers" class="panel-body">
+                                <div class="panel-body">
                                     <h6>Warning Points Control Panel</h6>
                                     {% if warning_point_date_select %}
                                         {% gizmo select_input warning_point_date_select %}
@@ -103,6 +104,21 @@
                                         </div>
                                     {% endif %}
 
+                                </div>
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="download">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <h6>Download ERA Interim Data</h6>
+                                        <div class="btn-group" role="group">
+                                            <a class="btn btn-success" role="button" id="submit-download-interim-csv">
+                                                <span class="glyphicon glyphicon-play"></span> Download Daily Interim Data
+                                            </a>
+                                            <a class="btn btn-warning" role="button" id="submit-download-interim-csv-daily">
+                                                <span class="glyphicon glyphicon-play"></span> Download Interim Data
+                                            </a>
+                                        </div>
                                 </div>
                             </div>
                         </div>

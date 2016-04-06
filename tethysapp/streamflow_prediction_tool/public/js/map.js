@@ -755,6 +755,17 @@ var ERFP_MAP = (function() {
         } else {
             resetChartSelectMessage();
             m_long_term_chart_data_ajax_load_failed = false;
+            var params = { watershed_name: m_selected_ecmwf_watershed,
+                           subbasin_name: m_selected_ecmwf_subbasin,
+                           reach_id: m_selected_reach_id,
+                           daily: false };
+            //change download button url
+            $('#submit-download-interim-csv').attr({target: '_blank', 
+                                                    href  : 'era-interim-get-csv?' + jQuery.param( params ) });
+            params.daily = true;
+            //change download button url
+            $('#submit-download-interim-csv-daily').attr({target: '_blank', 
+                                                          href  : 'era-interim-get-csv?' + jQuery.param( params ) });
             //turn off select interaction
             m_map.removeInteraction(m_select_interaction);
             addInfoMessage("Retrieving Data ...");

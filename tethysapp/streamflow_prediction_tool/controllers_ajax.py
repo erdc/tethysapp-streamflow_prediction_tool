@@ -8,6 +8,7 @@
 ##  License: BSD 3-Clause
 
 from crontab import CronTab
+from csv import writer as csv_writer
 import datetime
 from glob import glob
 from json import load as json_load
@@ -17,7 +18,7 @@ import os
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import ObjectDeletedError
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from RAPIDpy.dataset import RAPIDDataset
 
 
@@ -779,6 +780,85 @@ def generate_warning_points(request):
         return JsonResponse({ 'success': "Warning Points Sucessfully Returned!",
                              'warning_points' : warning_points,
                             })
+
+@login_required                     
+def era_interim_get_csv(request):
+    """""
+    Returns ERA Interim data as csv
+    """""
+    if request.method == 'GET':
+        #Query DB for path to rapid output
+        session = mainSessionMaker()
+        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
+        session.close()
+        path_to_era_interim_data = main_settings.era_interim_rapid_directory
+        if not os.path.exists(path_to_era_interim_data):
+            return JsonResponse({'error' : 'Location of ERA-Interim files faulty. Please check settings.'})
+
+        #get information from GET request
+        get_info = request.GET
+        watershed_name = format_name(get_info['watershed_name']) if 'watershed_name' in get_info else None
+        subbasin_name = format_name(get_info['subbasin_name']) if 'subbasin_name' in get_info else None
+        reach_id = get_info.get('reach_id')
+        daily = get_info.get('daily')
+        if not reach_id or not watershed_name or not subbasin_name:
+            return JsonResponse({'error' : 'ERA Interim AJAX request input faulty.'})
+
+        #make sure reach id is integet
+        try:
+            reach_id = int(reach_id)
+        except TypeError, ValueError:
+            return JsonResponse({'error' : 'Invalid Reach ID %s.' % reach_id})
+            
+        #----------------------------------------------
+        # HISTORICAL DATA SECTION
+        #----------------------------------------------
+        era_interim_return_data = {}
+        #find/check current output datasets
+        path_to_output_files = os.path.join(path_to_era_interim_data, "{0}-{1}".format(watershed_name, subbasin_name))
+        historical_data_files = glob(os.path.join(path_to_output_files, "Qout*.nc"))
+        if historical_data_files:
+            try:
+                #get/check the index of the reach
+                with RAPIDDataset(historical_data_files[0]) as qout_nc:
+                    error_found = False
+                    #get/check the index of the reach
+                    try:
+                        reach_index = qout_nc.get_river_index(reach_id)
+                    except Exception:
+                        era_interim_return_data['error'] = 'ERA Interim reach with id: %s not found.' % reach_id
+                        error_found = True
+                        raise
+    
+                    if not error_found:
+                        #get information from dataset
+                        response = HttpResponse(content_type='text/csv')
+                        response['Content-Disposition'] = 'attachment; filename={0}'.format("streamflow_{0}_{1}_{2}.csv".format(watershed_name,
+                                                                                                                                subbasin_name,
+                                                                                                                                reach_id))
+                    
+                        writer = csv_writer(response)
+                        writer.writerow(['datetime', 'streamflow (m3/s)'])
+                        if not daily:
+                            #return raw data
+                            data_values = qout_nc.get_qout_index(reach_index)
+                            datetime_array = qout_nc.get_time_array(return_datetime=True)
+                            for index, data_value in enumerate(data_values):
+                                writer.writerow([datetime_array[index], data_value])
+                        else:
+                            #return daily values
+                            daily_time_index_array = qout_nc.get_daily_time_index_array()
+                            data_values = qout_nc.get_daily_qout_index(reach_index, daily_time_index_array)
+                            datetime_array = qout_nc.get_time_array(return_datetime=True)
+                            for index, daily_time_index in enumerate(daily_time_index_array):
+                                writer.writerow([datetime_array[daily_time_index], data_values[index]])
+                    
+                        return response
+            except Exception:
+                raise
+                return JsonResponse({'error' : "Invalid ERA-Interim file ..."})
+                        
+        return JsonResponse({'error' : 'ERA Interim data for %s (%s) not found.' % (watershed_name, subbasin_name)})
 
 @user_passes_test(user_permission_test)
 def settings_update(request):
