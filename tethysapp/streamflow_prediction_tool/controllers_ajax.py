@@ -519,7 +519,7 @@ def ecmwf_get_hydrograph(request):
                             all_data_first_half.append(data_values)
                         high_res_data = data_values
             except Exception, e:
-                print e
+                print(e)
                 pass
         return_data = {}
         if low_res_time:
@@ -800,7 +800,7 @@ def era_interim_get_csv(request):
         watershed_name = format_name(get_info['watershed_name']) if 'watershed_name' in get_info else None
         subbasin_name = format_name(get_info['subbasin_name']) if 'subbasin_name' in get_info else None
         reach_id = get_info.get('reach_id')
-        daily = get_info.get('daily')
+        daily = get_info.get('daily') if 'daily' in get_info else ''
         if not reach_id or not watershed_name or not subbasin_name:
             return JsonResponse({'error' : 'ERA Interim AJAX request input faulty.'})
 
@@ -839,19 +839,19 @@ def era_interim_get_csv(request):
                     
                         writer = csv_writer(response)
                         writer.writerow(['datetime', 'streamflow (m3/s)'])
-                        if not daily:
-                            #return raw data
-                            data_values = qout_nc.get_qout_index(reach_index)
-                            datetime_array = qout_nc.get_time_array(return_datetime=True)
-                            for index, data_value in enumerate(data_values):
-                                writer.writerow([datetime_array[index], data_value])
-                        else:
+                        if daily.lower() == 'true':
                             #return daily values
                             daily_time_index_array = qout_nc.get_daily_time_index_array()
                             data_values = qout_nc.get_daily_qout_index(reach_index, daily_time_index_array)
                             datetime_array = qout_nc.get_time_array(return_datetime=True)
                             for index, daily_time_index in enumerate(daily_time_index_array):
                                 writer.writerow([datetime_array[daily_time_index], data_values[index]])
+                        else:
+                            #return raw data
+                            data_values = qout_nc.get_qout_index(reach_index)
+                            datetime_array = qout_nc.get_time_array(return_datetime=True)
+                            for index, data_value in enumerate(data_values):
+                                writer.writerow([datetime_array[index], data_value])
                     
                         return response
             except Exception:
