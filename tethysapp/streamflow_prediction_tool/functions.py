@@ -181,7 +181,7 @@ def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
                     hour = int(time)/100
                     return basin_files, (date + datetime.timedelta(0,int(hour)*60*60)).replace(tzinfo=utc)
         except Exception as ex:
-            print ex
+            print(ex)
             pass
     #there are no files found
     return None, None
@@ -244,7 +244,7 @@ def wrf_hydro_find_most_current_file(path_to_watershed_files, date_string):
             if os.path.exists(path_to_file):
                 return path_to_file
         except Exception as ex:
-            print ex
+            print(ex)
             pass
     #there are no files found
     return None
