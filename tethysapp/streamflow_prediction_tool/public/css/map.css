@@ -62,3 +62,8 @@
     float: right;
     color: #34495E;
 }
+.warning-val {
+	font: 400 12px Arial;
+	color: #888;
+	margin: 15px 0;
+}
