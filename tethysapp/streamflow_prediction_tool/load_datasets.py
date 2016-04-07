@@ -72,11 +72,11 @@ def download_single_watershed_ecmwf_data(watershed,
                                          reverse=True)[7:]
                     for geoserver_directory in geoserver_directories:
                         layer_name = geoserver_manager.get_layer_name("%s%s" % (flood_map_layer_name_beginning, geoserver_directory))
-                        print "Deleting geoserver layer group:", layer_name
+                        print("Deleting geoserver layer group: {0}".format(layer_name))
                         #TODO: CHECK IF EXISTS BEFORE REMOVING
                         geoserver_manager.purge_remove_geoserver_layer_group(layer_name)
                 except Exception as ex:
-                    print ex
+                    print(ex)
                     pass
 
 def download_single_watershed_wrf_hydro_data(watershed, 
@@ -129,7 +129,7 @@ def load_datasets():
                                                  ecmwf_rapid_prediction_directory, 
                                                  main_settings.app_instance_id)
     else:
-        print "ECMWF prediction location invalid. Please set to continue."
+        print("ECMWF prediction location invalid. Please set to continue.")
         
     wrf_hydro_rapid_prediction_directory = main_settings.wrf_hydro_rapid_prediction_directory
     if wrf_hydro_rapid_prediction_directory and \
@@ -138,7 +138,7 @@ def load_datasets():
             download_single_watershed_wrf_hydro_data(watershed, 
                                                      wrf_hydro_rapid_prediction_directory)
     else:
-        print "WRF-Hydro prediction location invalid. Please set to continue."
+        print("WRF-Hydro prediction location invalid. Please set to continue.")
     session.close()
     
 def load_watershed(watershed):
@@ -155,7 +155,7 @@ def load_watershed(watershed):
                                              main_settings.ecmwf_rapid_prediction_directory,
                                              main_settings.app_instance_id)
     else:
-        print "ECMWF prediction location invalid. Please set to continue."
+        print("ECMWF prediction location invalid. Please set to continue.")
 
     if main_settings.wrf_hydro_rapid_prediction_directory and \
         os.path.exists(main_settings.wrf_hydro_rapid_prediction_directory):
@@ -163,7 +163,7 @@ def load_watershed(watershed):
         download_single_watershed_wrf_hydro_data(watershed, 
                                                  main_settings.wrf_hydro_rapid_prediction_directory)
     else:
-        print "WRF-Hydro prediction location invalid. Please set to continue."
+        print("WRF-Hydro prediction location invalid. Please set to continue.")
     
     session.close()
     
