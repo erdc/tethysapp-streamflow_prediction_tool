@@ -773,9 +773,9 @@ var ERFP_MAP = (function() {
             //turn off select interaction
             m_map.removeInteraction(m_select_interaction);
             addInfoMessage("Retrieving Data ...");
-            var y_axis_title = "Flow (cms)";
+            var y_axis_title = "Flow (m^3/s)";
             if (m_units == "english") {
-                y_axis_title = "Flow (cfs)";
+                y_axis_title = "Flow (ft^3/s)";
             }
             var default_chart_settings = {
 
@@ -1469,6 +1469,7 @@ var ERFP_MAP = (function() {
                     } else {
                         watershed_layer_group.getLayers().forEach(function(sublayer, j) {
                             sublayer.getSource().getSource().addFeatures(feature_dict[sublayer.get('peak_date_str')]);
+                            sublayer.setVisible(true);         
                         });
                         watershed_layer_group.set("daily_warnings", true);
                     }
@@ -1495,24 +1496,22 @@ var ERFP_MAP = (function() {
         m_map.getLayers().forEach(function(layer, i){
             if (layer instanceof ol.layer.Group) {
                 if (layer.get('layer_type') == "warning_points") {
+                    var group_id = '#'+layer.get('group_id');
                     var layer_id = '#'+layer.get('layer_id');
-                    $(layer_id).parent().addClass('hidden'); //hide until reset
                     layer.getLayers().forEach(function(sublayer, j) {
-                        sublayer.getSource().getSource().clear(); //remove previous elements
-                    });
-                    xhr_list.push(loadWarningPoints(layer, layer_id, datetime_string));
-                } else {
-                    if (layer.get('layer_type') == "warning_points") {
-                        console.log(layer);
-                    }
-                    layer.getLayers().forEach(function(sublayer, j) {
-                        if (sublayer.get('layer_type') == "warning_points") {
-                            var group_id = '#'+layer.get('group_id');
+                        if (sublayer instanceof ol.layer.Group) {
                             $(group_id).parent().addClass('hidden'); //hide until reset
                             sublayer.getLayers().forEach(function(subsublayer, j) {
                                 subsublayer.getSource().getSource().clear(); //remove previous elements
                             });
                             xhr_list.push(loadWarningPoints(sublayer, group_id, datetime_string));
+                        }
+                        else {
+                            $(layer_id).parent().addClass('hidden'); //hide until reset
+                            layer.getLayers().forEach(function(sublayer, j) {
+                                sublayer.getSource().getSource().clear(); //remove previous elements
+                            });
+                            xhr_list.push(loadWarningPoints(layer, layer_id, datetime_string));
                         }
                     });
                 }
@@ -1592,12 +1591,10 @@ var ERFP_MAP = (function() {
                                     sublayer.getLayers().forEach(function(subsublayer, j) {
                                         var layer_date = subsublayer.get('peak_date');
                                         if(typeof layer_date != 'undefined') {
-                                            subsublayer.setVisible(false);
-                                            var layer_time = layer_date.getTime();
-                                            if ((layer_date > warning_date_start || layer_date === warning_date_start)
-                                                && (layer_date < warning_date_end || layer_date === warning_date_end)) 
+                                            subsublayer.setVisible(true);
+                                            if (layer_date < warning_date_start || layer_date > warning_date_end) 
                                             {
-                                                subsublayer.setVisible(true);
+                                                subsublayer.setVisible(false);
                                             } 
                                         }
                                     });
@@ -1606,12 +1603,10 @@ var ERFP_MAP = (function() {
                             else if (layer.get("daily_warnings")) {
                                 var layer_date = sublayer.get('peak_date');
                                 if(typeof layer_date != 'undefined') {
-                                    sublayer.setVisible(false);
-                                    var layer_time = layer_date.getTime();
-                                    if ((layer_date > warning_date_start || layer_date === warning_date_start)
-                                        && (layer_date < warning_date_end || layer_date === warning_date_end)) 
+                                    sublayer.setVisible(true);
+                                    if (layer_date < warning_date_start || layer_date > warning_date_end) 
                                     {
-                                        sublayer.setVisible(true);
+                                        sublayer.setVisible(false);
                                     } 
                                 }
                             }
@@ -2146,26 +2141,38 @@ var ERFP_MAP = (function() {
         var warning_xhr_list = []
         //wait for layers to load and then zoom to them
         all_watershed_layers.forEach(function(watershed_layer){
+            var group_id = '#'+watershed_layer.get('group_id');
+            var layer_id = '#'+watershed_layer.get('layer_id');
             if (watershed_layer instanceof ol.layer.Group) {
-                var group_id = '#'+watershed_layer.get('group_id');
-                bindInputs(group_id, watershed_layer);
-                var group_extent = ol.extent.createEmpty();
-                watershed_layer.getLayers().forEach(function(sublayer, j) {
-                    if (sublayer.get('layer_type') == "geoserver") {
-                        ol.extent.extend(group_extent, sublayer.get('extent'));
-                    } else if (sublayer.get('layer_type') == "warning_points") {
-                        warning_xhr_list.push(loadWarningPoints(sublayer, group_id, warning_point_start_folder));
-                    }
-                });
-                if (watershed_layer.get('layer_type') == "geoserver" &&
-                    group_extent != ol.extent.createEmpty()) {
-                    watershed_layer.set("extent", group_extent);
-                    ol.extent.extend(m_map_extent, group_extent);
-                    m_map.getView().fit(m_map_extent, m_map.getSize());
-                } else if (watershed_layer.get('layer_type') == "warning_points") {
-                    var layer_id = '#'+watershed_layer.get('group_id');
-                    bindInputs(layer_id, watershed_layer);
-                    warning_xhr_list.push(loadWarningPoints(watershed_layer, layer_id, warning_point_start_folder));
+                if (watershed_layer.get('layer_type') == "warning_points") {
+                    var loaded = false;
+                    watershed_layer.getLayers().forEach(function(sublayer, j) {
+                        if (sublayer instanceof ol.layer.Group) {
+                            if (!loaded) {
+                                bindInputs(group_id, watershed_layer);
+                            }
+                            warning_xhr_list.push(loadWarningPoints(sublayer, group_id, warning_point_start_folder));
+                        }
+                        else if (!loaded) {
+                            loaded = true;
+                            bindInputs(layer_id, watershed_layer);
+                            warning_xhr_list.push(loadWarningPoints(watershed_layer, layer_id, warning_point_start_folder));
+                        }
+                    });
+                } else {
+                    bindInputs(group_id, watershed_layer);
+                    var group_extent = ol.extent.createEmpty();
+                    watershed_layer.getLayers().forEach(function(sublayer, j) {
+                        if (sublayer.get('layer_type') == "geoserver") {
+                            ol.extent.extend(group_extent, sublayer.get('extent'));
+                        }
+                    });
+                    if (watershed_layer.get('layer_type') == "geoserver" &&
+                        group_extent != ol.extent.createEmpty()) {
+                        watershed_layer.set("extent", group_extent);
+                        ol.extent.extend(m_map_extent, group_extent);
+                        m_map.getView().fit(m_map_extent, m_map.getSize());
+                    } 
                 }
             
             } else if (watershed_layer.get('layer_type') == "geoserver") {
