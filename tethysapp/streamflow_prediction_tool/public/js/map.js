@@ -1463,7 +1463,8 @@ var ERFP_MAP = (function() {
                         }
                     }
                     if (feature_array.length > 0) {
-                        first_layer.getSource().getSource().addFeatures(feature_array);         
+                        first_layer.getSource().getSource().addFeatures(feature_array);
+                        first_layer.setVisible(true);         
                         watershed_layer_group.set("daily_warnings", false);
                     } else {
                         watershed_layer_group.getLayers().forEach(function(sublayer, j) {
@@ -1497,7 +1498,7 @@ var ERFP_MAP = (function() {
                     var layer_id = '#'+layer.get('layer_id');
                     $(layer_id).parent().addClass('hidden'); //hide until reset
                     layer.getLayers().forEach(function(sublayer, j) {
-                            sublayer.getSource().getSource().clear(); //remove previous elements
+                        sublayer.getSource().getSource().clear(); //remove previous elements
                     });
                     xhr_list.push(loadWarningPoints(layer, layer_id, datetime_string));
                 } else {
@@ -1508,11 +1509,6 @@ var ERFP_MAP = (function() {
                             sublayer.getLayers().forEach(function(subsublayer, j) {
                                 subsublayer.getSource().getSource().clear(); //remove previous elements
                             });
-                        }
-                    });
-                    layer.getLayers().forEach(function(sublayer, j) {
-                        if (sublayer.get('layer_type') == "warning_points") {
-                            var group_id = '#'+layer.get('group_id');
                             xhr_list.push(loadWarningPoints(sublayer, group_id, datetime_string));
                         }
                     });
@@ -1581,35 +1577,44 @@ var ERFP_MAP = (function() {
         dateSlider.noUiSlider.on('update', function( values, handle ) {
             dateValues[handle].innerHTML = dateToUTCString(new Date(+values[handle]));
             var warning_date_start = new Date(+values[0]);
-            var warning_start_time = warning_date_start.getTime();
             var warning_date_end = new Date(+values[1]);
-            var warning_end_time = warning_date_start.getTime();
             //parse through warning points
             m_map.getLayers().forEach(function(layer, i){
                 if (layer instanceof ol.layer.Group) {
                     if (layer.get('layer_type') == "warning_points") {
-                        layer.getLayers().forEach(function(sublayer, j) {
-                            var layer_date = sublayer.get('peak_date');
-                            sublayer.setVisible(false);
-                            if(typeof layer_date != 'undefined') {
-                                var layer_time = layer_date.getTime();
-                                if ((layer_date > warning_date_start || layer_date === warning_date_start)
-                                    && (layer_date < warning_date_end || layer_date === warning_date_end)) 
-                                {
-                                    sublayer.setVisible(true);
-                                } 
-                            }
-                        });
+                        if (layer.get("daily_warnings")) {
+                            //filter out layers by date
+                            layer.getLayers().forEach(function(sublayer, j) {
+                                var layer_date = sublayer.get('peak_date');
+                                if(typeof layer_date != 'undefined') {
+                                    sublayer.setVisible(false);
+                                    var layer_time = layer_date.getTime();
+                                    if ((layer_date > warning_date_start || layer_date === warning_date_start)
+                                        && (layer_date < warning_date_end || layer_date === warning_date_end)) 
+                                    {
+                                        sublayer.setVisible(true);
+                                    } 
+                                }
+                            });
+                        }
                     } else {
                         layer.getLayers().forEach(function(sublayer, j) {
                             if (sublayer.get('layer_type') == "warning_points") {
-                                sublayer.getLayers().forEach(function(subsublayer, j) {
-                                    subsublayer.setVisible(false);
-                                    var layer_date = subsublayer.get('peak_date');
-                                    if (layer_date => warning_date_start && layer_date <= warning_date_end) {
-                                        subsublayer.setVisible(true);
-                                    }
-                                });
+                                if (sublayer.get("daily_warnings")) {
+                                    //filter out layers by date
+                                    sublayer.getLayers().forEach(function(subsublayer, j) {
+                                        var layer_date = subsublayer.get('peak_date');
+                                        if(typeof layer_date != 'undefined') {
+                                            subsublayer.setVisible(false);
+                                            var layer_time = layer_date.getTime();
+                                            if ((layer_date > warning_date_start || layer_date === warning_date_start)
+                                                && (layer_date < warning_date_end || layer_date === warning_date_end)) 
+                                            {
+                                                subsublayer.setVisible(true);
+                                            } 
+                                        }
+                                    });
+                                }
                             }
                         });
                     }
