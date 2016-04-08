@@ -1502,6 +1502,9 @@ var ERFP_MAP = (function() {
                     });
                     xhr_list.push(loadWarningPoints(layer, layer_id, datetime_string));
                 } else {
+                    if (layer.get('layer_type') == "warning_points") {
+                        console.log(layer);
+                    }
                     layer.getLayers().forEach(function(sublayer, j) {
                         if (sublayer.get('layer_type') == "warning_points") {
                             var group_id = '#'+layer.get('group_id');
@@ -1582,26 +1585,10 @@ var ERFP_MAP = (function() {
             m_map.getLayers().forEach(function(layer, i){
                 if (layer instanceof ol.layer.Group) {
                     if (layer.get('layer_type') == "warning_points") {
-                        if (layer.get("daily_warnings")) {
-                            //filter out layers by date
-                            layer.getLayers().forEach(function(sublayer, j) {
-                                var layer_date = sublayer.get('peak_date');
-                                if(typeof layer_date != 'undefined') {
-                                    sublayer.setVisible(false);
-                                    var layer_time = layer_date.getTime();
-                                    if ((layer_date > warning_date_start || layer_date === warning_date_start)
-                                        && (layer_date < warning_date_end || layer_date === warning_date_end)) 
-                                    {
-                                        sublayer.setVisible(true);
-                                    } 
-                                }
-                            });
-                        }
-                    } else {
+                        //filter out layers by date
                         layer.getLayers().forEach(function(sublayer, j) {
-                            if (sublayer.get('layer_type') == "warning_points") {
+                            if (sublayer instanceof ol.layer.Group) {
                                 if (sublayer.get("daily_warnings")) {
-                                    //filter out layers by date
                                     sublayer.getLayers().forEach(function(subsublayer, j) {
                                         var layer_date = subsublayer.get('peak_date');
                                         if(typeof layer_date != 'undefined') {
@@ -1614,6 +1601,18 @@ var ERFP_MAP = (function() {
                                             } 
                                         }
                                     });
+                                }
+                            }
+                            else if (layer.get("daily_warnings")) {
+                                var layer_date = sublayer.get('peak_date');
+                                if(typeof layer_date != 'undefined') {
+                                    sublayer.setVisible(false);
+                                    var layer_time = layer_date.getTime();
+                                    if ((layer_date > warning_date_start || layer_date === warning_date_start)
+                                        && (layer_date < warning_date_end || layer_date === warning_date_end)) 
+                                    {
+                                        sublayer.setVisible(true);
+                                    } 
                                 }
                             }
                         });
