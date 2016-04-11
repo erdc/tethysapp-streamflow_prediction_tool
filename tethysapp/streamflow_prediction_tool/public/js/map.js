@@ -773,9 +773,9 @@ var ERFP_MAP = (function() {
             //turn off select interaction
             m_map.removeInteraction(m_select_interaction);
             addInfoMessage("Retrieving Data ...");
-            var y_axis_title = "Flow (m^3/s)";
+            var y_axis_title = "Flow (m<sup>3</sup>/s)";
             if (m_units == "english") {
-                y_axis_title = "Flow (ft^3/s)";
+                y_axis_title = "Flow (ft<sup>3</sup>/s)";
             }
             var default_chart_settings = {
 
@@ -803,6 +803,7 @@ var ERFP_MAP = (function() {
                 },
                 yAxis: {
                     title: {
+                        useHTML: true,
                         text: y_axis_title
                     },
                     min: 0,
