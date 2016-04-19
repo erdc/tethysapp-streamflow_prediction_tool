@@ -1407,7 +1407,7 @@ var ERFP_MAP = (function() {
     };
 
     //FUNCTION: LOAD WARNING POINTS
-    loadWarningPoints = function(watershed_layer_group, layer_id, datetime_string) {
+    loadWarningPoints = function(watershed_layer_group, group_id, datetime_string) {
         //get warning points for map
         var xhr = jQuery.ajax({
             type: "GET",
@@ -1424,7 +1424,7 @@ var ERFP_MAP = (function() {
             if ("success" in data) {
                 var feature_count = data.warning_points.length;
                 if (feature_count > 0) {
-                    $(layer_id).parent().removeClass('hidden');
+                    $(group_id).parent().removeClass('hidden');
                     var ecmwf_forecast_start_year = parseInt(datetime_string.substring(0,4));
                     var ecmwf_forecast_start_month = parseInt(datetime_string.substring(4,6));
                     var ecmwf_forecast_start_day = parseInt(datetime_string.substring(6,8));
@@ -1498,7 +1498,6 @@ var ERFP_MAP = (function() {
             if (layer instanceof ol.layer.Group) {
                 if (layer.get('layer_type') == "warning_points") {
                     var group_id = '#'+layer.get('group_id');
-                    var layer_id = '#'+layer.get('layer_id');
                     layer.getLayers().forEach(function(sublayer, j) {
                         if (sublayer instanceof ol.layer.Group) {
                             $(group_id).parent().addClass('hidden'); //hide until reset
@@ -1508,11 +1507,11 @@ var ERFP_MAP = (function() {
                             xhr_list.push(loadWarningPoints(sublayer, group_id, datetime_string));
                         }
                         else {
-                            $(layer_id).parent().addClass('hidden'); //hide until reset
+                            $(group_id).parent().addClass('hidden'); //hide until reset
                             layer.getLayers().forEach(function(sublayer, j) {
                                 sublayer.getSource().getSource().clear(); //remove previous elements
                             });
-                            xhr_list.push(loadWarningPoints(layer, layer_id, datetime_string));
+                            xhr_list.push(loadWarningPoints(layer, group_id, datetime_string));
                         }
                     });
                 }
@@ -2156,8 +2155,8 @@ var ERFP_MAP = (function() {
                         }
                         else if (!loaded) {
                             loaded = true;
-                            bindInputs(layer_id, watershed_layer);
-                            warning_xhr_list.push(loadWarningPoints(watershed_layer, layer_id, warning_point_start_folder));
+                            bindInputs(group_id, watershed_layer);
+                            warning_xhr_list.push(loadWarningPoints(watershed_layer, group_id, warning_point_start_folder));
                         }
                     });
                 } else {
