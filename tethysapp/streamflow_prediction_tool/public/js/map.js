@@ -60,7 +60,8 @@ var ERFP_MAP = (function() {
     /************************************************************************
      *                    PRIVATE FUNCTION DECLARATIONS
      *************************************************************************/
-    var resizeAppContent, bindInputs, convertTimeSeriesMetricToEnglish, getCI,
+    var stringToUTCmiliseconds, stringToUTCDate, resizeAppContent, bindInputs, 
+        convertTimeSeriesMetricToEnglish, getCI, 
         convertTimeSeriesEnglishToMetric, isNotLoadingPastRequest, zoomToAll,
         zoomToLayer, zoomToFeature, toTitleCase, datePadString, getBaseLayer,
         getTileLayer, clearAllMessages, clearInfoMessages, clearOldChart,
@@ -76,7 +77,24 @@ var ERFP_MAP = (function() {
     /************************************************************************
      *                    PRIVATE FUNCTION IMPLEMENTATIONS
      *************************************************************************/
-     //FUNCTION: reset chart and select options
+    stringToUTCmiliseconds = function(datetime_string) {
+        var start_year = parseInt(datetime_string.substring(0,4));
+        var start_month = parseInt(datetime_string.substring(4,6));
+        var start_day = parseInt(datetime_string.substring(6,8));
+        var start_hour = 0;
+        var string_split = datetime_string.split(".");
+        if (string_split.length > 0) {
+            start_hour = parseInt(string_split[1].substring(0,2))
+        }
+        return Date.UTC(start_year, start_month-1,
+                        start_day, start_hour, 0, 0, 0);
+
+    }
+    //FUNCTION: String to utc-date
+    stringToUTCDate = function(datetime_string) {
+        return new Date(stringToUTCmiliseconds(datetime_string));
+    }
+    //FUNCTION: reset chart and select options
     resetChartSelectMessage = function() {
         //remove old chart reguardless
         clearOldChart('long-term');
@@ -1425,13 +1443,7 @@ var ERFP_MAP = (function() {
                 var feature_count = data.warning_points.length;
                 if (feature_count > 0) {
                     $(group_id).parent().removeClass('hidden');
-                    var ecmwf_forecast_start_year = parseInt(datetime_string.substring(0,4));
-                    var ecmwf_forecast_start_month = parseInt(datetime_string.substring(4,6));
-                    var ecmwf_forecast_start_day = parseInt(datetime_string.substring(6,8));
-                    var ecmwf_forecast_start_hour = parseInt(datetime_string.split(".")[1].substring(0,2));
-                    var ecmwf_date_forecast_begin = new Date(Date.UTC(ecmwf_forecast_start_year, ecmwf_forecast_start_month-1,
-                                                             ecmwf_forecast_start_day, ecmwf_forecast_start_hour));
-
+                    var ecmwf_date_forecast_begin = stringToUTCDate(datetime_string);
                     var first_layer = null;
                     var feature_dict = {}
                     watershed_layer_group.getLayers().forEach(function(sublayer, j) {
@@ -1524,17 +1536,12 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: updates the warning slider
     updateWarningSlider = function(datetime_string) {
-        var ecmwf_forecast_start_year = parseInt(datetime_string.substring(0,4));
-        var ecmwf_forecast_start_month = parseInt(datetime_string.substring(4,6));
-        var ecmwf_forecast_start_day = parseInt(datetime_string.substring(6,8));
-        var ecmwf_forecast_start_hour = parseInt(datetime_string.split(".")[1].substring(0,2));
-        var ecmwf_date_forecast_begin = new Date(Date.UTC(ecmwf_forecast_start_year, ecmwf_forecast_start_month-1,
-                                                 ecmwf_forecast_start_day, ecmwf_forecast_start_hour));
-
-        var date_array = [];
-        for(var i=0; i<16; i++) {
+        var ecmwf_date_forecast_begin = stringToUTCDate(datetime_string);
+        var date_array = [ecmwf_date_forecast_begin];
+        for(var i=2; i<17; i++) {
             var peak_date = new Date();
-            peak_date.setUTCDate(ecmwf_date_forecast_begin.getUTCDate()+i);
+            peak_date.setUTCDate(ecmwf_date_forecast_begin.getDate()+i);
+            peak_date.setUTCHours(0,0,0,0);
             date_array.push(peak_date);
         }
         //update associated slider
@@ -1565,7 +1572,7 @@ var ERFP_MAP = (function() {
             step: 16,
             connect: true,
             snap: true,
-            start: [ date_array[0].getTime(), date_array[15].getTime()],
+            start: [date_array[0].getTime(), date_array[15].getTime()],
             format: wNumb({
                 decimals: 0
             })
