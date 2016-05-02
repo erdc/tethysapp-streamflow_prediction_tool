@@ -83,7 +83,7 @@ var ERFP_MAP = (function() {
         var start_day = parseInt(datetime_string.substring(6,8));
         var start_hour = 0;
         var string_split = datetime_string.split(".");
-        if (string_split.length > 0) {
+        if (string_split.length > 1) {
             start_hour = parseInt(string_split[1].substring(0,2))
         }
         return Date.UTC(start_year, start_month-1,
@@ -1546,83 +1546,85 @@ var ERFP_MAP = (function() {
         }
         //update associated slider
         var dateSlider = document.getElementById('warning-date-slider-range');
-        var noui_data = dateSlider.noUiSlider;
-        if(typeof noui_data != 'undefined') {
-            noui_data.destroy();
-        }
-        noUiSlider.create(dateSlider, {
-            range: {
-                'min': date_array[0].getTime(),
-                '7%': date_array[1].getTime(),
-                '13%': date_array[2].getTime(),
-                '20%': date_array[3].getTime(),
-                '27%': date_array[4].getTime(),
-                '33%': date_array[5].getTime(),
-                '40%': date_array[6].getTime(),
-                '47%': date_array[7].getTime(),
-                '53%': date_array[8].getTime(),
-                '60%': date_array[9].getTime(),
-                '67%': date_array[10].getTime(),
-                '73%': date_array[11].getTime(),
-                '80%': date_array[12].getTime(),
-                '87%': date_array[13].getTime(),
-                '93%': date_array[14].getTime(),
-                'max': date_array[15].getTime()
-            },
-            step: 16,
-            connect: true,
-            snap: true,
-            start: [date_array[0].getTime(), date_array[15].getTime()],
-            format: wNumb({
-                decimals: 0
-            })
-        });
-
-        var dateValues = [
-        	document.getElementById('warning-start'),
-        	document.getElementById('warning-end')
-        ];
-        
-        dateSlider.noUiSlider.on('update', function( values, handle ) {
-            dateValues[handle].innerHTML = dateToUTCString(new Date(+values[handle]));
-            var warning_date_start = new Date(+values[0]);
-            var warning_date_end = new Date(+values[1]);
-            //parse through warning points
-            m_map.getLayers().forEach(function(layer, i){
-                if (layer instanceof ol.layer.Group) {
-                    if (layer.get('layer_type') == "warning_points") {
-                        //filter out layers by date
-                        layer.getLayers().forEach(function(sublayer, j) {
-                            if (sublayer instanceof ol.layer.Group) {
-                                if (sublayer.get("daily_warnings")) {
-                                    sublayer.getLayers().forEach(function(subsublayer, j) {
-                                        var layer_date = subsublayer.get('peak_date');
-                                        if(typeof layer_date != 'undefined') {
-                                            subsublayer.setVisible(true);
-                                            if (layer_date < warning_date_start || layer_date > warning_date_end) 
-                                            {
-                                                subsublayer.setVisible(false);
-                                            } 
-                                        }
-                                    });
-                                }
-                            }
-                            else if (layer.get("daily_warnings")) {
-                                var layer_date = sublayer.get('peak_date');
-                                if(typeof layer_date != 'undefined') {
-                                    sublayer.setVisible(true);
-                                    if (layer_date < warning_date_start || layer_date > warning_date_end) 
-                                    {
-                                        sublayer.setVisible(false);
-                                    } 
-                                }
-                            }
-                        });
-                    }
-                }
+        if (dateSlider != null) {
+            var noui_data = dateSlider.noUiSlider;
+            if(typeof noui_data != 'undefined') {
+                noui_data.destroy();
+            }
+            noUiSlider.create(dateSlider, {
+                range: {
+                    'min': date_array[0].getTime(),
+                    '7%': date_array[1].getTime(),
+                    '13%': date_array[2].getTime(),
+                    '20%': date_array[3].getTime(),
+                    '27%': date_array[4].getTime(),
+                    '33%': date_array[5].getTime(),
+                    '40%': date_array[6].getTime(),
+                    '47%': date_array[7].getTime(),
+                    '53%': date_array[8].getTime(),
+                    '60%': date_array[9].getTime(),
+                    '67%': date_array[10].getTime(),
+                    '73%': date_array[11].getTime(),
+                    '80%': date_array[12].getTime(),
+                    '87%': date_array[13].getTime(),
+                    '93%': date_array[14].getTime(),
+                    'max': date_array[15].getTime()
+                },
+                step: 16,
+                connect: true,
+                snap: true,
+                start: [date_array[0].getTime(), date_array[15].getTime()],
+                format: wNumb({
+                    decimals: 0
+                })
             });
-            m_map.render();
-        });
+    
+            var dateValues = [
+            	document.getElementById('warning-start'),
+            	document.getElementById('warning-end')
+            ];
+            
+            dateSlider.noUiSlider.on('update', function( values, handle ) {
+                dateValues[handle].innerHTML = dateToUTCString(new Date(+values[handle]));
+                var warning_date_start = new Date(+values[0]);
+                var warning_date_end = new Date(+values[1]);
+                //parse through warning points
+                m_map.getLayers().forEach(function(layer, i){
+                    if (layer instanceof ol.layer.Group) {
+                        if (layer.get('layer_type') == "warning_points") {
+                            //filter out layers by date
+                            layer.getLayers().forEach(function(sublayer, j) {
+                                if (sublayer instanceof ol.layer.Group) {
+                                    if (sublayer.get("daily_warnings")) {
+                                        sublayer.getLayers().forEach(function(subsublayer, j) {
+                                            var layer_date = subsublayer.get('peak_date');
+                                            if(typeof layer_date != 'undefined') {
+                                                subsublayer.setVisible(true);
+                                                if (layer_date < warning_date_start || layer_date > warning_date_end) 
+                                                {
+                                                    subsublayer.setVisible(false);
+                                                } 
+                                            }
+                                        });
+                                    }
+                                }
+                                else if (layer.get("daily_warnings")) {
+                                    var layer_date = sublayer.get('peak_date');
+                                    if(typeof layer_date != 'undefined') {
+                                        sublayer.setVisible(true);
+                                        if (layer_date < warning_date_start || layer_date > warning_date_end) 
+                                        {
+                                            sublayer.setVisible(false);
+                                        } 
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+                m_map.render();
+            });
+        }
     };
 
     //FUNCTION: Determines whether it is a layer or a group
@@ -2132,6 +2134,9 @@ var ERFP_MAP = (function() {
             controls: ol.control.defaults().extend([
                 new ol.control.FullScreen(),
                 new ol.control.ZoomToExtent(),
+                new ol.control.ScaleLine(),
+                new ol.control.OverviewMap(),
+                new ol.control.Control({element: document.getElementById('map-view-legend')}),
             ]),
             interactions: ol.interaction.defaults().extend([
                 new ol.interaction.DragRotateAndZoom(),
