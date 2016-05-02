@@ -136,6 +136,43 @@
             </div>
         </div>
     </div>
+    <div id="map-view-legend" class="map-view-legend ol-unselectable ol-control">
+        <div> 
+            <svg width="20" height="20" viewPort="0 0 20 20" version="1.1"
+         xmlns="http://www.w3.org/2000/svg">
+                <polyline points="19 1, 1 6, 19 14, 1 19" stroke="blue" fill="transparent" stroke-width="2"/>
+            </svg>
+            Drainage Line
+        </div>
+        <div>
+            <svg width="20" height="20" viewPort="0 0 20 20" version="1.1"
+         xmlns="http://www.w3.org/2000/svg">
+                <polygon points="1 10, 5 3, 13 1, 19 9, 14 19, 9 13" stroke="black" fill="grey" stroke-width="2"/>
+            </svg>
+            Watershed Boundary 
+        </div>
+        <div>
+            <svg width="20" height="20" viewPort="0 0 20 20" version="1.1"
+         xmlns="http://www.w3.org/2000/svg">
+                <polygon points="0 20, 10 0, 20 20" stroke="purple" fill="purple" stroke-width="2"/>
+            </svg>
+            20-Year Warnings
+        </div>
+        <div>
+            <svg width="20" height="20" viewPort="0 0 20 20" version="1.1"
+         xmlns="http://www.w3.org/2000/svg">
+                <polygon points="0 20, 10 0, 20 20" stroke="red" fill="red" stroke-width="2"/>
+            </svg>
+            10-Year Warnings
+        </div>
+        <div>
+            <svg width="20" height="20" viewPort="0 0 20 20" version="1.1"
+         xmlns="http://www.w3.org/2000/svg">
+                <polygon points="0 20, 10 0, 20 20" stroke="yellow" fill="yellow" stroke-width="2"/>
+            </svg>
+            2-Year Warnings
+        </div>
+    </div>
 {% endblock %}
 
 {% block app_navigation_items %}
