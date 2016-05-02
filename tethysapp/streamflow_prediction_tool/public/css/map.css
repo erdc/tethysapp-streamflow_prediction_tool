@@ -67,3 +67,19 @@
 	color: #888;
 	margin: 15px 0;
 }
+.ol-scale-line {
+    left: 40%;
+}
+.map-view-legend {
+  bottom: 30px;
+  right: 0;
+  width: 170px;
+  max-height: 90%;
+  overflow-y: auto;
+  margin: 5px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px #ddd solid;
+}
+.map-view-legend:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
