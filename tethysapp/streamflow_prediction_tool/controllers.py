@@ -15,7 +15,6 @@ import os
 #django imports
 from django.contrib.auth.decorators import user_passes_test, login_required
 from django.shortcuts import render
-
 #tethys imports
 from tethys_sdk.gizmos import (Button, MessageBox, SelectInput, 
                                TextInput, ToggleSwitch)
@@ -26,7 +25,8 @@ from .model import (BaseLayer, DataStore, DataStoreType, Geoserver,
                     MainSettings, mainSessionMaker,
                     Watershed, WatershedGroup)
 from .functions import (ecmwf_get_valid_forecast_folder_list,
-                        format_watershed_title, 
+                        format_watershed_title,
+                        redirect_with_message,
                         user_permission_test)
 @login_required
 def home(request):
@@ -275,8 +275,8 @@ def map(request):
         
         if not watershed_ids and not group_ids:
             #send them home
-            return render(request, 'streamflow_prediction_tool/home.html', 
-                          {'error': "No watershed or watershed group selected." })
+            msg = "No watershed or watershed group selected. Please select one to proceed."
+            return redirect_with_message(request, "..", msg, severity="WARNING")
             
         session = mainSessionMaker()
 
@@ -336,8 +336,8 @@ def map(request):
                     int(group_id)
                 except TypeError, ValueError:
                     #send them home
-                    return render(request, 'streamflow_prediction_tool/home.html', 
-                                  {'error': "Invalid Watershed Group ID: {0}".format(group_id) })
+                    msg = "Invalid Watershed Group ID: {0}".format(group_id)
+                    return redirect_with_message(request, "..", msg, severity="ERROR")
                     
                 watershed_group  = session.query(WatershedGroup).get(group_id)
                 
@@ -422,9 +422,9 @@ def map(request):
         rendered_request = render(request, 'streamflow_prediction_tool/map.html', context)
         session.close()
         return rendered_request
-    #send them home
-    return render(request, 'streamflow_prediction_tool/home.html', 
-                  {'error': 'Invalid Request Method'})
+    #send home
+    msg = 'Invalid Request Method.'
+    return redirect_with_message(request, "..", msg, severity="WARNING")
 
 
 @user_passes_test(user_permission_test)

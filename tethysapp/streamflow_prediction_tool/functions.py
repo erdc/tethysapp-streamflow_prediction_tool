@@ -8,6 +8,8 @@
 ##  License: BSD 3-Clause
 
 import datetime
+from django.contrib import messages
+from django.shortcuts import redirect
 from glob import glob
 from json import dumps as json_dumps
 import netCDF4 as NET
@@ -22,6 +24,19 @@ from sqlalchemy import and_
 from model import GeoServerLayer, mainSessionMaker, MainSettings, Watershed
 from spt_dataset_manager.dataset_manager import (CKANDatasetManager, 
                                                  GeoServerDatasetManager)
+
+def redirect_with_message(request, url, message, severity="INFO"):
+    """
+    Redirects to new page with message
+    """
+    if message not in [m.message for m in messages.get_messages(request)]:
+        if severity=="INFO":
+            messages.info(request, message)
+        elif severity=="WARNING":
+            messages.warning(request, message)
+        elif severity=="ERROR":
+            messages.error(request, message)
+    return redirect(url)
                                                  
 def delete_from_database(session, object_to_delete):
     """
@@ -330,7 +345,6 @@ def upload_geoserver_layer(geoserver_manager, resource_name,
         geoserver_layer.uploaded = True
         geoserver_layer.latlon_bbox = latlon_bbox
         geoserver_layer.projection = layer_info['projection']
-        geoserver_layer.attribute_list = json_dumps(layer_info['attributes'])
         geoserver_layer.wfs_url = layer_info['wfs']['geojson']
     else:
         raise Exception("Problems uploading {}".format(resource_name))
