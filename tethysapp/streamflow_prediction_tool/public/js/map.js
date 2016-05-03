@@ -805,6 +805,36 @@ var ERFP_MAP = (function() {
                 title: { text: "Forecast"},
                 chart: {
                     zoomType: 'x',
+                    events: {
+                        redraw: function () {
+                            var chart = this,
+                                legend = chart.legend;
+        
+                            for (var i = 0, len = legend.allItems.length; i < len; i++) {
+                                (function(i) {
+                                    var item = legend.allItems[i].legendItem;
+                                    if (item.textStr == "ECMWF - HRES") {
+                                        item.element.innerHTML = '<tspan id="boot_tooltip_chart'+i+'">' + item.textStr + '<tspan>';
+                                        var item_parent = $('#boot_tooltip_chart'+i).parent();
+                                        item_parent.data('toggle', 'tooltip');
+                                        item_parent.data('placement', 'top');
+                                        item_parent.attr('title', 'The HRES member provides a highly detailed description of future weather over 10 days. Overall, it is seen as the best forecast. However, other forecast members may be more accurate in any given prediction cycle.');
+                                        item_parent.addClass('boot_tooltip_chart');
+                                        item_parent.tooltip({container: 'body'});
+                                    }
+                                    else if (item.textStr == "ECMWF") {
+                                        item.element.innerHTML = '<tspan id="boot_tooltip_chart'+i+'">' + item.textStr + '<tspan>';
+                                        var item_parent = $('#boot_tooltip_chart'+i).parent();
+                                        item_parent.data('toggle', 'tooltip');
+                                        item_parent.data('placement', 'top');
+                                        item_parent.attr('title', 'The "light green" band represents the extremes, the "dark green" band represents the probable streamflow bounds, and the "dark green line" represents the average over the 52 members.');
+                                        item_parent.addClass('boot_tooltip_chart');
+                                        item_parent.tooltip({container: 'body'});
+                                    }
+                                })(i);
+                            }
+                        }
+                    }
                 },
                 legend: {
                     enabled: true,
@@ -887,7 +917,7 @@ var ERFP_MAP = (function() {
                                                    'arearange');
                         }
                         if ("high_res" in data) {
-                            addECMWFSeriesToCharts("ECMWF - High Res.",
+                            addECMWFSeriesToCharts("ECMWF - HRES",
                                                    data.high_res,
                                                    Highcharts.getOptions().colors[1]);
                         }
