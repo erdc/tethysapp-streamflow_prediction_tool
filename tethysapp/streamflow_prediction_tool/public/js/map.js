@@ -2135,7 +2135,6 @@ var ERFP_MAP = (function() {
                 new ol.control.FullScreen(),
                 new ol.control.ZoomToExtent(),
                 new ol.control.ScaleLine(),
-                new ol.control.OverviewMap(),
                 new ol.control.Control({element: document.getElementById('map-view-legend')}),
             ]),
             interactions: ol.interaction.defaults().extend([
