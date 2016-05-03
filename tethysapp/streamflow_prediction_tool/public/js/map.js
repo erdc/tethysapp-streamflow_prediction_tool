@@ -777,10 +777,15 @@ var ERFP_MAP = (function() {
         } else {
             resetChartSelectMessage();
             m_long_term_chart_data_ajax_load_failed = false;
+            //UPDATE ERA INTERIM DOWNLOAD BUTTONS
             var params = { watershed_name: m_selected_ecmwf_watershed,
                            subbasin_name: m_selected_ecmwf_subbasin,
                            reach_id: m_selected_reach_id,
                            daily: false };
+    
+            $('#era_message').addClass('hidden');
+            $('#download_interim').removeClass('hidden');
+
             //change download button url
             $('#submit-download-interim-csv').attr({target: '_blank', 
                                                     href  : 'era-interim-get-csv?' + jQuery.param( params ) });
