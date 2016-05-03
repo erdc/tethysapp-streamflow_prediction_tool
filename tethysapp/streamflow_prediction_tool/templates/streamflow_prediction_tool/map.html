@@ -118,7 +118,11 @@
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <h6>Download ERA Interim Data</h6>
-                                        <div class="btn-group" role="group">
+                                        <div id="era_message" class="alert alert-info" role="alert">
+                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                            Click on a river segment or search by river reach ID before downloading data.
+                                        </div>
+                                        <div id="download_interim" class="btn-group hidden" role="group">
                                             <a class="btn btn-warning" role="button" id="submit-download-interim-csv-daily">
                                                 <span class="glyphicon glyphicon-play"></span> Download Daily Interim Data
                                             </a>

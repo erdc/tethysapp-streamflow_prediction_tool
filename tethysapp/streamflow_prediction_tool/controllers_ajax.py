@@ -18,7 +18,7 @@ import os
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import ObjectDeletedError
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from RAPIDpy.dataset import RAPIDDataset
 
 
@@ -793,7 +793,7 @@ def era_interim_get_csv(request):
         session.close()
         path_to_era_interim_data = main_settings.era_interim_rapid_directory
         if not os.path.exists(path_to_era_interim_data):
-            return JsonResponse({'error' : 'Location of ERA-Interim files faulty. Please check settings.'})
+            raise Http404('Location of ERA-Interim files faulty. Please check settings.')
 
         #get information from GET request
         get_info = request.GET
@@ -808,7 +808,7 @@ def era_interim_get_csv(request):
         try:
             reach_id = int(reach_id)
         except TypeError, ValueError:
-            return JsonResponse({'error' : 'Invalid Reach ID %s.' % reach_id})
+            raise Http404('Invalid Reach ID %s.' % reach_id)
             
         #----------------------------------------------
         # HISTORICAL DATA SECTION
@@ -826,9 +826,7 @@ def era_interim_get_csv(request):
                     try:
                         reach_index = qout_nc.get_river_index(reach_id)
                     except Exception:
-                        era_interim_return_data['error'] = 'ERA Interim reach with id: %s not found.' % reach_id
-                        error_found = True
-                        raise
+                        raise Http404('ERA Interim reach with id: %s not found.' % reach_id)
     
                     if not error_found:
                         #get information from dataset
@@ -855,10 +853,9 @@ def era_interim_get_csv(request):
                     
                         return response
             except Exception:
-                raise
-                return JsonResponse({'error' : "Invalid ERA-Interim file ..."})
+                raise Http404("Invalid ERA-Interim file ...")
                         
-        return JsonResponse({'error' : 'ERA Interim data for %s (%s) not found.' % (watershed_name, subbasin_name)})
+        raise Http404('ERA Interim data for %s (%s) not found.' % (watershed_name, subbasin_name))
 
 @user_passes_test(user_permission_test)
 def settings_update(request):
