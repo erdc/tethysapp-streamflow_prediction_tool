@@ -807,8 +807,8 @@ var ERFP_MAP = (function() {
                     zoomType: 'x',
                     events: {
                         redraw: function () {
-                            var chart = this,
-                                legend = chart.legend;
+                            var chart = this;
+                            var legend = chart.legend;
         
                             for (var i = 0, len = legend.allItems.length; i < len; i++) {
                                 (function(i) {
@@ -828,6 +828,15 @@ var ERFP_MAP = (function() {
                                         item_parent.data('toggle', 'tooltip');
                                         item_parent.data('placement', 'top');
                                         item_parent.attr('title', 'The "light green" band represents the extremes, the "dark green" band represents the probable streamflow bounds, and the "dark green line" represents the average over the 52 members.');
+                                        item_parent.addClass('boot_tooltip_chart');
+                                        item_parent.tooltip({container: 'body'});
+                                    }
+                                    else if (item.textStr == "ERA Interim") {
+                                        item.element.innerHTML = '<tspan id="boot_tooltip_chart'+i+'">' + item.textStr + '<tspan>';
+                                        var item_parent = $('#boot_tooltip_chart'+i).parent();
+                                        item_parent.data('toggle', 'tooltip');
+                                        item_parent.data('placement', 'top');
+                                        item_parent.attr('title', 'This data is modeled historical streamflow based on the ERA Interim global runoff dataset.');
                                         item_parent.addClass('boot_tooltip_chart');
                                         item_parent.tooltip({container: 'body'});
                                     }
