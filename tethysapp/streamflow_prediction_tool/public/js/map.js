@@ -801,6 +801,9 @@ var ERFP_MAP = (function() {
                 chart: {
                     zoomType: 'x',
                 },
+                legend: {
+                    enabled: true,
+                },
                 rangeSelector: {
                     selected: 0
                 },
