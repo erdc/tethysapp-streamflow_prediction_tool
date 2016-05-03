@@ -810,10 +810,6 @@ def era_interim_get_csv(request):
         except TypeError, ValueError:
             raise Http404('Invalid Reach ID %s.' % reach_id)
             
-        #----------------------------------------------
-        # HISTORICAL DATA SECTION
-        #----------------------------------------------
-        era_interim_return_data = {}
         #find/check current output datasets
         path_to_output_files = os.path.join(path_to_era_interim_data, "{0}-{1}".format(watershed_name, subbasin_name))
         historical_data_files = glob(os.path.join(path_to_output_files, "Qout*.nc"))
