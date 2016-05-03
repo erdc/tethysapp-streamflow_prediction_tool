@@ -2292,14 +2292,13 @@ var ERFP_MAP = (function() {
         });
 
         //show/hide forecasts based on toggle
-         $('#ecmwf-toggle').on('switchChange.bootstrapSwitch', function(event, state) {
+        $('#ecmwf-toggle').on('switchChange.bootstrapSwitch', function(event, state) {
              m_ecmwf_show = state;
              if (m_selected_feature != null && m_selected_ecmwf_watershed != null 
                  && m_selected_ecmwf_subbasin != null) {
                  loadHydrographFromFeature(m_selected_feature);
              }
         });
-
         $('#wrf-toggle').on('switchChange.bootstrapSwitch', function(event, state) {
             m_wrf_show = state;
             if (m_selected_feature != null && m_selected_wrf_hydro_watershed != null 
@@ -2307,6 +2306,8 @@ var ERFP_MAP = (function() {
                 loadHydrographFromFeature(m_selected_feature);
             }
         });
+        //init tooltip
+        $('.boot_tooltip').tooltip();
 
         //resize app content based on window size and nav bar
         $('.toggle-nav').off();
