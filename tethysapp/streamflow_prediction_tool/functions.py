@@ -338,13 +338,14 @@ def upload_geoserver_layer(geoserver_manager, resource_name,
     layer_name, layer_info = geoserver_manager.upload_shapefile(resource_name, 
                                                                 shp_file_list)
     if layer_name and layer_info:
+        geoserver_layer.name = layer_name.strip()
+        geoserver_layer.uploaded = True
         raw_latlon_bbox = layer_info['latlon_bbox'][:4]
         latlon_bbox=json_dumps([raw_latlon_bbox[0],raw_latlon_bbox[2],
                                 raw_latlon_bbox[1],raw_latlon_bbox[3]])
-        geoserver_layer.name = layer_name.strip()
-        geoserver_layer.uploaded = True
         geoserver_layer.latlon_bbox = latlon_bbox
         geoserver_layer.projection = layer_info['projection']
+        geoserver_layer.attribute_list = json_dumps(layer_info['attributes'])
         geoserver_layer.wfs_url = layer_info['wfs']['geojson']
     else:
         raise Exception("Problems uploading {}".format(resource_name))
