@@ -1601,11 +1601,10 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: updates the warning slider
     updateWarningSlider = function(datetime_string) {
-        var ecmwf_date_forecast_begin = stringToUTCDate(datetime_string);
-        var date_array = [ecmwf_date_forecast_begin];
-        for(var i=2; i<17; i++) {
-            var peak_date = new Date();
-            peak_date.setUTCDate(ecmwf_date_forecast_begin.getDate()+i);
+        var date_array = [];
+        for(var i=0; i<16; i++) {
+            var peak_date = stringToUTCDate(datetime_string);
+            peak_date.setUTCDate(peak_date.getUTCDate()+i);
             peak_date.setUTCHours(0,0,0,0);
             date_array.push(peak_date);
         }
