@@ -1490,12 +1490,11 @@ var ERFP_MAP = (function() {
                 var feature_count = data.warning_points.length;
                 if (feature_count > 0) {
                     $(group_id).parent().removeClass('hidden');
-                    var ecmwf_date_forecast_begin = stringToUTCDate(datetime_string);
                     var first_layer = null;
                     var feature_dict = {}
                     watershed_layer_group.getLayers().forEach(function(sublayer, j) {
-                        var peak_date = new Date();
-                        peak_date.setUTCDate(ecmwf_date_forecast_begin.getUTCDate()+j);
+                        var peak_date = stringToUTCDate(datetime_string);
+                        peak_date.setUTCDate(peak_date.getUTCDate()+j);
                         sublayer.set('peak_date', peak_date); 
                         sublayer.set('peak_date_str', dateToUTCString(peak_date));
                         feature_dict[dateToUTCString(peak_date)] = []
@@ -1552,33 +1551,52 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: updates the warning points for all layers
     updateWarningPoints = function(datetime_string) {
-        var xhr_list = [];
-        m_map.getLayers().forEach(function(layer, i){
-            if (layer instanceof ol.layer.Group) {
-                if (layer.get('layer_type') == "warning_points") {
-                    var group_id = '#'+layer.get('group_id');
-                    layer.getLayers().forEach(function(sublayer, j) {
+
+        //STEP 1: REMOVE ALL OLD WARNINGS
+        m_map.getLayers().forEach(function(watershed_layer, i){
+            if (watershed_layer.get('layer_type') == "warning_points") {
+                if (watershed_layer instanceof ol.layer.Group) {
+                    var removed_old = false;
+                    watershed_layer.getLayers().forEach(function(sublayer, j) {
                         if (sublayer instanceof ol.layer.Group) {
-                            $(group_id).parent().addClass('hidden'); //hide until reset
                             sublayer.getLayers().forEach(function(subsublayer, j) {
                                 subsublayer.getSource().getSource().clear(); //remove previous elements
                             });
-                            xhr_list.push(loadWarningPoints(sublayer, group_id, datetime_string));
                         }
-                        else {
-                            $(group_id).parent().addClass('hidden'); //hide until reset
-                            layer.getLayers().forEach(function(sublayer, j) {
+                        else if (!removed_old) {
+                            watershed_layer.getLayers().forEach(function(sublayer, j) {
                                 sublayer.getSource().getSource().clear(); //remove previous elements
                             });
-                            xhr_list.push(loadWarningPoints(layer, group_id, datetime_string));
+                            removed_old = true;
                         }
                     });
                 }
             }
         });
-        jQuery.when.apply(jQuery, xhr_list).always(function() {
+
+        //STEP 2: LOAD NEW WARNINGS
+        var warning_xhr_list = [];
+        m_map.getLayers().forEach(function(watershed_layer, i){
+            if (watershed_layer.get('layer_type') == "warning_points") {
+                if (watershed_layer instanceof ol.layer.Group) {
+                    var group_id = '#'+watershed_layer.get('group_id');
+                    var loaded = false;
+                    watershed_layer.getLayers().forEach(function(sublayer, j) {
+                        if (sublayer instanceof ol.layer.Group) {
+                            warning_xhr_list.push(loadWarningPoints(sublayer, group_id, datetime_string));
+                        }
+                        else if (!loaded) {
+                            warning_xhr_list.push(loadWarningPoints(watershed_layer, group_id, datetime_string));
+                            loaded = true;
+                        }
+                    });
+                }
+            }
+        });
+        jQuery.when.apply(jQuery, warning_xhr_list).always(function() {
             updateWarningSlider(datetime_string);
         });
+
     };
 
     //FUNCTION: updates the warning slider
