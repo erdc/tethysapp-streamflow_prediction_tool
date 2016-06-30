@@ -99,13 +99,19 @@
                                 <div class="panel-body">
                                     <h6>Warning Points Control Panel</h6>
                                     {% if warning_point_date_select %}
-                                        {% gizmo select_input warning_point_date_select %}
-                                        <div id="warning-date-slider-range"></div>
-                                        <span class="warning-val" id="warning-start"></span>
-                                        <span style="font: 700 12px Arial;"> to </span>
-                                        <span class="warning-val" id="warning-end"></span>
+                                        <div id="message_warning_points" class="alert alert-info row hidden" role="alert">
+                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                            Loading warning points. Please wait ...
+                                        </div>
+                                        <div id="warning_input_area">
+                                            {% gizmo select_input warning_point_date_select %}
+                                            <div id="warning-date-slider-range"></div>
+                                            <span class="warning-val" id="warning-start"></span>
+                                            <span style="font: 700 12px Arial;"> to </span>
+                                            <span class="warning-val" id="warning-end"></span>
+                                        </div>
                                     {% else %}
-                                        <div id="message" class="alert alert-danger" role="alert">
+                                        <div id="message_warning_points" class="alert alert-danger" role="alert">
                                             <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                                             No forecasts found.
                                         </div>
