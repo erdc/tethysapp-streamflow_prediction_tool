@@ -1551,7 +1551,8 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: updates the warning points for all layers
     updateWarningPoints = function(datetime_string) {
-
+        $('#message_warning_points').removeClass('hidden');
+        $('#warning_input_area').addClass('hidden');
         //STEP 1: REMOVE ALL OLD WARNINGS
         m_map.getLayers().forEach(function(watershed_layer, i){
             if (watershed_layer.get('layer_type') == "warning_points") {
@@ -1595,6 +1596,8 @@ var ERFP_MAP = (function() {
         });
         jQuery.when.apply(jQuery, warning_xhr_list).always(function() {
             updateWarningSlider(datetime_string);
+            $('#message_warning_points').addClass('hidden');
+            $('#warning_input_area').removeClass('hidden');
         });
 
     };
@@ -1618,7 +1621,7 @@ var ERFP_MAP = (function() {
             noUiSlider.create(dateSlider, {
                 range: {
                     'min': date_array[0].getTime(),
-                    '7%': date_array[1].getTime(),
+                    '7%':  date_array[1].getTime(),
                     '13%': date_array[2].getTime(),
                     '20%': date_array[3].getTime(),
                     '27%': date_array[4].getTime(),
