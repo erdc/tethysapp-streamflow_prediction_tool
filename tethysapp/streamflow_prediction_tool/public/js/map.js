@@ -1473,6 +1473,7 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: LOAD WARNING POINTS
     loadWarningPoints = function(watershed_layer_group, group_id, datetime_string) {
+        $(group_id).parent().addClass('hidden');
         //get warning points for map
         var xhr = jQuery.ajax({
             type: "GET",
