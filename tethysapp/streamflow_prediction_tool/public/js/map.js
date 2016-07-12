@@ -1605,12 +1605,17 @@ var ERFP_MAP = (function() {
     //FUNCTION: updates the warning slider
     updateWarningSlider = function(datetime_string) {
         var date_array = [];
-        for(var i=0; i<16; i++) {
+        for(var i=0; i<15; i++) {
             var peak_date = stringToUTCDate(datetime_string);
             peak_date.setUTCDate(peak_date.getUTCDate()+i);
             peak_date.setUTCHours(0,0,0,0);
             date_array.push(peak_date);
         }
+        //set max to 15 days later (because it could have +12 hrs)
+        var peak_date = stringToUTCDate(datetime_string);
+        peak_date.setUTCDate(peak_date.getUTCDate()+15);
+        date_array.push(peak_date);
+
         //update associated slider
         var dateSlider = document.getElementById('warning-date-slider-range');
         if (dateSlider != null) {
@@ -1653,8 +1658,10 @@ var ERFP_MAP = (function() {
             
             dateSlider.noUiSlider.on('update', function( values, handle ) {
                 dateValues[handle].innerHTML = dateToUTCString(new Date(+values[handle]));
-                var warning_date_start = new Date(+values[0]);
-                var warning_date_end = new Date(+values[1]);
+                var warning_date_start = new Date();
+                warning_date_start.setTime(+values[0]);
+                var warning_date_end = new Date();
+                warning_date_end.setTime(+values[1]);
                 //parse through warning points
                 m_map.getLayers().forEach(function(layer, i){
                     if (layer instanceof ol.layer.Group) {
