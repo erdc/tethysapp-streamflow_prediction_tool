@@ -882,6 +882,11 @@ def add_data_store(request):
                                           placeholder='e.g.: http://ciwweb.chpc.utah.edu/api/3/action',
                                           icon_append='glyphicon glyphicon-cloud-download',)
 
+    data_store_owner_org_input = TextInput(display_text='Data Store Owner Organization',
+                                           name='data-store-owner_org-input',
+                                           placeholder='e.g.: byu',
+                                           icon_append='glyphicon glyphicon-home',)
+
     add_button = Button(display_text='Add Data Store',
                         icon='glyphicon glyphicon-plus',
                         style='success',
@@ -892,6 +897,7 @@ def add_data_store(request):
                 'data_store_name_input': data_store_name_input,
                 'data_store_type_select_input': data_store_type_select_input,
                 'data_store_endpoint_input': data_store_endpoint_input,
+                'data_store_owner_org_input': data_store_owner_org_input,
                 'add_button': add_button,
               }
               

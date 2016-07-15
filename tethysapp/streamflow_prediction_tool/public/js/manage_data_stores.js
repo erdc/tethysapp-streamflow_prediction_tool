@@ -50,6 +50,7 @@ var ERFP_MANAGE_DATA_STORES = (function() {
             var safe_to_submit = {val: true, error:""};
             var data_store_id = parent_row.find('.data-store-id').text();
             var data_store_name = checkTableCellInputWithError(parent_row.find('.data-store-name'),safe_to_submit);
+            var data_store_owner_org = checkTableCellInputWithError(parent_row.find('.data-store-owner_org'),safe_to_submit);
             var data_store_api_endpoint = checkTableCellInputWithError(parent_row.find('.data-store-api-endpoint'),safe_to_submit);
             var data_store_api_key = checkTableCellInputWithError(parent_row.find('.data-store-api-key-input'),safe_to_submit);
         
@@ -57,7 +58,8 @@ var ERFP_MANAGE_DATA_STORES = (function() {
                     data_store_id: data_store_id,
                     data_store_name: data_store_name,
                     data_store_api_endpoint: data_store_api_endpoint,
-                    data_store_api_key: data_store_api_key
+                    data_store_api_key: data_store_api_key,
+                    data_store_owner_org: data_store_owner_org,
                     };
             //update database
             var xhr = submitRowData($(this), data, safe_to_submit); 
