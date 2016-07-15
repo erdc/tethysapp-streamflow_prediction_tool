@@ -152,6 +152,20 @@ def delete_old_watershed_geoserver_files(watershed):
         if watershed.geoserver_ahps_station_layer.uploaded:
             geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_ahps_station_layer.name)
         
+def delete_rapid_input_ckan(watershed):
+    """
+    This function deletes RAPID input on CKAN
+    """
+    data_store = watershed.data_store
+    if 'ckan' == data_store.data_store_type.code_name \
+    and watershed.ecmwf_rapid_input_resource_id.strip():
+        #get dataset managers
+        data_manager = CKANDatasetManager(data_store.api_endpoint,
+                                          data_store.api_key,
+                                          "ecmwf"
+                                          )
+        data_manager.dataset_engine.delete_resource(watershed.ecmwf_rapid_input_resource_id)
+        watershed.ecmwf_rapid_input_resource_id = ""
 
 def delete_old_watershed_files(watershed, ecmwf_local_prediction_files_location,
                                wrf_hydro_local_prediction_files_location):
@@ -163,15 +177,8 @@ def delete_old_watershed_files(watershed, ecmwf_local_prediction_files_location,
     #remove old ECMWF and WRF-Hydro prediction files
     delete_old_watershed_prediction_files(watershed, forecast="all")
     #remove RAPID input files on CKAN
-    data_store = watershed.data_store
-    if 'ckan' == data_store.data_store_type.code_name and watershed.ecmwf_rapid_input_resource_id:
-        #get dataset managers
-        data_manager = CKANDatasetManager(data_store.api_endpoint,
-                                          data_store.api_key,
-                                          "ecmwf"
-                                          )
-        data_manager.dataset_engine.delete_resource(watershed.ecmwf_rapid_input_resource_id)
-
+    delete_rapid_input_ckan(watershed)
+    
 def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
     """""
     Finds the current output from downscaled ECMWF forecasts

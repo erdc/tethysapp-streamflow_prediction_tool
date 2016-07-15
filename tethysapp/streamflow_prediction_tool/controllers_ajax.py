@@ -30,6 +30,7 @@ from tethys_dataset_services.engines import CkanDatasetEngine
 
 #local imports
 from functions import (delete_from_database,
+                       delete_rapid_input_ckan,
                        delete_old_watershed_prediction_files,
                        delete_old_watershed_files, 
                        delete_old_watershed_geoserver_files,
@@ -1454,33 +1455,33 @@ def watershed_update(request):
         except Exception as ex:
             session.close()
             return JsonResponse({'error' : "AHPS Station layer update error: %s" % ex})
-            
-
 
         #remove old prediction files if watershed/subbasin name changed
         if(ecmwf_data_store_watershed_name != watershed.ecmwf_data_store_watershed_name or 
            ecmwf_data_store_subbasin_name != watershed.ecmwf_data_store_subbasin_name):
             delete_old_watershed_prediction_files(watershed,forecast="ecmwf")
             #remove RAPID input files on CKAN if exists
-            if watershed.ecmwf_rapid_input_resource_id.strip() \
-            and watershed.data_store.data_store_type_id>0:
-                #get dataset manager
-                try:
-                    data_manager = RAPIDInputDatasetManager(watershed.data_store.api_endpoint,
-                                                            watershed.data_store.api_key,
-                                                            "ecmwf",
-                                                            main_settings.app_instance_id)
-                except Exception as ex:
-                    session.close()
-                    return JsonResponse({'error' : "Invalid CKAN instance %s. Cannot delete RAPID input files on CKAN: %s" \
-                                                    % (watershed.data_store.api_endpoint, ex)})
-
-                data_manager.dataset_engine.delete_resource(watershed.ecmwf_rapid_input_resource_id)
-                watershed.ecmwf_rapid_input_resource_id = ""
+            try:
+                delete_rapid_input_ckan(watershed)
+            except Exception as ex:
+                session.close()
+                return JsonResponse({'error' : "Invalid CKAN instance %s. Cannot delete RAPID input files on CKAN: %s" \
+                                                % (watershed.data_store.api_endpoint, ex)})
+            
 
         if(wrf_hydro_data_store_watershed_name != watershed.wrf_hydro_data_store_watershed_name or 
            wrf_hydro_data_store_subbasin_name != watershed.wrf_hydro_data_store_subbasin_name):
             delete_old_watershed_prediction_files(watershed, forecast="wrf_hydro")
+
+        #remove CKAN files on old CKAN instance
+        if watershed.data_store_id != data_store_id:
+            #remove RAPID input files on CKAN if exists
+            try:
+                delete_rapid_input_ckan(watershed)
+            except Exception as ex:
+                session.close()
+                return JsonResponse({'error' : "Invalid CKAN instance %s. Cannot delete RAPID input files on CKAN: %s" \
+                                                % (watershed.data_store.api_endpoint, ex)})
 
         #change watershed attributes
         watershed.watershed_name = watershed_name.strip()
