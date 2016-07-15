@@ -68,13 +68,16 @@ class DataStore(Base):
     # Columns
     id = Column(Integer, primary_key=True)
     name = Column(String)
+    owner_org = Column(String)
     data_store_type_id = Column(Integer,ForeignKey('data_store_type.id'))
     data_store_type = relationship("DataStoreType")
     api_endpoint = Column(String)
     api_key = Column(String)
 
-    def __init__(self, server_name, data_store_type_id, api_endpoint, api_key):
+    def __init__(self, server_name, owner_org, data_store_type_id, 
+                       api_endpoint, api_key):
         self.name = server_name
+        self.owner_org = owner_org
         self.data_store_type_id = data_store_type_id
         self.api_endpoint = api_endpoint
         self.api_key = api_key

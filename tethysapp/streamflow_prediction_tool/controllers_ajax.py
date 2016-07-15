@@ -59,6 +59,7 @@ def data_store_add(request):
         #get/check information from AJAX request
         post_info = request.POST
         data_store_name = post_info.get('data_store_name')
+        data_store_owner_org = post_info.get('data_store_owner_org')
         data_store_type_id = post_info.get('data_store_type_id')
         data_store_endpoint = post_info.get('data_store_endpoint')
         data_store_api_key = post_info.get('data_store_api_key')
@@ -94,7 +95,12 @@ def data_store_add(request):
         
             
         #add Data Store
-        session.add(DataStore(data_store_name, data_store_type_id, data_store_endpoint, data_store_api_key))
+        session.add(DataStore(data_store_name,
+                              data_store_owner_org,
+                              data_store_type_id, 
+                              data_store_endpoint, 
+                              data_store_api_key, 
+                              ))
         session.commit()
         session.close()
         
@@ -137,6 +143,7 @@ def data_store_update(request):
         post_info = request.POST
         data_store_id = post_info.get('data_store_id')
         data_store_name = post_info.get('data_store_name')
+        data_store_owner_org = post_info.get('data_store_owner_org')
         data_store_api_endpoint = post_info.get('data_store_api_endpoint')
         data_store_api_key = post_info.get('data_store_api_key')
     
@@ -170,6 +177,7 @@ def data_store_update(request):
             #update data store
             data_store  = session.query(DataStore).get(data_store_id)
             data_store.name = data_store_name
+            data_store.owner_org = data_store_owner_org
             data_store.api_endpoint= data_store_api_endpoint    
             data_store.api_key = data_store_api_key
             session.commit()
@@ -1152,17 +1160,27 @@ def watershed_ecmwf_rapid_file_upload(request):
             data_manager = RAPIDInputDatasetManager(watershed.data_store.api_endpoint,
                                                     watershed.data_store.api_key,
                                                     "ecmwf",
-                                                    main_settings.app_instance_id)
+                                                    main_settings.app_instance_id,
+                                                    watershed.data_store.owner_org)
 
             #remove RAPID input files on CKAN if exists
             if watershed.ecmwf_rapid_input_resource_id.strip():
                 data_manager.dataset_engine.delete_resource(watershed.ecmwf_rapid_input_resource_id)
 
             #upload file to CKAN
-            resource_info = data_manager.upload_model_resource(local_file_path, 
-                                                               watershed.ecmwf_data_store_watershed_name, 
-                                                               watershed.ecmwf_data_store_subbasin_name)
-            
+            try:
+                resource_info = data_manager.upload_model_resource(local_file_path, 
+                                                                   watershed.ecmwf_data_store_watershed_name, 
+                                                                   watershed.ecmwf_data_store_subbasin_name)
+            except Exception:
+                #delete local file
+                try:
+                    os.remove(local_file_path)
+                except OSError:
+                    pass
+                session.close()
+                return JsonResponse({'error' : 'Problem uploading ECMWF-RAPID dataset to CKAN.'})
+                
             #delete local file
             try:
                 os.remove(local_file_path)
