@@ -52,15 +52,14 @@ def delete_old_watershed_prediction_files(watershed, forecast="all"):
     """
     Removes old watershed prediction files from system if no other watershed has them
     """
-    def delete_prediciton_files(main_folder_name, sub_folder_name, local_prediction_files_location):
+    def delete_prediciton_files(watershed_folder_name, local_prediction_files_location):
         """
         Removes predicitons from folder and folder if not empty
         """
         prediciton_folder = os.path.join(local_prediction_files_location, 
-                                         main_folder_name,
-                                         sub_folder_name)
+                                         watershed_folder_name)
         #remove watersheds subbsasins folders/files
-        if main_folder_name and sub_folder_name and \
+        if watershed_folder_name and \
         local_prediction_files_location and os.path.exists(prediciton_folder):
             
             #remove all prediction files from watershed/subbasin
@@ -72,7 +71,7 @@ def delete_old_watershed_prediction_files(watershed, forecast="all"):
             #remove watershed folder if no other subbasins exist
             try:
                 os.rmdir(os.path.join(local_prediction_files_location, 
-                                      main_folder_name))
+                                      watershed_folder_name))
             except OSError:
                 pass
         
@@ -95,8 +94,8 @@ def delete_old_watershed_prediction_files(watershed, forecast="all"):
             .filter(Watershed.id != watershed.id) \
             .count()
         if num_ecmwf_watersheds_with_forecast <= 0:
-            delete_prediciton_files(watershed.ecmwf_data_store_watershed_name, 
-                                    watershed.ecmwf_data_store_subbasin_name, 
+            delete_prediciton_files("{0}-{1}".format(watershed.ecmwf_data_store_watershed_name, 
+                                                     watershed.ecmwf_data_store_subbasin_name), 
                                     main_settings.ecmwf_rapid_prediction_directory)
     
     #Remove WRF-Hydro Forecasts
@@ -113,8 +112,8 @@ def delete_old_watershed_prediction_files(watershed, forecast="all"):
             .filter(Watershed.id != watershed.id) \
             .count()
         if num_wrf_hydro_watersheds_with_forecast <= 0:
-            delete_prediciton_files(watershed.wrf_hydro_data_store_watershed_name, 
-                                    watershed.wrf_hydro_data_store_subbasin_name, 
+            delete_prediciton_files("{0}-{1}".format(watershed.wrf_hydro_data_store_watershed_name, 
+                                                     watershed.wrf_hydro_data_store_subbasin_name), 
                                     main_settings.wrf_hydro_rapid_prediction_directory)
     
     session.close()
