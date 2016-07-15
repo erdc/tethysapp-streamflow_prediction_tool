@@ -1135,6 +1135,14 @@ def watershed_ecmwf_rapid_file_upload(request):
 
             ecmwf_rapid_input_zip = "%s-%s-rapid.zip" % (watershed.ecmwf_data_store_watershed_name, 
                                                          watershed.ecmwf_data_store_subbasin_name)
+            local_file_path = os.path.join(tmp_file_location, ecmwf_rapid_input_zip)
+
+            #delete local file
+            try:
+                os.remove(local_file_path)
+            except OSError:
+                pass
+
             handle_uploaded_file(ecmwf_rapid_input_file,
                                  tmp_file_location, 
                                  ecmwf_rapid_input_zip)
@@ -1151,10 +1159,15 @@ def watershed_ecmwf_rapid_file_upload(request):
                 data_manager.dataset_engine.delete_resource(watershed.ecmwf_rapid_input_resource_id)
 
             #upload file to CKAN
-            upload_file = os.path.join(tmp_file_location, ecmwf_rapid_input_zip)
-            resource_info = data_manager.upload_model_resource(upload_file, 
+            resource_info = data_manager.upload_model_resource(local_file_path, 
                                                                watershed.ecmwf_data_store_watershed_name, 
                                                                watershed.ecmwf_data_store_subbasin_name)
+            
+            #delete local file
+            try:
+                os.remove(local_file_path)
+            except OSError:
+                pass
             
             #update watershed
             watershed.ecmwf_rapid_input_resource_id = resource_info['result']['id']
