@@ -1131,7 +1131,7 @@ def watershed_ecmwf_rapid_file_upload(request):
         if int(watershed.data_store_id) > 1 and ecmwf_rapid_input_file:
             #temporarily upload to Tethys Plarform server
             tmp_file_location = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                             'tmp')
+                                             'workspaces', 'app_workspace')
 
             ecmwf_rapid_input_zip = "%s-%s-rapid.zip" % (watershed.ecmwf_data_store_watershed_name, 
                                                          watershed.ecmwf_data_store_subbasin_name)
