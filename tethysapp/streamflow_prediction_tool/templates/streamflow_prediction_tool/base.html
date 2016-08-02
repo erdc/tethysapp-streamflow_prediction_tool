@@ -25,26 +25,26 @@
 
 {% block app_navigation_items %}
     <li class="title">App Navigation</li>
-    <li><a href="{% url 'streamflow_prediction_tool:home' %}">Select Watershed(s)</a></li>
+    <li {% if request.path == "/apps/streamflow-prediction-tool/" %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:home' %}">Select Watershed(s)</a></li>
     {% if user.is_superuser or user.is_staff %}
     <li class="title">Configuration</li>
-    <li><a href="{% url 'streamflow_prediction_tool:settings' %}">Settings</a></li>
+    <li {% if "settings" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:settings' %}">Settings</a></li>
     <li class="title">Add</li>
-    <li><a href="{% url 'streamflow_prediction_tool:add-watershed' %}">Add a Watershed</a></li>
-    <li><a href="{% url 'streamflow_prediction_tool:add-watershed-group' %}">Add a Watershed Group</a></li>
-    <li><a href="{% url 'streamflow_prediction_tool:add-data-store' %}">Add a Data Store</a></li>
-    <li><a href="{% url 'streamflow_prediction_tool:add-geoserver' %}">Add a Geoserver</a></li>
+    <li {% if "add-watershed" in request.path and not "add-watershed-group" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:add-watershed' %}">Add a Watershed</a></li>
+    <li {% if "add-watershed-group" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:add-watershed-group' %}">Add a Watershed Group</a></li>
+    <li {% if "add-data-store" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:add-data-store' %}">Add a Data Store</a></li>
+    <li {% if "add-geoserver" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:add-geoserver' %}">Add a Geoserver</a></li>
     <li class="title">Manage</li>
-    <li><a href="{% url 'streamflow_prediction_tool:manage-watersheds' %}">Manage Watersheds</a></li>
-    <li><a href="{% url 'streamflow_prediction_tool:manage-watershed-groups' %}">Manage Watershed Groups</a></li>
-    <li><a href="{% url 'streamflow_prediction_tool:manage-data-stores' %}">Manage Data Stores</a></li>
-    <li><a href="{% url 'streamflow_prediction_tool:manage-geoservers' %}">Manage Geoservers</a></li>
+    <li {% if "manage-watersheds" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:manage-watersheds' %}">Manage Watersheds</a></li>
+    <li {% if "manage-watershed-groups" in request.path %}} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:manage-watershed-groups' %}">Manage Watershed Groups</a></li>
+    <li {% if "manage-data-stores" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:manage-data-stores' %}">Manage Data Stores</a></li>
+    <li {% if "manage-geoservers" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:manage-geoservers' %}">Manage Geoservers</a></li>
     {% endif %}
     <li class="title">Learn</li>
     {% if user.is_superuser or user.is_staff %}
-    <li><a href="{% url 'streamflow_prediction_tool:getting-started' %}">Getting Started</a></li>
+    <li {% if "getting-started" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:getting-started' %}">Getting Started</a></li>
     {% endif %}
-    <li><a href="{% url 'streamflow_prediction_tool:publications' %}">Publications</a></li>
+    <li {% if "publications" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:publications' %}">Publications</a></li>
     <li><a href="https://github.com/erdc-cm/tethysapp-streamflow_prediction_tool" target="_blank">View the Code</a></li>
     <li><a href="https://zenodo.org/badge/latestdoi/19918/erdc-cm/tethysapp-streamflow_prediction_tool" target="_blank">
         <img src="https://zenodo.org/badge/19918/erdc-cm/tethysapp-streamflow_prediction_tool.svg" alt="10.5281/zenodo.47278">
