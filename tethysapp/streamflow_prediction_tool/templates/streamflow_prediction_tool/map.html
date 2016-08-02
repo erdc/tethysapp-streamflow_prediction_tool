@@ -30,6 +30,13 @@
   <link rel="stylesheet" href="{% static 'streamflow_prediction_tool/css/map.css' %}" type="text/css">
 {% endblock %}
 
+{% block exit_button_override %}
+    <div class="exit-button">
+      <a href="{% url 'streamflow_prediction_tool:home' %}">Back</a>
+    </div>
+{% endblock %}
+
+
 {% block app_content %}
     <div class="container-fluid">
         <div class="row-fluid" style="height:100%">
@@ -186,8 +193,6 @@
 {% endblock %}
 
 {% block app_navigation_items %}
-    <li class="title">App Navigation</li>
-    <li><a href="{% url 'streamflow_prediction_tool:home' %}">Select Watershed(s)</a></li>
     {% if watershed_layers_info_array %}
         <li class="title collapse-control">
             <a class="closeall" data-toggle="collapse" data-target="#map-navigation">
@@ -440,10 +445,6 @@
     {% else %}
         <li class="title"> No Watersheds or Watershed Groups Found ...</li>
     {% endif %}
-    {% if user.is_superuser or user.is_staff %}
-    <li class="separator"></li>
-    <li><a href="../">Back to Admin Options</a></li>
-    {% endif %}    
 {% endblock %}
 
 {% block scripts %}
