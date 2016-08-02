@@ -1141,7 +1141,15 @@ def manage_watershed_groups_table(request):
 @user_passes_test(user_permission_test)
 def getting_started(request):
     """
-    Controller for the app home page.
+    Controller for the app getting started page.
     """
    
     return render(request, 'streamflow_prediction_tool/getting_started.html', {})
+
+@user_passes_test(user_permission_test)
+def publications(request):
+    """
+    Controller for the app publications page.
+    """
+   
+    return render(request, 'streamflow_prediction_tool/publications.html', {})

@@ -156,7 +156,10 @@ class StreamflowPredictionTool(TethysAppBase):
                            controller='streamflow_prediction_tool.controllers_ajax.watershed_group_delete'),
                     UrlMap(name='getting-started',
                            url='streamflow-prediction-tool/getting-started',
-                           controller='streamflow_prediction_tool.controllers.getting_started')
+                           controller='streamflow_prediction_tool.controllers.getting_started'),
+                    UrlMap(name='publications',
+                           url='streamflow-prediction-tool/publications',
+                           controller='streamflow_prediction_tool.controllers.publications'),
         )
         return url_maps
         
