@@ -30,7 +30,7 @@ def init_main_db(first_time):
         session.add(DataStoreType("hydroshare", "HydroShare"))
         
         #add all possible data stores
-        session.add(DataStore("Local Server", 1, "local", ""))
+        session.add(DataStore("Local Server", "", 1, "local", ""))
 
         #add main settings
         session.add(MainSettings(1, "", "", ""))
