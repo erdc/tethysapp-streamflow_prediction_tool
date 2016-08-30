@@ -1146,7 +1146,7 @@ def getting_started(request):
    
     return render(request, 'streamflow_prediction_tool/getting_started.html', {})
 
-@user_passes_test(user_permission_test)
+@login_required
 def publications(request):
     """
     Controller for the app publications page.
