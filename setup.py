@@ -12,10 +12,10 @@ dependencies = ['RAPIDpy', 'python-crontab', 'sqlalchemy']
 
 setup(
     name=release_package,
-    version='1.0.0',
+    version='1.0.5',
     description='Display streamflow from ECMWF predicted runoff routed with RAPID. Also, floodmaping with AutoRoute is available.',
     long_description='',
-    keywords='',
+    keywords='ECMWF, RAPID, Streamflow Prefiction, Forecast',
     author='Alan D. Snow',
     author_email='alan.d.snow@usace.army.mil',
     url='https://github.com/erdc-cm/tethysapp-streamflow_prediction_tool',
