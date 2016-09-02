@@ -22,8 +22,9 @@ American Water Resources Association (JAWRA)* 1-15, DOI: 10.1111/1752-1688.12434
 Snow, Alan Dee, "A New Global Forecasting Model to Produce High-Resolution Stream Forecasts" (2015). All Theses and Dissertations. Paper 5272. http://scholarsarchive.byu.edu/etd/5272
 
 ##Prerequisites:
-- Tethys Platform v1.3 (CKAN, PostgresQL, GeoServer): See: http://docs.tethysplatform.org/en/1.3.0/
+- Tethys Platform v1.4 (CKAN, PostgresQL, GeoServer): See: http://docs.tethysplatform.org/en/1.4.0/
 - RAPIDpy (Python package).
+- Geoserver needs CORS enabled.
 
 ###Install RAPIDpy:
 For instructions, go to: https://github.com/erdc-cm/RAPIDpy.
