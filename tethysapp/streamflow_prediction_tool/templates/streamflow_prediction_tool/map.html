@@ -66,6 +66,7 @@
                         <li role="presentation"><a href="#search" aria-controls="search" role="tab" data-toggle="tab">Search</a></li>
                         <li role="presentation"><a href="#warnings" aria-controls="warnings" role="tab" data-toggle="tab">Warnings</a></li>
                         <li role="presentation"><a href="#download" aria-controls="download" role="tab" data-toggle="tab">Download</a></li>
+                        <li role="presentation"><a href="#season" aria-controls="season" role="tab" data-toggle="tab">Season</a></li>
                     </ul>
                 
                     <!-- Tab panes -->
@@ -143,6 +144,24 @@
                                                 <span class="glyphicon glyphicon-play"></span> Download Interim Data
                                             </a>
                                         </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="season">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div id="seasonal_streamflow_data" class="panel-body" style="height: 50%;">
+                                        <h6>Seasonal Streamflow Chart</h6>
+                                        <div id="era_message" class="alert alert-info" role="alert">
+                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                            Click on a river segment or search by river reach ID before displaying data.
+                                        </div>
+                                    </div>
+                                    <div id="retrieve_seasonal_streamflow_chart" class="btn-group hidden" role="group">
+                                        <a class="btn btn-warning" role="button" id="submit-retreive-seasonal-streamflow-chart">
+                                            <span class="glyphicon glyphicon-play"></span> Retrieve Seasonal Streamflow Chart
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -449,6 +468,7 @@
 
 {% block scripts %}
   {{ block.super }}
+  <script src="/static/tethys_gizmos/js/plot_view.js" type="text/javascript"></script>
   <script src="{% static 'streamflow_prediction_tool/js/waterml_parser.js' %}" type="text/javascript"></script>
   <script src="{% static 'streamflow_prediction_tool/js/map.js' %}" type="text/javascript"></script>
 {% endblock %}
