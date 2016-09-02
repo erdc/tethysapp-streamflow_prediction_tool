@@ -40,6 +40,7 @@ var ERFP_MAP = (function() {
         m_downloading_usgs,
         m_downloading_nws,
         m_downloading_hydroserver,
+        m_downloaded_seasonal_streamflow,
         m_searching_for_reach,
         m_long_term_chart_data_ajax_load_failed,
         m_long_term_select_data_ajax_handle,
@@ -71,7 +72,8 @@ var ERFP_MAP = (function() {
         addECMWFSeriesToCharts, addSeriesToCharts, isThereDataToLoad, 
         checkCleanString, dateToUTCDateTimeString, getValidSeries, 
         convertValueMetricToEnglish, unbindInputs, loadWarningPoints,
-        updateWarningPoints, determineGeoServerLayerOrGroup, updateWarningSlider;
+        updateWarningPoints, determineGeoServerLayerOrGroup, updateWarningSlider,
+        loadSeasonalStreamflowChart, convertDataMetricToEnglish;
 
 
     /************************************************************************
@@ -196,6 +198,30 @@ var ERFP_MAP = (function() {
             new_time_series.push(new_data_array);
         });
         return new_time_series;
+    };
+
+    convertDataMetricToEnglish = function(flow_data) {
+        var new_flow_data = [];
+        var conversion_factor = 1;
+        if(m_units=="english") {
+            conversion_factor = 35.3146667;
+        }
+        if( Object.prototype.toString.call( flow_data[0] ) === '[object Array]' ) {
+            flow_data.map(function(data_row) {
+                
+                var new_data_array = [];
+                for (var i = 0; i<data_row.length; i++) {
+                    new_data_array.push(parseFloat((data_row[i]*conversion_factor).toFixed(5)));
+                }
+                new_flow_data.push(new_data_array);
+            });
+        } else 
+        {
+            flow_data.map(function(data) {
+                new_flow_data.push(parseFloat((data*conversion_factor).toFixed(5)));
+            });
+        }
+        return new_flow_data;
     };
 
     //FUNCTION: convert units from english to metric
@@ -785,6 +811,9 @@ var ERFP_MAP = (function() {
     
             $('#era_message').addClass('hidden');
             $('#download_interim').removeClass('hidden');
+            $("#retrieve_seasonal_streamflow_chart").removeClass('hidden');
+            $("#seasonal_streamflow_data").text("");
+
 
             //change download button url
             $('#submit-download-interim-csv').attr({target: '_blank', 
@@ -1461,8 +1490,9 @@ var ERFP_MAP = (function() {
                 m_selected_usgs_id = usgs_id;
                 m_selected_nws_id = nws_id;
                 m_selected_hydroserver_url = hydroserver_url;
+                m_downloaded_seasonal_streamflow = false;
 
-                displayHydrograph(); 
+                displayHydrograph();
             } else {
                 appendErrorMessage('The attributes in the file are faulty. Please fix and upload again.',
                                     "file_attr_error",
@@ -1722,6 +1752,85 @@ var ERFP_MAP = (function() {
         }
         return null;
     };
+    //FUNCTION: Loads seasonal streamflow chart
+    loadSeasonalStreamflowChart = function() {
+        $.ajax({
+            url: 'get_seasonal_streamflow',
+            method: 'GET',
+            data: {
+                'watershed_name': m_selected_ecmwf_watershed,
+                'subbasin_name': m_selected_ecmwf_subbasin,
+                'reach_id': m_selected_reach_id,
+            },
+            success: function(data) {
+                var y_axis_title = "Flow (m<sup>3</sup>/s)";
+                if (m_units == "english") {
+                    y_axis_title = "Flow (ft<sup>3</sup>/s)";
+                }
+
+                var days_of_year = [];
+
+                for(var i=1;i<=365;i++) {
+                    days_of_year.push(i);
+                }
+
+                var default_chart_settings = {
+    
+                    title: { text: "Daily Seasonal Streamflow"},
+                    chart: {
+                        zoomType: 'x',
+                    },
+                    legend: {
+                        enabled: true,
+                    },
+                    rangeSelector: {
+                        selected: 0
+                    },
+                    plotOptions: {
+                        series: {
+                            marker: {
+                                enabled: false,
+                            }
+                        }
+                    },
+                    xAxis: {
+                        title: {
+                            text: 'Day of Year'
+                        },
+                        categories: days_of_year,
+                    },
+                    yAxis: {
+                        title: {
+                            useHTML: true,
+                            text: y_axis_title
+                        },
+                        min: 0,
+                        opposite: false
+                    },
+                    series: [
+                       {
+                           name: 'Average',
+                           color: '#0066ff',
+                           data: convertDataMetricToEnglish(data.season_avg),
+                       },
+                       {
+                           name: 'Std. Dev. Range',
+                           color: '#ff6600',
+                           data: convertDataMetricToEnglish(data.std_range),
+                           type: 'arearange',
+                           lineWidth:0,
+                           linkedTo:":previous",
+                           fillOpacity: 0.4,
+                       },
+                    ],
+
+                };
+                $("#seasonal_streamflow_data").removeClass('alert-info');
+                $("#seasonal_streamflow_data").highcharts(default_chart_settings);
+                m_downloaded_seasonal_streamflow = true;
+            }
+        });
+    };
     
     /************************************************************************
     *                        DEFINE PUBLIC INTERFACE
@@ -1762,6 +1871,7 @@ var ERFP_MAP = (function() {
         m_selected_hydroserver_url = null;
         m_downloading_ecmwf_hydrograph = false;
         m_downloading_era_interim_hydrograph = false;
+        m_downloaded_seasonal_streamflow = false;
         m_downloading_long_term_select = false;
         m_downloading_wrf_hydro_hydrograph = false;
         m_downloading_short_term_select = false;
@@ -2359,6 +2469,10 @@ var ERFP_MAP = (function() {
             }
             if (m_selected_feature != null) {
                 loadHydrographFromFeature(m_selected_feature);
+                if (m_downloaded_seasonal_streamflow)
+                {
+                    loadSeasonalStreamflowChart();
+                }
             }
             
         });
@@ -2378,6 +2492,13 @@ var ERFP_MAP = (function() {
                 loadHydrographFromFeature(m_selected_feature);
             }
         });
+
+        $("#retrieve_seasonal_streamflow_chart").click(function(){
+            $(this).addClass("hidden");
+            addInfoMessage("Loading data ...", "seasonal_streamflow_data");
+            loadSeasonalStreamflowChart();
+        });
+
         //init tooltip
         $('.boot_tooltip').tooltip();
 
