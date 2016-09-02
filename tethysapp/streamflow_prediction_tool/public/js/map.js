@@ -812,7 +812,9 @@ var ERFP_MAP = (function() {
             $('#era_message').addClass('hidden');
             $('#download_interim').removeClass('hidden');
             $("#retrieve_seasonal_streamflow_chart").removeClass('hidden');
-            $("#seasonal_streamflow_data").text("");
+            $("#seasonal_streamflow_data").removeClass('alert-info')
+                                          .removeClass('alert-danger')
+                                          .text("");
 
 
             //change download button url
@@ -1761,8 +1763,9 @@ var ERFP_MAP = (function() {
                 'watershed_name': m_selected_ecmwf_watershed,
                 'subbasin_name': m_selected_ecmwf_subbasin,
                 'reach_id': m_selected_reach_id,
-            },
-            success: function(data) {
+                },
+        })
+        .done(function(data) {
                 var y_axis_title = "Flow (m<sup>3</sup>/s)";
                 if (m_units == "english") {
                     y_axis_title = "Flow (ft<sup>3</sup>/s)";
@@ -1828,7 +1831,9 @@ var ERFP_MAP = (function() {
                 $("#seasonal_streamflow_data").removeClass('alert-info');
                 $("#seasonal_streamflow_data").highcharts(default_chart_settings);
                 m_downloaded_seasonal_streamflow = true;
-            }
+        })
+        .fail(function (request, status, error) {
+            addErrorMessage("Error: " + error, "seasonal_streamflow_data");
         });
     };
     
