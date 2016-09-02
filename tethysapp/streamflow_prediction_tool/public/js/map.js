@@ -72,7 +72,7 @@ var ERFP_MAP = (function() {
         checkCleanString, dateToUTCDateTimeString, getValidSeries, 
         convertValueMetricToEnglish, unbindInputs, loadWarningPoints,
         updateWarningPoints, determineGeoServerLayerOrGroup, updateWarningSlider,
-        loadSeasonalStreamflowChart, convertDataMetricToEnglish;
+        loadSeasonalStreamflowChart;
 
 
     /************************************************************************
@@ -197,30 +197,6 @@ var ERFP_MAP = (function() {
             new_time_series.push(new_data_array);
         });
         return new_time_series;
-    };
-
-    convertDataMetricToEnglish = function(flow_data) {
-        var new_flow_data = [];
-        var conversion_factor = 1;
-        if(m_units=="english") {
-            conversion_factor = 35.3146667;
-        }
-        if( Object.prototype.toString.call( flow_data[0] ) === '[object Array]' ) {
-            flow_data.map(function(data_row) {
-                
-                var new_data_array = [];
-                for (var i = 0; i<data_row.length; i++) {
-                    new_data_array.push(parseFloat((data_row[i]*conversion_factor).toFixed(5)));
-                }
-                new_flow_data.push(new_data_array);
-            });
-        } else 
-        {
-            flow_data.map(function(data) {
-                new_flow_data.push(parseFloat((data*conversion_factor).toFixed(5)));
-            });
-        }
-        return new_flow_data;
     };
 
     //FUNCTION: convert units from english to metric
@@ -1772,10 +1748,11 @@ var ERFP_MAP = (function() {
                     y_axis_title = "Flow (ft<sup>3</sup>/s)";
                 }
 
-                var days_of_year = [];
-
-                for(var i=1;i<=365;i++) {
-                    days_of_year.push(i);
+                var new_season_average = [];
+                var new_std_range = [];
+                for(var i=0;i<365;i++) {
+                    new_season_average.push([i*24*3600*1000, data.season_avg[i]]);
+                    new_std_range.push([i*24*3600*1000, data.std_range[i][0], data.std_range[i][1]]);
                 }
 
                 var default_chart_settings = {
@@ -1797,11 +1774,19 @@ var ERFP_MAP = (function() {
                             }
                         }
                     },
+                    tooltip: {
+                        headerFormat: '<b>{series.name}</b><br>',
+                        pointFormat: '{point.x:%e. %b}: {point.y:.2f}'
+                    },
                     xAxis: {
                         title: {
                             text: 'Day of Year'
                         },
-                        categories: days_of_year,
+                        type: 'datetime',
+                        dateTimeLabelFormats: { // don't display the dummy year
+                            month: '%e. %b',
+                            year: '%b'
+                        },
                     },
                     yAxis: {
                         title: {
@@ -1809,18 +1794,17 @@ var ERFP_MAP = (function() {
                             text: y_axis_title
                         },
                         min: 0,
-                        opposite: false
                     },
                     series: [
                        {
                            name: 'Average',
                            color: '#0066ff',
-                           data: convertDataMetricToEnglish(data.season_avg),
+                           data: convertTimeSeriesMetricToEnglish(new_season_average),
                        },
                        {
                            name: 'Std. Dev. Range',
                            color: '#ff6600',
-                           data: convertDataMetricToEnglish(data.std_range),
+                           data: convertTimeSeriesMetricToEnglish(new_std_range),
                            type: 'arearange',
                            fillOpacity: 0.4,
                        },
