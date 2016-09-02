@@ -40,7 +40,6 @@ var ERFP_MAP = (function() {
         m_downloading_usgs,
         m_downloading_nws,
         m_downloading_hydroserver,
-        m_downloaded_seasonal_streamflow,
         m_searching_for_reach,
         m_long_term_chart_data_ajax_load_failed,
         m_long_term_select_data_ajax_handle,
@@ -778,12 +777,14 @@ var ERFP_MAP = (function() {
             new_series.linkedTo = ":previous";
             new_series.fillOpacity = 0.3;
         }
+        $('#plot_tab_link').tab('show'); //switch to plot tab
         long_term_chart.addSeries(new_series);
     };
 
     //FUNCTION: adds data to the chart
     addSeriesToCharts = function(series){
         var long_term_chart = $("#long-term-chart").highcharts();
+        $('#plot_tab_link').tab('show'); //switch to plot tab
         long_term_chart.addSeries(series);
         $("#long-term-chart").removeClass("hidden");
     };
@@ -791,7 +792,6 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: gets all data for chart
     getChartData = function() {
-        $('#plot_tab_link').tab('show'); //switch to plot tab
         if(!isNotLoadingPastRequest()) {
             //updateInfoAlert
             addWarningMessage("Please wait for datasets to download before making another selection.");
@@ -920,6 +920,7 @@ var ERFP_MAP = (function() {
                 default_chart_settings.subtitle = subtitle;
             }
 
+            $('#plot_tab_link').tab('show'); //switch to plot tab
             $("#long-term-chart").highcharts('StockChart', default_chart_settings);
 
             //get ecmwf data
@@ -1492,7 +1493,6 @@ var ERFP_MAP = (function() {
                 m_selected_usgs_id = usgs_id;
                 m_selected_nws_id = nws_id;
                 m_selected_hydroserver_url = hydroserver_url;
-                m_downloaded_seasonal_streamflow = false;
 
                 displayHydrograph();
             } else {
@@ -1756,6 +1756,7 @@ var ERFP_MAP = (function() {
     };
     //FUNCTION: Loads seasonal streamflow chart
     loadSeasonalStreamflowChart = function() {
+        $("#retrieve_seasonal_streamflow_chart").addClass('hidden');
         $.ajax({
             url: 'get_seasonal_streamflow',
             method: 'GET',
@@ -1821,16 +1822,15 @@ var ERFP_MAP = (function() {
                            color: '#ff6600',
                            data: convertDataMetricToEnglish(data.std_range),
                            type: 'arearange',
-                           lineWidth:0,
-                           linkedTo:":previous",
                            fillOpacity: 0.4,
                        },
                     ],
 
                 };
                 $("#seasonal_streamflow_data").removeClass('alert-info');
+                $('#season_tab_link').tab('show'); //switch to plot tab
                 $("#seasonal_streamflow_data").highcharts(default_chart_settings);
-                m_downloaded_seasonal_streamflow = true;
+                $("#retrieve_seasonal_streamflow_chart").addClass('hidden');
         })
         .fail(function (request, status, error) {
             addErrorMessage("Error: " + error, "seasonal_streamflow_data");
@@ -1876,7 +1876,6 @@ var ERFP_MAP = (function() {
         m_selected_hydroserver_url = null;
         m_downloading_ecmwf_hydrograph = false;
         m_downloading_era_interim_hydrograph = false;
-        m_downloaded_seasonal_streamflow = false;
         m_downloading_long_term_select = false;
         m_downloading_wrf_hydro_hydrograph = false;
         m_downloading_short_term_select = false;
@@ -2473,11 +2472,11 @@ var ERFP_MAP = (function() {
                 m_units = "english";
             }
             if (m_selected_feature != null) {
-                loadHydrographFromFeature(m_selected_feature);
-                if (m_downloaded_seasonal_streamflow)
+                if ($("#seasonal_streamflow_data").find(".highcharts-container").length)
                 {
                     loadSeasonalStreamflowChart();
                 }
+                loadHydrographFromFeature(m_selected_feature);
             }
             
         });
@@ -2499,7 +2498,6 @@ var ERFP_MAP = (function() {
         });
 
         $("#retrieve_seasonal_streamflow_chart").click(function(){
-            $(this).addClass("hidden");
             addInfoMessage("Loading data ...", "seasonal_streamflow_data");
             loadSeasonalStreamflowChart();
         });
