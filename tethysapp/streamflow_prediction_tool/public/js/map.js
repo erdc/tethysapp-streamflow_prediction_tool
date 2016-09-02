@@ -1775,8 +1775,7 @@ var ERFP_MAP = (function() {
                         }
                     },
                     tooltip: {
-                        headerFormat: '<b>{series.name}</b><br>',
-                        pointFormat: '{point.x:%e. %b}: {point.y:.2f}'
+                        xDateFormat: '%b. %e'
                     },
                     xAxis: {
                         title: {
