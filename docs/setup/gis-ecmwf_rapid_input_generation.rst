@@ -2,8 +2,6 @@
 Setup: ECMWF-RAPID Input Generation
 ***********************************
 
-**Last Updated:** May 27, 2015
-
 .. tip::
 
     If you have not already generated your stream netork, see these instructions :doc:`gis-stream_network_generation`.
