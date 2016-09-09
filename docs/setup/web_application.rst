@@ -10,13 +10,10 @@ Setup: Web Application
 *This app requires you to have the ECMWF AutoRAPID preprocessing
 completed separately. See:*
 
-.. toctree::
-    :maxdepth: 1
-
-    gis-stream_network_generation.rst
-    gis-ecmwf_rapid_input_generation.rst
-    historical_lsm_process.rst
-    forecast_framework.rst
+- :doc:`gis-stream_network_generation`
+- :doc:`gis-ecmwf_rapid_input_generation`
+- :doc:`historical_lsm_process`
+- :doc:`forecast_framework`
 
 Publications:
 -------------
