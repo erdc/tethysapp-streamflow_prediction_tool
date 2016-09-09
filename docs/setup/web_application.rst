@@ -113,11 +113,11 @@ your old database and regenerate a new app instance id):
 Restart the Apache Server: See:
 http://docs.tethysplatform.org/en/1.3.0/production/installation.html#enable-site-and-restart-apache
 
-Troubleshooting
-===============
+Troubleshooting:
+----------------
 
 ImportError: No module named packages.urllib3.poolmanager
----------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -130,7 +130,7 @@ Restart your terminal
     $ pip install requests --upgrade
 
 Crontab Errors
---------------
+~~~~~~~~~~~~~~
 
 Check if your server has crontab permissions: Ex:
 
@@ -148,7 +148,7 @@ If not, add the permissions in the cron.allow file.
     # echo apache >>/etc/cron.allow
 
 SELinux
--------
+~~~~~~~
 
 If you are using a drive/folder not associated with your normal apache
 server locations, you may need to set SELinux to allow it. In this
