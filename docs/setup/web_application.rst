@@ -18,7 +18,7 @@ completed separately. See:*
     historical_lsm_process.rst
     forecast_framework.rst
 
-How it works:
+Publications:
 -------------
 
 Snow, Alan D., Scott D. Christensen, Nathan R. Swain, E. James Nelson,
@@ -111,7 +111,7 @@ your old database and regenerate a new app instance id):
     $ tethys syncstores streamflow_prediction_tool -r
 
 Restart the Apache Server: See:
-http://docs.tethysplatform.org/en/1.3.0/production/installation.html#enable-site-and-restart-apache
+http://docs.tethysplatform.org/en/1.4.0/production/installation.html#enable-site-and-restart-apache
 
 Troubleshooting:
 ----------------
