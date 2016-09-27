@@ -9,5 +9,5 @@ b. RAPID Tools (ERDC Version): https://github.com/erdc-cm/python-toolbox-for-rap
 
 TauDEM & RAPIDpy Tools
 ======================
-a. RAPIDpy: https://github.com/erdc-cm/RAPIDpy/wiki/Generating-Stream-Network
+a. RAPIDpy: http://rapidpy.readthedocs.io/en/latest/gis_stream_network.html
 
