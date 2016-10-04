@@ -1,8 +1,3 @@
-.. Streamflow Prediction Tool documentation master file, created by
-   sphinx-quickstart on Fri Jul 15 16:26:28 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 ********************************
 Streamflow Prediction Tool 1.0.5
 ********************************
@@ -14,6 +9,22 @@ with the RAPID (rapid-hub.org) program. The connection between
 the predicted and hindcasted runoff are generated with GIS tools
 both from Esri as well as from open source contributions. 
 Return period estimates and warning flags aid in determining the severity.
+
+The Streamflow Prediction Tool was the result of a collaboration between:
+
+- Brigham Young University
+- Esri
+- The European Centre for Medium Range Weather Forecasts
+- NASA's Jet Propulsion Laboratory
+
+The Streamflow Prediction Tool was developed at Brigham Young University 
+with support from the National Science Foundation (NSF) under Grant No. 1135483. 
+The Streamflow Prediction Tool is part of a larger effort known as CI-Water (http://ci-water.org). 
+The purpose of CI-Water is to develop cyber infrastructure for water resources decision support.
+
+Currently, the Streamflow Prediction Tool is being developed and maintained by
+the U.S. Army Engineer Research and Development Center.
+ 
 
 Publications
 ============
