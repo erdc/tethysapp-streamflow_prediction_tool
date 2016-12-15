@@ -391,10 +391,10 @@ var ERFP_MAP = (function() {
             return new ol.layer.Tile({
               source: new ol.source.XYZ({
                 attributions: [new ol.Attribution({
-                  html: 'Tiles &copy; <a href="http://services.arcgisonline.com/ArcGIS/' +
+                  html: 'Tiles &copy; <a href="https://services.arcgisonline.com/ArcGIS/' +
                       'rest/services/World_Topo_Map/MapServer">ArcGIS</a>'
                 })],
-                url: 'http://server.arcgisonline.com/ArcGIS/rest/services/' +
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/' +
                     'World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
               })
             });
@@ -1170,7 +1170,7 @@ var ERFP_MAP = (function() {
                     //get USGS data
                     var chart_usgs_data_ajax_handle = jQuery.ajax({
                         type: "GET",
-                        url: "http://waterservices.usgs.gov/nwis/iv/",
+                        url: "https://waterservices.usgs.gov/nwis/iv/",
                         dataType: "json",
                         data: {
                             format: 'json',
