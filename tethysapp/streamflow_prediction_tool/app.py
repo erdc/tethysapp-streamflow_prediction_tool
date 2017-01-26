@@ -160,6 +160,9 @@ class StreamflowPredictionTool(TethysAppBase):
                     UrlMap(name='publications',
                            url='streamflow-prediction-tool/publications',
                            controller='streamflow_prediction_tool.controllers.publications'),
+                    UrlMap(name='waterml',
+                           url='streamflow-prediction-tool/api/GetWaterML',
+                           controller='streamflow_prediction_tool.api.get_waterml'),
         )
         return url_maps
         
