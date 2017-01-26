@@ -1,5 +1,9 @@
 ********************************
+<<<<<<< HEAD
 Streamflow Prediction Tool 1.0.4
+=======
+Streamflow Prediction Tool 1.0.5
+>>>>>>> 29b22ce75b6cedd1b2cc80df97ba38acd612febf
 ********************************
 
 The Streamflow Prediction Tool provides 15-day streamflow 

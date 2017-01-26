@@ -76,15 +76,10 @@ function checkKMLfile(kml_file, safe_to_submit) {
 }
 
 //form submission check function
-function checkInputWithError(input, safe_to_submit, one_parent, select_two) {
+function checkInputWithError(input, safe_to_submit, one_parent) {
     one_parent = typeof one_parent !== 'undefined' ? one_parent : false;
-    select_two = typeof select_two !== 'undefined' ? select_two : false;
 
-    if(select_two) {
-        var data_value = input.select2("val");
-    } else {
-        var data_value = input.val();
-    }
+    var data_value = input.val();
 
     if(one_parent){
         var parent = input.parent();

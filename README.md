@@ -14,6 +14,10 @@ American Water Resources Association (JAWRA)* 1-15, DOI: 10.1111/1752-1688.12434
 
 Snow, Alan Dee, "A New Global Forecasting Model to Produce High-Resolution Stream Forecasts" (2015). All Theses and Dissertations. Paper 5272. http://scholarsarchive.byu.edu/etd/5272
 
+<<<<<<< HEAD
 ##Documentation:
+=======
+##Setup:
+>>>>>>> 29b22ce75b6cedd1b2cc80df97ba38acd612febf
 
 See: http://streamflow-prediction-tool.readthedocs.io
