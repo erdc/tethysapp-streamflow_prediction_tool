@@ -41,4 +41,4 @@ Contents
     setup/historical_lsm_process.rst
     setup/forecast_framework.rst
     setup/web_application.rst
-    SPT REST API/SPT REST API.rst
+    spt_rest_api/rest_api.rst
