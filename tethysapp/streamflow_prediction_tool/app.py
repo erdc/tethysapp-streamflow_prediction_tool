@@ -61,6 +61,9 @@ class StreamflowPredictionTool(TethysAppBase):
                     UrlMap(name='wrf_hydro_get_avaialable_dates_ajax',
                            url='streamflow-prediction-tool/map/wrf-hydro-get-avaialable-dates',
                            controller='streamflow_prediction_tool.controllers_ajax.wrf_hydro_get_avaialable_dates'),
+                    UrlMap(name='get_seasonal_streamflow',
+                           url='streamflow-prediction-tool/map/get_seasonal_streamflow',
+                           controller='streamflow_prediction_tool.controllers_ajax.get_seasonal_streamflow'),
                     UrlMap(name='settings',
                            url='streamflow-prediction-tool/settings',
                            controller='streamflow_prediction_tool.controllers.settings'),
@@ -160,6 +163,9 @@ class StreamflowPredictionTool(TethysAppBase):
                     UrlMap(name='publications',
                            url='streamflow-prediction-tool/publications',
                            controller='streamflow_prediction_tool.controllers.publications'),
+                    UrlMap(name='waterml',
+                           url='streamflow-prediction-tool/api/GetWaterML',
+                           controller='streamflow_prediction_tool.api.get_waterml'),
         )
         return url_maps
         
