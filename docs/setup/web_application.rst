@@ -23,7 +23,7 @@ Daniel P. Ames, Norman L. Jones, Deng Ding, Nawajish S. Noman, Cedric H.
 David, Florian Pappenberger, and Ervin Zsoter, 2016. A High-Resolution
 National-Scale Hydrologic Forecast System from a Global Ensemble Land
 Surface Model. *Journal of the American Water Resources Association
-(JAWRA)* 1-15, DOI: 10.1111/1752-1688.12434. 
+(JAWRA)* 1-15, DOI: 10.1111/1752-1688.12434.
 http://onlinelibrary.wiley.com/doi/10.1111/1752-1688.12434/abstract
 
 Snow, Alan Dee, "A New Global Forecasting Model to Produce
@@ -33,8 +33,8 @@ Paper 5272. http://scholarsarchive.byu.edu/etd/5272
 Prerequisites:
 --------------
 
--  Tethys Platform v1.3 (CKAN, PostgresQL, GeoServer): See:
-   http://docs.tethysplatform.org/en/1.3.0/
+-  Tethys Platform v1.4 (CKAN, PostgresQL, GeoServer): See:
+   http://docs.tethysplatform.org/en/1.4.0/
 -  RAPIDpy (Python package).
 -  Geoserver needs CORS enabled.
 

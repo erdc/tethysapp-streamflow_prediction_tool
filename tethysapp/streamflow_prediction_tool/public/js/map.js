@@ -71,7 +71,8 @@ var ERFP_MAP = (function() {
         addECMWFSeriesToCharts, addSeriesToCharts, isThereDataToLoad, 
         checkCleanString, dateToUTCDateTimeString, getValidSeries, 
         convertValueMetricToEnglish, unbindInputs, loadWarningPoints,
-        updateWarningPoints, determineGeoServerLayerOrGroup, updateWarningSlider;
+        updateWarningPoints, determineGeoServerLayerOrGroup, updateWarningSlider,
+        loadSeasonalStreamflowChart;
 
 
     /************************************************************************
@@ -390,10 +391,10 @@ var ERFP_MAP = (function() {
             return new ol.layer.Tile({
               source: new ol.source.XYZ({
                 attributions: [new ol.Attribution({
-                  html: 'Tiles &copy; <a href="http://services.arcgisonline.com/ArcGIS/' +
+                  html: 'Tiles &copy; <a href="https://services.arcgisonline.com/ArcGIS/' +
                       'rest/services/World_Topo_Map/MapServer">ArcGIS</a>'
                 })],
-                url: 'http://server.arcgisonline.com/ArcGIS/rest/services/' +
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/' +
                     'World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
               })
             });
@@ -752,12 +753,14 @@ var ERFP_MAP = (function() {
             new_series.linkedTo = ":previous";
             new_series.fillOpacity = 0.3;
         }
+        $('#plot_tab_link').tab('show'); //switch to plot tab
         long_term_chart.addSeries(new_series);
     };
 
     //FUNCTION: adds data to the chart
     addSeriesToCharts = function(series){
         var long_term_chart = $("#long-term-chart").highcharts();
+        $('#plot_tab_link').tab('show'); //switch to plot tab
         long_term_chart.addSeries(series);
         $("#long-term-chart").removeClass("hidden");
     };
@@ -765,7 +768,6 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: gets all data for chart
     getChartData = function() {
-        $('#plot_tab_link').tab('show'); //switch to plot tab
         if(!isNotLoadingPastRequest()) {
             //updateInfoAlert
             addWarningMessage("Please wait for datasets to download before making another selection.");
@@ -785,6 +787,11 @@ var ERFP_MAP = (function() {
     
             $('#era_message').addClass('hidden');
             $('#download_interim').removeClass('hidden');
+            $("#retrieve_seasonal_streamflow_chart").removeClass('hidden');
+            $("#seasonal_streamflow_data").removeClass('alert-info')
+                                          .removeClass('alert-danger')
+                                          .text("");
+
 
             //change download button url
             $('#submit-download-interim-csv').attr({target: '_blank', 
@@ -889,6 +896,7 @@ var ERFP_MAP = (function() {
                 default_chart_settings.subtitle = subtitle;
             }
 
+            $('#plot_tab_link').tab('show'); //switch to plot tab
             $("#long-term-chart").highcharts('StockChart', default_chart_settings);
 
             //get ecmwf data
@@ -1162,7 +1170,7 @@ var ERFP_MAP = (function() {
                     //get USGS data
                     var chart_usgs_data_ajax_handle = jQuery.ajax({
                         type: "GET",
-                        url: "http://waterservices.usgs.gov/nwis/iv/",
+                        url: "https://waterservices.usgs.gov/nwis/iv/",
                         dataType: "json",
                         data: {
                             format: 'json',
@@ -1462,7 +1470,7 @@ var ERFP_MAP = (function() {
                 m_selected_nws_id = nws_id;
                 m_selected_hydroserver_url = hydroserver_url;
 
-                displayHydrograph(); 
+                displayHydrograph();
             } else {
                 appendErrorMessage('The attributes in the file are faulty. Please fix and upload again.',
                                     "file_attr_error",
@@ -1721,6 +1729,95 @@ var ERFP_MAP = (function() {
             return layer_array[0];
         }
         return null;
+    };
+    //FUNCTION: Loads seasonal streamflow chart
+    loadSeasonalStreamflowChart = function() {
+        $("#retrieve_seasonal_streamflow_chart").addClass('hidden');
+        $.ajax({
+            url: 'get_seasonal_streamflow',
+            method: 'GET',
+            data: {
+                'watershed_name': m_selected_ecmwf_watershed,
+                'subbasin_name': m_selected_ecmwf_subbasin,
+                'reach_id': m_selected_reach_id,
+                },
+        })
+        .done(function(data) {
+                var y_axis_title = "Flow (m<sup>3</sup>/s)";
+                if (m_units == "english") {
+                    y_axis_title = "Flow (ft<sup>3</sup>/s)";
+                }
+
+                var new_season_average = [];
+                var new_std_range = [];
+                for(var i=0;i<365;i++) {
+                    new_season_average.push([i*24*3600*1000, data.season_avg[i]]);
+                    new_std_range.push([i*24*3600*1000, data.std_range[i][0], data.std_range[i][1]]);
+                }
+
+                var default_chart_settings = {
+    
+                    title: { text: "Daily Seasonal Streamflow"},
+                    chart: {
+                        zoomType: 'x',
+                    },
+                    legend: {
+                        enabled: true,
+                    },
+                    rangeSelector: {
+                        selected: 0
+                    },
+                    plotOptions: {
+                        series: {
+                            marker: {
+                                enabled: false,
+                            }
+                        }
+                    },
+                    tooltip: {
+                        xDateFormat: '%b. %e'
+                    },
+                    xAxis: {
+                        title: {
+                            text: 'Day of Year'
+                        },
+                        type: 'datetime',
+                        dateTimeLabelFormats: { // don't display the dummy year
+                            month: '%e. %b',
+                            year: '%b'
+                        },
+                    },
+                    yAxis: {
+                        title: {
+                            useHTML: true,
+                            text: y_axis_title
+                        },
+                        min: 0,
+                    },
+                    series: [
+                       {
+                           name: 'Average',
+                           color: '#0066ff',
+                           data: convertTimeSeriesMetricToEnglish(new_season_average),
+                       },
+                       {
+                           name: 'Std. Dev. Range',
+                           color: '#ff6600',
+                           data: convertTimeSeriesMetricToEnglish(new_std_range),
+                           type: 'arearange',
+                           fillOpacity: 0.4,
+                       },
+                    ],
+
+                };
+                $("#seasonal_streamflow_data").removeClass('alert-info');
+                $('#season_tab_link').tab('show'); //switch to plot tab
+                $("#seasonal_streamflow_data").highcharts(default_chart_settings);
+                $("#retrieve_seasonal_streamflow_chart").addClass('hidden');
+        })
+        .fail(function (request, status, error) {
+            addErrorMessage("Error: " + error, "seasonal_streamflow_data");
+        });
     };
     
     /************************************************************************
@@ -2358,6 +2455,10 @@ var ERFP_MAP = (function() {
                 m_units = "english";
             }
             if (m_selected_feature != null) {
+                if ($("#seasonal_streamflow_data").find(".highcharts-container").length)
+                {
+                    loadSeasonalStreamflowChart();
+                }
                 loadHydrographFromFeature(m_selected_feature);
             }
             
@@ -2378,6 +2479,12 @@ var ERFP_MAP = (function() {
                 loadHydrographFromFeature(m_selected_feature);
             }
         });
+
+        $("#retrieve_seasonal_streamflow_chart").click(function(){
+            addInfoMessage("Loading data ...", "seasonal_streamflow_data");
+            loadSeasonalStreamflowChart();
+        });
+
         //init tooltip
         $('.boot_tooltip').tooltip();
 

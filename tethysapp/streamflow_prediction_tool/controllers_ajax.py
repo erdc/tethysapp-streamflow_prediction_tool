@@ -24,8 +24,10 @@ from RAPIDpy.dataset import RAPIDDataset
 
 #django imports
 from django.contrib.auth.decorators import user_passes_test, login_required
+from django.shortcuts import render
 
 #tethys imports
+from tethys_sdk.gizmos import LinePlot
 from tethys_dataset_services.engines import CkanDatasetEngine
 
 #local imports
@@ -861,6 +863,64 @@ def era_interim_get_csv(request):
                 raise Http404("Invalid ERA-Interim file ...")
                         
         raise Http404('ERA Interim data for %s (%s) not found.' % (watershed_name, subbasin_name))
+
+@login_required                     
+def get_seasonal_streamflow(request):
+    """""
+    Returns seasonal streamflow for unique river ID
+    """""
+    if request.method == 'GET':
+        #Query DB for path to rapid output
+        session = mainSessionMaker()
+        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
+        session.close()
+        path_to_era_interim_data = main_settings.era_interim_rapid_directory
+        if not os.path.exists(path_to_era_interim_data):
+            raise Http404('Location of ERA-Interim files faulty. Please check settings.')
+
+        #get information from GET request
+        get_info = request.GET
+        watershed_name = format_name(get_info['watershed_name']) if 'watershed_name' in get_info else None
+        subbasin_name = format_name(get_info['subbasin_name']) if 'subbasin_name' in get_info else None
+        reach_id = get_info.get('reach_id')
+        if not reach_id or not watershed_name or not subbasin_name:
+            return JsonResponse({'error' : 'ERA Interim AJAX request input faulty.'})
+
+        #make sure reach id is integer
+        try:
+            reach_id = int(reach_id)
+        except TypeError, ValueError:
+            raise Http404('Invalid Reach ID %s.' % reach_id)
+            
+        #find/check current output datasets
+        path_to_output_files = os.path.join(path_to_era_interim_data, "{0}-{1}".format(watershed_name, subbasin_name))
+        seasonal_data_files = glob(os.path.join(path_to_output_files, "seasonal_average*.nc"))
+        if seasonal_data_files:
+            try:
+                
+                seasonal_nc = NET.Dataset(seasonal_data_files[0])
+                rivid_index = np.where(seasonal_nc.variables['rivid'][:] == reach_id)[0][0]
+                
+                season_avg = seasonal_nc.variables['average_flow'][rivid_index,:]
+                season_std = seasonal_nc.variables['std_dev_flow'][rivid_index,:]
+                
+                avg_plus_std = season_avg + season_std
+                avg_min_std = season_avg - season_std
+                
+                season_avg[season_avg < 0] = 0
+                avg_plus_std[avg_plus_std <0] = 0
+                avg_min_std[avg_min_std < 0] = 0
+
+                return JsonResponse({ 
+                                        'season_avg': season_avg.tolist(),
+                                        'std_range': zip(avg_min_std.tolist(), avg_plus_std.tolist()),
+                                    })                                
+                
+                
+            except Exception as ex:
+                raise Http404("Invalid Seasonal Average file ... {0}".format(ex))
+                        
+        raise Http404('Seasonal Average data for %s (%s) not found.' % (watershed_name, subbasin_name))
 
 @user_passes_test(user_permission_test)
 def settings_update(request):
