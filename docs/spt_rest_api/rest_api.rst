@@ -15,7 +15,11 @@ GetWaterML for Forecasts Statistics
 +----------------+--------------------------------------------------+---------------+
 | Parameter      | Description                                      | Example       |
 +================+==================================================+===============+
-| Watershed_name | The name of watershed or main area of interest.  | Nepal         |
+| user           | Your account username.                           | john          |
++----------------+--------------------------------------------------+---------------+
+| pass           | Your account password.                           | secret        |
++----------------+--------------------------------------------------+---------------+
+| watershed_name | The name of watershed or main area of interest.  | Nepal         |
 +----------------+--------------------------------------------------+---------------+
 | subbasin_name  | The name of the sub basin or sub area.           | Central       |
 +----------------+--------------------------------------------------+---------------+
@@ -33,5 +37,5 @@ GetWaterML for Forecasts Statistics
 
 Example
 -------
-https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWaterML/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&start_folder=most_recent&stat_type=mean
+https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWaterML/?user=john&pass=secret&watershed_name=Nepal&subbasin_name=Central&reach_id=5&start_folder=most_recent&stat_type=mean
 

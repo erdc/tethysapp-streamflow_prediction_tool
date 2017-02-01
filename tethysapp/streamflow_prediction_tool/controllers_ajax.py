@@ -431,7 +431,7 @@ def wrf_hydro_get_avaialable_dates(request):
         else:
             return JsonResponse({'error' : 'Recent WRF-Hydro forecasts for %s (%s) not found.' % (watershed_name, subbasin_name)})
 
-@login_required 
+@login_required
 def ecmwf_get_hydrograph(request):
     """""
     Plots 52 ECMWF ensembles analysis with min., max., avg. ,std. dev.
