@@ -11,9 +11,8 @@ def get_waterml(request):
 	Controller that will show the data in WaterML 1.1 format
 	"""
 
-    username = request.GET['user']
-    password = request.GET['pass']
-    user = authenticate(username=username, password=password)
+    access_token = request.GET['token']
+    user = authenticate(token=access_token)
 
     if user is not None:
         login(request, user)
@@ -69,4 +68,4 @@ def get_waterml(request):
                 raise Http404('An error occurred. Please verify parameters.')
 
     else:
-        raise Http404('A valid user and password are required.')
+        raise Http404('A valid token is required.')
