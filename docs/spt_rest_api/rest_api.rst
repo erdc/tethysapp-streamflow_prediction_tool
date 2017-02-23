@@ -37,3 +37,22 @@ Example
 -------
 https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWaterML/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&start_folder=most_recent&stat_type=mean&token=asdfqwer1234
 
+GetHistoricData (1980 - 2014)
+=============================
+
++----------------+--------------------------------------------------+---------------+
+| Parameter      | Description                                      | Example       |
++================+==================================================+===============+
+| watershed_name | The name of watershed or main area of interest.  | Nepal         |
++----------------+--------------------------------------------------+---------------+
+| subbasin_name  | The name of the sub basin or sub area.           | Central       |
++----------------+--------------------------------------------------+---------------+
+| reach_id       | The identifier for the stream reach.             | 5             |
++----------------+--------------------------------------------------+---------------+
+| token          | A secret key provided by the portal admin        | asdfqwer1234  |
++----------------+--------------------------------------------------+---------------+
+
+Example
+-------
+https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetHistoricData/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&token=asdfqwer1234
+
