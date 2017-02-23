@@ -1,6 +1,6 @@
 from django.http import JsonResponse, Http404
 from django.shortcuts import render_to_response
-from .controllers_ajax import ecmwf_get_hydrograph
+from .controllers_ajax import ecmwf_get_hydrograph, era_interim_get_hydrograph
 from django.contrib.auth import authenticate, login
 
 import json
@@ -56,6 +56,62 @@ def get_waterml(request):
                     'site_name': watershed_name + ' ' + subbasin_name,
                     'units': {'name': 'Flow', 'short': 'm^3/s', 'long': 'Cubic meters per Second'},
                     'time_series': time_series,
+                    'Source': 'ECMWF GloFAS forecast',
+                    'host': 'https://%s' % request.get_host(),
+                }
+
+                xmlResponse = render_to_response('streamflow_prediction_tool/waterml.xml', context)
+                xmlResponse['Content-Type'] = 'application/xml'
+
+                return xmlResponse
+            except Exception as e:
+                print str(e)
+                raise Http404('An error occurred. Please verify parameters.')
+
+    else:
+        raise Http404('A valid token is required.')
+
+
+def get_historic_data(request):
+    """
+	Controller that will show the historic data in WaterML 1.1 format
+	"""
+
+    access_token = request.GET['token']
+    user = authenticate(token=access_token)
+
+    if user is not None:
+        login(request, user)
+
+        if request.GET:
+            watershed_name = request.GET['watershed_name']
+            subbasin_name = request.GET['subbasin_name']
+            reach_id = request.GET['reach_id']
+
+            try:
+                data = era_interim_get_hydrograph(request)
+                data_dict = json.loads(data.content)
+                historic_data = data_dict['era_interim']
+
+                time_series = []
+                if "success" in data_dict.keys():
+                    startdate = dt.datetime.fromtimestamp(historic_data['series'][0][0] / 1e3).strftime('%Y-%m-%d %H:%M:%S')
+                    for pair in historic_data['series']:
+                        date = dt.datetime.fromtimestamp(pair[0]/1e3)
+                        formatted_date = date.strftime('%Y-%m-%dT%H:%M:%S')
+                        time_series.append({'date': formatted_date, 'val': pair[1]})
+                else:
+                    raise Http404('Historic data is not available for this area.')
+
+                context = {
+                    'config': watershed_name,
+                    'comid': reach_id,
+                    'stat': 'Historic Data',
+                    'startdate': startdate,
+                    'site_name': watershed_name + ' ' + subbasin_name,
+                    'units': {'name': 'Flow', 'short': 'm^3/s', 'long': 'Cubic meters per Second'},
+                    'time_series': time_series,
+                    'source': 'ECMWF ERA Interim data',
                     'host': 'https://%s' % request.get_host(),
                 }
 
