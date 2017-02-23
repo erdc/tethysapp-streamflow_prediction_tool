@@ -1,6 +1,6 @@
 from django.http import JsonResponse, Http404
 from django.shortcuts import render_to_response
-from .controllers_ajax import ecmwf_get_hydrograph, era_interim_get_hydrograph
+from .controllers_ajax import ecmwf_get_hydrograph, era_interim_get_hydrograph, ecmwf_get_avaialable_dates
 from django.contrib.auth import authenticate, login
 
 import json
@@ -94,14 +94,11 @@ def get_historic_data(request):
                 historic_data = data_dict['era_interim']
 
                 time_series = []
-                if "success" in data_dict.keys():
-                    startdate = dt.datetime.fromtimestamp(historic_data['series'][0][0] / 1e3).strftime('%Y-%m-%d %H:%M:%S')
-                    for pair in historic_data['series']:
-                        date = dt.datetime.fromtimestamp(pair[0]/1e3)
-                        formatted_date = date.strftime('%Y-%m-%dT%H:%M:%S')
-                        time_series.append({'date': formatted_date, 'val': pair[1]})
-                else:
-                    raise Http404('Historic data is not available for this area.')
+                startdate = dt.datetime.fromtimestamp(historic_data['series'][0][0] / 1e3).strftime('%Y-%m-%d %H:%M:%S')
+                for pair in historic_data['series']:
+                    date = dt.datetime.fromtimestamp(pair[0]/1e3)
+                    formatted_date = date.strftime('%Y-%m-%dT%H:%M:%S')
+                    time_series.append({'date': formatted_date, 'val': pair[1]})
 
                 context = {
                     'config': watershed_name,
@@ -119,6 +116,73 @@ def get_historic_data(request):
                 xmlResponse['Content-Type'] = 'application/xml'
 
                 return xmlResponse
+            except Exception as e:
+                print str(e)
+                raise Http404('An error occurred. Please verify parameters.')
+
+    else:
+        raise Http404('A valid token is required.')
+
+
+def get_return_periods(request):
+    """
+	Controller that will show the return period data in json format
+	"""
+
+    access_token = request.GET['token']
+    user = authenticate(token=access_token)
+
+    if user is not None:
+        login(request, user)
+
+        if request.GET:
+            try:
+                data = era_interim_get_hydrograph(request)
+                data_dict = json.loads(data.content)
+                return_periods = data_dict['return_period']
+
+                if 'error' not in return_periods.keys():
+                    return JsonResponse(return_periods, safe=False)
+                else:
+                    json_data = dict()
+                    json_data['error'] = 'An error occurred. Please verify parameters.'
+                    return JsonResponse(json_data, safe=False)
+
+            except Exception as e:
+                print str(e)
+                raise Http404('An error occurred. Please verify parameters.')
+
+    else:
+        raise Http404('A valid token is required.')
+
+
+def get_available_dates(request):
+    """
+	Controller that will show the available forecast dates in a python list format
+	"""
+
+    access_token = request.GET['token']
+    user = authenticate(token=access_token)
+
+    if user is not None:
+        login(request, user)
+
+        if request.GET:
+            try:
+                data = ecmwf_get_avaialable_dates(request)
+                data_dict = json.loads(data.content)
+
+                if "error" not in data_dict.keys():
+                    available_dates_raw = data_dict['output_directories']
+                    available_dates = []
+                    for pair in available_dates_raw:
+                        available_dates.append(pair["id"])
+                    available_dates = sorted(available_dates)
+                    return JsonResponse(available_dates, safe=False)
+                else:
+                    error_list = [{'error': 'An error occurred. Please verify parameters.'}]
+                    return JsonResponse(error_list, safe=False)
+
             except Exception as e:
                 print str(e)
                 raise Http404('An error occurred. Please verify parameters.')
