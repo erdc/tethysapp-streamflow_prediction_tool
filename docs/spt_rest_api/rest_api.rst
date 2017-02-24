@@ -9,6 +9,13 @@ access the web app interface. This type of service facilitates integration of th
 the automation of forecast retrievals using programing languages like Python, or R. The available methods and a
 description of how to use them are shown below.
 
+For each request, you need to use the API Key provided by Tethys Platform in
+the Authorization HTTP request header.
+
+For example::
+
+    Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b
+
 GetWaterML for Forecasts Statistics
 ===================================
 
@@ -29,13 +36,11 @@ GetWaterML for Forecasts Statistics
 |                |                                                  |               |
 |                | outer_range_upper, outer_range_lower).           |               |
 +----------------+--------------------------------------------------+---------------+
-| token          | A secret key provided by the portal admin        | asdfqwer1234  |
-+----------------+--------------------------------------------------+---------------+
 .. [*] start_folder=most_recent will retrieve the most recent date available.
 
 Example
 -------
-https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWaterML/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&start_folder=most_recent&stat_type=mean&token=asdfqwer1234
+https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWaterML/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&start_folder=most_recent&stat_type=mean
 
 GetHistoricData (1980 - 2014)
 =============================
@@ -49,10 +54,7 @@ GetHistoricData (1980 - 2014)
 +----------------+--------------------------------------------------+---------------+
 | reach_id       | The identifier for the stream reach.             | 5             |
 +----------------+--------------------------------------------------+---------------+
-| token          | A secret key provided by the portal admin        | asdfqwer1234  |
-+----------------+--------------------------------------------------+---------------+
 
 Example
 -------
-https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetHistoricData/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&token=asdfqwer1234
-
+https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetHistoricData/?watershed_name=Nepal&subbasin_name=Central&reach_id=5

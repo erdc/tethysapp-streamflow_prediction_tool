@@ -27,7 +27,7 @@ class StreamflowPredictionTool(TethysAppBase):
                   'and warning flags aid in determining the severity.'
     enable_feedback = False
     feedback_emails = []
-        
+
     def url_maps(self):
         """
         Add controllers
@@ -163,15 +163,15 @@ class StreamflowPredictionTool(TethysAppBase):
                     UrlMap(name='publications',
                            url='streamflow-prediction-tool/publications',
                            controller='streamflow_prediction_tool.controllers.publications'),
-                    UrlMap(name='waterml',
+                    UrlMap(name='api_waterml',
                            url='streamflow-prediction-tool/api/GetWaterML',
                            controller='streamflow_prediction_tool.api.get_waterml'),
-                    UrlMap(name='era_interim',
+                    UrlMap(name='api_era_interim',
                            url='streamflow-prediction-tool/api/GetHistoricData',
                            controller='streamflow_prediction_tool.api.get_historic_data'),
         )
         return url_maps
-        
+
     def persistent_stores(self):
         """
         Add one or more persistent stores
