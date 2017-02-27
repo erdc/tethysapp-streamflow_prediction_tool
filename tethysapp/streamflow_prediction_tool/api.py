@@ -1,13 +1,15 @@
 from django.http import JsonResponse, Http404
 from django.shortcuts import render_to_response
 from django.contrib.auth import authenticate, login
-from rest_framework.decorators import api_view
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view, authentication_classes
 import json
 import datetime as dt
 
 from .controllers_ajax import ecmwf_get_hydrograph, era_interim_get_hydrograph
 
 @api_view(['GET'])
+@authentication_classes((TokenAuthentication,))
 def get_waterml(request):
     """
 	Controller that will show the data in WaterML 1.1 format
@@ -63,6 +65,7 @@ def get_waterml(request):
         raise Http404('An error occurred. Please verify parameters.')
 
 @api_view(['GET'])
+@authentication_classes((TokenAuthentication,))
 def get_historic_data(request):
     """
 	Controller that will show the historic data in WaterML 1.1 format
