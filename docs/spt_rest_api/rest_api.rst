@@ -29,13 +29,13 @@ GetWaterML for Forecasts Statistics
 |                |                                                  |               |
 |                | outer_range_upper, outer_range_lower).           |               |
 +----------------+--------------------------------------------------+---------------+
-| token          | A secret key provided by the portal admin        | asdfqwer1234  |
-+----------------+--------------------------------------------------+---------------+
 .. [*] start_folder=most_recent will retrieve the most recent date available.
 
 Example
 -------
-https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWaterML/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&start_folder=most_recent&stat_type=mean&token=asdfqwer1234
+
+>>> import requests
+>>> res = requests.get('http://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWaterML/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&start_folder=most_recent&stat_type=mean', headers={'Authorization': 'Token asdfqwer1234'})
 
 GetHistoricData (1980 - Present)
 ================================
@@ -49,12 +49,11 @@ GetHistoricData (1980 - Present)
 +----------------+--------------------------------------------------+---------------+
 | reach_id       | The identifier for the stream reach.             | 5             |
 +----------------+--------------------------------------------------+---------------+
-| token          | A secret key provided by the portal admin        | asdfqwer1234  |
-+----------------+--------------------------------------------------+---------------+
 
 Example
 -------
-https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetHistoricData/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&token=asdfqwer1234
+>>> import requests
+>>> res = requests.get('http://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetHistoricData/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
 
 GetReturnPeriods (2, 10, 20, and 35 year return)
 ================================================
@@ -68,12 +67,11 @@ GetReturnPeriods (2, 10, 20, and 35 year return)
 +----------------+--------------------------------------------------+---------------+
 | reach_id       | The identifier for the stream reach.             | 5             |
 +----------------+--------------------------------------------------+---------------+
-| token          | A secret key provided by the portal admin        | asdfqwer1234  |
-+----------------+--------------------------------------------------+---------------+
 
 Example
 -------
-https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetReturnPeriods/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&token=asdfqwer1234
+>>> import requests
+>>> res = requests.get('http://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetReturnPeriods/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
 
 GetAvailableDates
 =================
@@ -87,9 +85,8 @@ GetAvailableDates
 +----------------+--------------------------------------------------+---------------+
 | reach_id       | The identifier for the stream reach.             | 5             |
 +----------------+--------------------------------------------------+---------------+
-| token          | A secret key provided by the portal admin        | asdfqwer1234  |
-+----------------+--------------------------------------------------+---------------+
 
 Example
 -------
-https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetAvailableDates/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&token=asdfqwer1234
+>>> import requests
+>>> res = requests.get('http://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetAvailableDates/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
