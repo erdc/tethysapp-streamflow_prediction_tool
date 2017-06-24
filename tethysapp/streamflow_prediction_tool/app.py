@@ -8,7 +8,8 @@
 ##  License: BSD 3-Clause
 
 from tethys_sdk.base import TethysAppBase, url_map_maker
-from tethys_sdk.stores import PersistentStore
+from tethys_sdk.app_settings import PersistentStoreDatabaseSetting
+
 
 class StreamflowPredictionTool(TethysAppBase):
     """
@@ -177,15 +178,18 @@ class StreamflowPredictionTool(TethysAppBase):
                            controller='streamflow_prediction_tool.api.get_available_dates'),
         )
         return url_maps
-        
-    def persistent_stores(self):
+
+    def persistent_store_settings(self):
         """
-        Add one or more persistent stores
+        Define Persistent Store Settings.
         """
-        stores = (PersistentStore(name='main_db',
-                                  initializer='streamflow_prediction_tool.init_stores.init_main_db',
-                                  spatial=False
-                ),
+        ps_settings = (
+            PersistentStoreDatabaseSetting(
+                name='main_db',
+                description='primary database',
+                initializer='streamflow_prediction_tool.init_stores.init_main_db',
+                required=True
+            ),
         )
 
-        return stores
+        return ps_settings

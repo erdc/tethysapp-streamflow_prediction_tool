@@ -21,20 +21,22 @@ from tethys_sdk.gizmos import (Button, MessageBox, SelectInput,
 
 #local imports
 #from spt_dataset_manager.dataset_manager import GeoServerDatasetManager
+from .app import StreamflowPredictionTool as app
 from .model import (BaseLayer, DataStore, DataStoreType, Geoserver,
-                    MainSettings, mainSessionMaker,
-                    Watershed, WatershedGroup)
+                    MainSettings, Watershed, WatershedGroup)
 from .functions import (ecmwf_get_valid_forecast_folder_list,
                         format_watershed_title,
                         redirect_with_message,
                         user_permission_test)
+
 @login_required
 def home(request):
     """
     Controller for the app home page.
     """
     #get the base layer information
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     #Query DB for settings
     watersheds  = session.query(Watershed) \
                             .order_by(Watershed.watershed_name,
@@ -277,8 +279,9 @@ def map(request):
             #send them home
             msg = "No watershed or watershed group selected. Please select one to proceed."
             return redirect_with_message(request, "..", msg, severity="WARNING")
-            
-        session = mainSessionMaker()
+
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
 
         #get base layer info
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
@@ -433,7 +436,8 @@ def settings(request):
     Controller for the app settings page.
     """
     
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     # Query DB for base layers
     base_layers = session.query(BaseLayer).all()
     base_layer_list = []
@@ -500,7 +504,8 @@ def add_watershed(request):
     Controller for the app add_watershed page.
     """
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
 
     watershed_name_input = TextInput(display_text='Watershed Display Name',
                                      name='watershed-name-input',
@@ -633,7 +638,8 @@ def manage_watersheds(request):
     Controller for the app manage_watersheds page.
     """
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     num_watersheds = session.query(Watershed).count()
     session.close()
     edit_modal = MessageBox(name='edit_watershed_modal',
@@ -657,7 +663,8 @@ def manage_watersheds_table(request):
     Controller for the app manage_watersheds page.
     """
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
 
     # Query DB for watersheds
     RESULTS_PER_PAGE = 5
@@ -705,7 +712,8 @@ def edit_watershed(request):
         watershed_id = get_info.get('watershed_id')
 
         #initialize session
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         #get desired watershed
         #try:
         watershed  = session.query(Watershed).get(watershed_id)
@@ -856,7 +864,8 @@ def add_data_store(request):
     Controller for the app add_data_store page.
     """
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
 
     data_store_name_input = TextInput(display_text='Data Store Server Name',
                                       name='data-store-name-input',
@@ -909,7 +918,8 @@ def manage_data_stores(request):
     Controller for the app manage_data_stores page.
     """
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     num_data_stores = session.query(DataStore).count() - 1
     session.close()
     context = {
@@ -925,7 +935,8 @@ def manage_data_stores_table(request):
     Controller for the app manage_data_stores page.
     """
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     RESULTS_PER_PAGE = 5
     page = int(request.GET.get('page'))
 
@@ -996,7 +1007,8 @@ def manage_geoservers(request):
     Controller for the app manage_geoservers page.
     """
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     num_geoservers = session.query(Geoserver).count()
     session.close()
 
@@ -1013,7 +1025,8 @@ def manage_geoservers_table(request):
     Controller for the app manage_geoservers page.
     """
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     RESULTS_PER_PAGE = 5
     page = int(request.GET.get('page'))
 
@@ -1051,7 +1064,8 @@ def add_watershed_group(request):
                                            icon_append='glyphicon glyphicon-tag',)
  
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     #Query DB for settings
     watersheds  = session.query(Watershed) \
                         .order_by(Watershed.watershed_name,
@@ -1089,7 +1103,8 @@ def manage_watershed_groups(request):
     Controller for the app manage_watershed_groups page.
     """
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     num_watershed_groups = session.query(WatershedGroup).count()
     session.close()
     context = {
@@ -1104,7 +1119,8 @@ def manage_watershed_groups_table(request):
     Controller for the app manage_watershed_groups page.
     """
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     RESULTS_PER_PAGE = 5
     page = int(request.GET.get('page'))
 
