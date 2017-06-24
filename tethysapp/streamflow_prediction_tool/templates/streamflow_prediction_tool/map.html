@@ -31,9 +31,9 @@
 {% endblock %}
 
 {% block exit_button_override %}
-    <div class="exit-button">
-      <a href="{% url 'streamflow_prediction_tool:home' %}">Back</a>
-    </div>
+  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Back">
+    <a href="{% url 'streamflow_prediction_tool:home' %}"><span class="glyphicon glyphicon-arrow-left"></span></a>
+  </div>
 {% endblock %}
 
 
