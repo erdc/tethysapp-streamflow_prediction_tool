@@ -33,8 +33,8 @@ Paper 5272. http://scholarsarchive.byu.edu/etd/5272
 Prerequisites:
 --------------
 
--  Tethys Platform v1.4 (CKAN, PostgresQL, GeoServer): See:
-   http://docs.tethysplatform.org/en/1.4.0/
+-  Tethys Platform 2.0 (CKAN, PostgresQL, GeoServer): See:
+   http://docs.tethysplatform.org
 -  RAPIDpy (Python package).
 -  Geoserver needs CORS enabled.
 
