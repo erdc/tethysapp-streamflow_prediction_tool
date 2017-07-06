@@ -1,9 +1,11 @@
 /* MAP STYLES */
 #app-content-wrapper #app-content {
-    padding: 120px 5px 0 5px;
     height: 100%;
 }
+
 #inner-app-content {
+    padding: 0;
+    padding-top: 10px;
     height: 100%
 }
 

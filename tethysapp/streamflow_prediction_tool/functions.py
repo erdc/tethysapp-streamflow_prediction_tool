@@ -21,7 +21,8 @@ from shutil import rmtree
 from sqlalchemy import and_
 
 #local import
-from model import GeoServerLayer, mainSessionMaker, MainSettings, Watershed
+from .app import StreamflowPredictionTool as app
+from .model import GeoServerLayer, MainSettings, Watershed
 from spt_dataset_manager.dataset_manager import (CKANDatasetManager, 
                                                  GeoServerDatasetManager)
 
@@ -76,7 +77,8 @@ def delete_old_watershed_prediction_files(watershed, forecast="all"):
                 pass
         
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
     forecast = forecast.lower()
     
@@ -124,7 +126,8 @@ def delete_old_watershed_geoserver_files(watershed):
     Removes old watershed geoserver files from system
     """
     #initialize session
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
     
     #initialize geoserver manager
