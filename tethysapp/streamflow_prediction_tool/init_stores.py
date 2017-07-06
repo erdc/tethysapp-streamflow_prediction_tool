@@ -7,18 +7,20 @@
 ##  Copyright © 2015-2016 Alan D. Snow. All rights reserved.
 ##  License: BSD 3-Clause
 
-from .model import (Base, BaseLayer, DataStore, DataStoreType, MainSettings,
-                    mainEngine, mainSessionMaker)
+from .app import StreamflowPredictionTool as app
+from .model import Base, BaseLayer, DataStore, DataStoreType, MainSettings
 
-def init_main_db(first_time):
+
+def init_main_db(engine, first_time):
     # Create tables
-    Base.metadata.create_all(mainEngine)
+    Base.metadata.create_all(engine)
     
     # Initial data
     if first_time:
         #make session
-        session = mainSessionMaker()
-        
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
+
         #add all possible base layers
         session.add(BaseLayer("MapQuest","none",))
         session.add(BaseLayer("Esri","none",))

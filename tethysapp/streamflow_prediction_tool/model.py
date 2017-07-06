@@ -9,15 +9,12 @@
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import relationship
 from uuid import uuid5, NAMESPACE_DNS
 from datetime import datetime
-#local import
-from app import StreamflowPredictionTool
-# DB Engine, sessionmaker and base
-mainEngine = StreamflowPredictionTool.get_persistent_store_engine('main_db')
-mainSessionMaker = sessionmaker(bind=mainEngine)
+
 Base = declarative_base()
+
 
 class BaseLayer(Base):
     '''

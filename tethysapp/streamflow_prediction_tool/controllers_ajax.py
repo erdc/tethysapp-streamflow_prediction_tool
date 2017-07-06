@@ -24,34 +24,34 @@ from RAPIDpy.dataset import RAPIDDataset
 
 #django imports
 from django.contrib.auth.decorators import user_passes_test, login_required
-from django.shortcuts import render
 
 #tethys imports
-from tethys_sdk.gizmos import LinePlot
 from tethys_dataset_services.engines import CkanDatasetEngine
 
 #local imports
-from functions import (delete_from_database,
-                       delete_rapid_input_ckan,
-                       delete_old_watershed_prediction_files,
-                       delete_old_watershed_files, 
-                       delete_old_watershed_geoserver_files,
-                       ecmwf_find_most_current_files,
-                       ecmwf_get_valid_forecast_folder_list,
-                       get_reach_index,
-                       wrf_hydro_find_most_current_file,
-                       format_name,
-                       get_cron_command,
-                       handle_uploaded_file,
-                       update_geoserver_layer,
-                       user_permission_test)
-
-from model import (DataStore, Geoserver, MainSettings, 
-                   mainSessionMaker, Watershed, WatershedGroup)
-
 from spt_dataset_manager.dataset_manager import (GeoServerDatasetManager,
                                                  RAPIDInputDatasetManager)
-                        
+
+from .app import StreamflowPredictionTool as app
+from .functions import (delete_from_database,
+                        delete_rapid_input_ckan,
+                        delete_old_watershed_prediction_files,
+                        delete_old_watershed_files,
+                        delete_old_watershed_geoserver_files,
+                        ecmwf_find_most_current_files,
+                        ecmwf_get_valid_forecast_folder_list,
+                        get_reach_index,
+                        wrf_hydro_find_most_current_file,
+                        format_name,
+                        get_cron_command,
+                        handle_uploaded_file,
+                        update_geoserver_layer,
+                        user_permission_test)
+
+from .model import (DataStore, Geoserver, MainSettings,
+                   Watershed, WatershedGroup)
+
+
 @user_passes_test(user_permission_test)
 def data_store_add(request):
     """
@@ -71,8 +71,9 @@ def data_store_add(request):
             return JsonResponse({ 'error': "Request missing data." })
             
         #initialize session
-        session = mainSessionMaker()
-        
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
+
         #check to see if duplicate exists
         num_similar_data_stores  = session.query(DataStore) \
             .filter(
@@ -123,7 +124,8 @@ def data_store_delete(request):
         if int(data_store_id) != 1:
             try:
                 #initialize session
-                session = mainSessionMaker()
+                session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+                session = session_maker()
                 #update data store
                 data_store  = session.query(DataStore).get(data_store_id)
                 session.delete(data_store)
@@ -151,7 +153,8 @@ def data_store_update(request):
     
         if int(data_store_id) != 1:
             #initialize session
-            session = mainSessionMaker()
+            session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+            session = session_maker()
             #check to see if duplicate exists
             num_similar_data_stores  = session.query(DataStore) \
                 .filter(
@@ -207,7 +210,8 @@ def geoserver_add(request):
             return JsonResponse({ 'error': "Missing input data." })
 
         #initialize session
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
 
         #validate geoserver credentials
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
@@ -255,7 +259,8 @@ def geoserver_delete(request):
         geoserver_id = post_info.get('geoserver_id')
     
         #initialize session
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         try:
             #delete geoserver
             try:
@@ -299,7 +304,8 @@ def geoserver_update(request):
         if int(geoserver_id) != 1:
 
             #initialize session
-            session = mainSessionMaker()
+            session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+            session = session_maker()
             #validate geoserver credentials
             main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
             try:
@@ -347,7 +353,8 @@ def ecmwf_get_avaialable_dates(request):
     """""
     if request.method == 'GET':
         #Query DB for path to rapid output
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
         session.close()
 
@@ -384,7 +391,8 @@ def wrf_hydro_get_avaialable_dates(request):
     """""
     if request.method == 'GET':
         #Query DB for path to rapid output
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
         session.close()
 
@@ -438,7 +446,8 @@ def ecmwf_get_hydrograph(request):
     """""
     if request.method == 'GET':
         #Query DB for path to rapid output
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
         session.close()
         path_to_rapid_output = main_settings.ecmwf_rapid_prediction_directory
@@ -574,7 +583,8 @@ def era_interim_get_hydrograph(request):
     """""
     if request.method == 'GET':
         #Query DB for path to rapid output
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
         session.close()
         path_to_era_interim_data = main_settings.era_interim_rapid_directory
@@ -681,7 +691,8 @@ def wrf_hydro_get_hydrograph(request):
     """""
     if request.method == 'GET':
         #Query DB for path to rapid output
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
         session.close()
         path_to_rapid_output = main_settings.wrf_hydro_rapid_prediction_directory
@@ -734,7 +745,8 @@ def generate_warning_points(request):
     """
     if request.method == 'GET':
         #Query DB for path to rapid output
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
         session.close()
         path_to_ecmwf_rapid_output = main_settings.ecmwf_rapid_prediction_directory
@@ -799,7 +811,8 @@ def era_interim_get_csv(request):
     """""
     if request.method == 'GET':
         #Query DB for path to rapid output
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
         session.close()
         path_to_era_interim_data = main_settings.era_interim_rapid_directory
@@ -871,7 +884,8 @@ def get_seasonal_streamflow(request):
     """""
     if request.method == 'GET':
         #Query DB for path to rapid output
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
         session.close()
         path_to_era_interim_data = main_settings.era_interim_rapid_directory
@@ -955,7 +969,8 @@ def settings_update(request):
             return JsonResponse({ 'error': "CRON setup error." })
 
         #initialize session
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         #update main settings
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
         main_settings.base_layer_id = base_layer_id
@@ -1038,7 +1053,8 @@ def watershed_add(request):
             return JsonResponse({'error' : "Must have an ECMWF or WRF-Hydro watershed/subbasin name to continue." })
 
         #initialize session
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
 
         #check to see if duplicate exists
@@ -1192,7 +1208,8 @@ def watershed_ecmwf_rapid_file_upload(request):
         except ValueError:
             return JsonResponse({'error' : 'Watershed ID need to be an integer.'})
         #initialize session
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         watershed = session.query(Watershed).get(watershed_id)
 
         #Upload file to Data Store Server
@@ -1273,7 +1290,8 @@ def watershed_delete(request):
         
         if watershed_id:
             #initialize session
-            session = mainSessionMaker()
+            session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+            session = session_maker()
             #get watershed to delete
             try:
                 watershed  = session.query(Watershed).get(watershed_id)
@@ -1339,7 +1357,8 @@ def watershed_update(request):
             return JsonResponse({'error' : 'One or more ids are faulty.'})
 
         #initialize session
-        session = mainSessionMaker()
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
         #check to see if duplicate exists
         num_similar_watersheds  = session.query(Watershed) \
             .filter(Watershed.watershed_clean_name == watershed_clean_name) \
@@ -1623,8 +1642,9 @@ def watershed_group_add(request):
         if not watershed_group_name or not watershed_group_watershed_ids:
             return JsonResponse({ 'error': 'AJAX request input faulty' })
         #initialize session
-        session = mainSessionMaker()
-        
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session = session_maker()
+
         #check to see if duplicate exists
         num_similar_watershed_groups  = session.query(WatershedGroup) \
             .filter(WatershedGroup.name == watershed_group_name) \
@@ -1662,7 +1682,8 @@ def watershed_group_delete(request):
         
         if watershed_group_id:
             #initialize session
-            session = mainSessionMaker()
+            session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+            session = session_maker()
             #get watershed group to delete
             watershed_group  = session.query(WatershedGroup).get(watershed_group_id)
             
@@ -1688,7 +1709,8 @@ def watershed_group_update(request):
         watershed_group_watershed_ids = post_info.getlist('watershed_group_watershed_ids[]')
         if watershed_group_id and watershed_group_name and watershed_group_watershed_ids:
             #initialize session
-            session = mainSessionMaker()
+            session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+            session = session_maker()
             #check to see if duplicate exists
             num_similar_watershed_groups  = session.query(WatershedGroup) \
                 .filter(WatershedGroup.name == watershed_group_name) \

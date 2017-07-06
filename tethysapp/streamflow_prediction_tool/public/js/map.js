@@ -2197,13 +2197,13 @@ var ERFP_MAP = (function() {
                                                                watershed_layers_info.ecmwf_subbasin);
     
                 if (divide_into_groups) {
-                    group_return_20_layers.push(return_20_layer);
-                    group_return_10_layers.push(return_10_layer);
                     group_return_2_layers.push(return_2_layer);
+                    group_return_10_layers.push(return_10_layer);
+                    group_return_20_layers.push(return_20_layer);
                 } else {
-                    all_watershed_layers.push(return_20_layer);
-                    all_watershed_layers.push(return_10_layer);
                     all_watershed_layers.push(return_2_layer);
+                    all_watershed_layers.push(return_10_layer);
+                    all_watershed_layers.push(return_20_layer);
                 }
     
             });
@@ -2253,15 +2253,15 @@ var ERFP_MAP = (function() {
                     all_watershed_layers.push(ahps_station_layer);
                 }
     
-                var warnings_20_year = determineGeoServerLayerOrGroup(group_return_20_layers, 
-                                                                      divide_into_groups, 
-                                                                      "watershed_group-" + watershed_group_info.group_id + "-20_year_warnings", 
-                                                                      "warning_points",
-                                                                      true);
-                if (warnings_20_year != null) {
-                    all_watershed_layers.push(warnings_20_year);
+                var warnings_2_year = determineGeoServerLayerOrGroup(group_return_2_layers,
+                                                                     divide_into_groups,
+                                                                     "watershed_group-" + watershed_group_info.group_id + "-2_year_warnings",
+                                                                     "warning_points",
+                                                                     true);
+                if (warnings_2_year != null) {
+                    all_watershed_layers.push(warnings_2_year);
                 }
-    
+
                 var warnings_10_year = determineGeoServerLayerOrGroup(group_return_10_layers, 
                                                                       divide_into_groups, 
                                                                       "watershed_group-" + watershed_group_info.group_id + "-10_year_warnings", 
@@ -2271,13 +2271,13 @@ var ERFP_MAP = (function() {
                     all_watershed_layers.push(warnings_10_year);
                 }
     
-                var warnings_2_year = determineGeoServerLayerOrGroup(group_return_2_layers, 
-                                                                     divide_into_groups, 
-                                                                     "watershed_group-" + watershed_group_info.group_id + "-2_year_warnings", 
-                                                                     "warning_points",
-                                                                     true);
-                if (warnings_2_year != null) {
-                    all_watershed_layers.push(warnings_2_year);
+                var warnings_20_year = determineGeoServerLayerOrGroup(group_return_20_layers,
+                                                                      divide_into_groups,
+                                                                      "watershed_group-" + watershed_group_info.group_id + "-20_year_warnings",
+                                                                      "warning_points",
+                                                                      true);
+                if (warnings_20_year != null) {
+                    all_watershed_layers.push(warnings_20_year);
                 }
             }
 
