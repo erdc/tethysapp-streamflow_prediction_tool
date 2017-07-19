@@ -7,6 +7,7 @@ import datetime as dt
 
 
 from .controllers_ajax import ecmwf_get_hydrograph, era_interim_get_hydrograph, ecmwf_get_avaialable_dates
+from .model import mainSessionMaker, Watershed
 
 
 @api_view(['GET'])
@@ -159,3 +160,24 @@ def get_available_dates(request):
     except Exception as e:
         print str(e)
         raise Http404('An error occurred. Please verify parameters.')
+
+
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication,))
+def get_watershed_list(request):
+    """
+    Controller that returns available watersheds.
+    """
+    #get the base layer information
+    session = mainSessionMaker()
+    #Query DB for settings
+    watersheds = session.query(Watershed).order_by(Watershed.watershed_name, Watershed.subbasin_name).all()
+
+    watershed_list = []
+    for watershed in watersheds:
+        watershed_list.append(("%s (%s)" % (watershed.watershed_name, watershed.subbasin_name), watershed.id))
+
+    if len(watershed_list) > 0:
+        return JsonResponse(watershed_list, safe=False)
+    else:
+        return JsonResponse(["No watersheds found"], safe=False)

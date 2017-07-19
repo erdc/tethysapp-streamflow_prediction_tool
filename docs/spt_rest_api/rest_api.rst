@@ -35,7 +35,7 @@ Example
 -------
 
 >>> import requests
->>> res = requests.get('http://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWaterML/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&start_folder=most_recent&stat_type=mean', headers={'Authorization': 'Token asdfqwer1234'})
+>>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWaterML/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&start_folder=most_recent&stat_type=mean', headers={'Authorization': 'Token asdfqwer1234'})
 
 GetHistoricData (1980 - Present)
 ================================
@@ -53,7 +53,7 @@ GetHistoricData (1980 - Present)
 Example
 -------
 >>> import requests
->>> res = requests.get('http://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetHistoricData/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
+>>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetHistoricData/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
 
 GetReturnPeriods (2, 10, 20, and 35 year return)
 ================================================
@@ -71,7 +71,7 @@ GetReturnPeriods (2, 10, 20, and 35 year return)
 Example
 -------
 >>> import requests
->>> res = requests.get('http://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetReturnPeriods/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
+>>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetReturnPeriods/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
 
 GetAvailableDates
 =================
@@ -89,4 +89,14 @@ GetAvailableDates
 Example
 -------
 >>> import requests
->>> res = requests.get('http://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetAvailableDates/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
+>>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetAvailableDates/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
+
+GetWatersheds
+=============
+
+This method takes no parameters and returns a list of the available watersheds.
+
+Example
+-------
+>>> import requests
+>>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWatersheds/', headers={'Authorization': 'Token asdfqwer1234'})
