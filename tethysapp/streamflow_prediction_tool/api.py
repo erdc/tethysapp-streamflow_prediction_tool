@@ -5,9 +5,9 @@ from rest_framework.decorators import api_view, authentication_classes
 import json
 import datetime as dt
 
-
+from .app import StreamflowPredictionTool as app
 from .controllers_ajax import ecmwf_get_hydrograph, era_interim_get_hydrograph, ecmwf_get_avaialable_dates
-from .model import mainSessionMaker, Watershed
+from .model import Watershed
 
 
 @api_view(['GET'])
@@ -169,7 +169,9 @@ def get_watershed_list(request):
     Controller that returns available watersheds.
     """
     #get the base layer information
-    session = mainSessionMaker()
+
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
     #Query DB for settings
     watersheds = session.query(Watershed).order_by(Watershed.watershed_name, Watershed.subbasin_name).all()
 
