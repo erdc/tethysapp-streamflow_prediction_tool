@@ -176,6 +176,9 @@ class StreamflowPredictionTool(TethysAppBase):
                     UrlMap(name='return_periods',
                            url='streamflow-prediction-tool/api/GetAvailableDates',
                            controller='streamflow_prediction_tool.api.get_available_dates'),
+                    UrlMap(name='watershed_list',
+                           url='streamflow-prediction-tool/api/GetWatersheds',
+                           controller='streamflow_prediction_tool.api.get_watershed_list'),
         )
         return url_maps
 
