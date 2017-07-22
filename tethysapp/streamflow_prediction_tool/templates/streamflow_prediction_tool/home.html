@@ -11,12 +11,12 @@
 {% block app_content %}
     {% if watersheds_length > 0 %}
         <h1>Select a Watershed</h1>
-        <form action="{% url 'streamflow_prediction_tool:map' %}" method="get">
+        <form id="watershedForm" action="{% url 'streamflow_prediction_tool:map' %}" method="get">
             {% gizmo select_input watershed_select %}
             <div class="btn-group ">
-                <a name="submit-go-to-map" class="btn btn-success" role="button" onclick="document.forms[0].submit();" id="submit-go-to-map">
+                <button name="submit-go-to-map" class="btn btn-success" role="button" form="watershedForm" submit="True" id="submit-go-to-map">
                 <span class="glyphicon glyphicon-play"></span>View Watershed(s)
-              </a>
+              </button>
             </div>
         </form>
         {% if user.is_superuser or user.is_staff %}
@@ -26,12 +26,12 @@
         <h4>Or...</h4>
         <h1>Select a Watershed Group</h1>
         {% if watershed_group_length > 0 %}
-            <form action="{% url 'streamflow_prediction_tool:map' %}" method="get">
+            <form id="watershedGroupForm" action="{% url 'streamflow_prediction_tool:map' %}" method="get">
                 {% gizmo select_input watershed_group_select %}
                 <div class="btn-group ">
-                    <a name="submit-go-to-map" class="btn btn-success" role="button" onclick="document.forms[1].submit();" id="submit-go-to-map">
+                    <button name="submit-go-to-map" class="btn btn-success" role="button" form="watershedGroupForm" submit="True" id="submit-go-to-map">
                     <span class="glyphicon glyphicon-play"></span>View Watershed Group
-                  </a>
+                  </button>
                 </div>
             </form>
         {% else %}
