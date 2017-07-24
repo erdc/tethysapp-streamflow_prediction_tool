@@ -31,6 +31,7 @@ class BaseLayer(Base):
         self.name = name
         self.api_key = api_key
 
+
 class MainSettings(Base):
     '''
     Main Settings SQLAlchemy DB Model
@@ -79,6 +80,7 @@ class DataStore(Base):
         self.api_endpoint = api_endpoint
         self.api_key = api_key
 
+
 class DataStoreType(Base):
     '''
     DataStoreType SQLAlchemy DB Model
@@ -93,6 +95,7 @@ class DataStoreType(Base):
     def __init__(self, code_name, human_readable_name):
         self.code_name = code_name
         self.human_readable_name = human_readable_name
+
 
 class Geoserver(Base):
     '''
@@ -112,6 +115,7 @@ class Geoserver(Base):
         self.url = url
         self.username = username
         self.password = password
+
 
 class GeoServerLayer(Base):
     '''
@@ -185,31 +189,7 @@ class Watershed(Base):
                                                 cascade="save-update,merge,delete,delete-orphan")
     watershed_groups = relationship("WatershedGroup",
                                     secondary='watershed_watershed_group_link')
-                              
-    def __init__(self, watershed_name, subbasin_name, watershed_clean_name,
-                 subbasin_clean_name, data_store_id, ecmwf_rapid_input_resource_id,
-                 ecmwf_data_store_watershed_name, ecmwf_data_store_subbasin_name,
-                 wrf_hydro_data_store_watershed_name, wrf_hydro_data_store_subbasin_name,
-                 geoserver_id, geoserver_drainage_line_layer, geoserver_boundary_layer,
-                 geoserver_gage_layer, geoserver_historical_flood_map_layer,
-                 geoserver_ahps_station_layer):
 
-        self.watershed_name = watershed_name
-        self.subbasin_name = subbasin_name
-        self.watershed_clean_name = watershed_clean_name
-        self.subbasin_clean_name = subbasin_clean_name
-        self.data_store_id = data_store_id
-        self.ecmwf_rapid_input_resource_id = ecmwf_rapid_input_resource_id
-        self.ecmwf_data_store_watershed_name = ecmwf_data_store_watershed_name
-        self.ecmwf_data_store_subbasin_name = ecmwf_data_store_subbasin_name
-        self.wrf_hydro_data_store_watershed_name = wrf_hydro_data_store_watershed_name
-        self.wrf_hydro_data_store_subbasin_name = wrf_hydro_data_store_subbasin_name
-        self.geoserver_id = geoserver_id
-        self.geoserver_drainage_line_layer = geoserver_drainage_line_layer
-        self.geoserver_boundary_layer = geoserver_boundary_layer
-        self.geoserver_gage_layer = geoserver_gage_layer
-        self.geoserver_historical_flood_map_layer = geoserver_historical_flood_map_layer
-        self.geoserver_ahps_station_layer = geoserver_ahps_station_layer
 
 class WatershedWatershedGroupLink(Base):
     '''
@@ -218,6 +198,7 @@ class WatershedWatershedGroupLink(Base):
     __tablename__ = 'watershed_watershed_group_link'
     watershed_group_id = Column(Integer, ForeignKey('watershed_group.id'), primary_key=True)
     watershed_id = Column(Integer, ForeignKey('watershed.id'), primary_key=True)
+
 
 class WatershedGroup(Base):
     '''

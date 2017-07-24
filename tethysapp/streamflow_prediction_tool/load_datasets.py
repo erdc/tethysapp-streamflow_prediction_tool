@@ -3,26 +3,26 @@
 ##  load_datasets.py
 ##  streamflow_prediction_tool
 ##
-##  Created by Alan D. Snow.
-##  Copyright © 2015-2016 Alan D. Snow. All rights reserved.
+##  Created by Alan D. Snow, 2015
 ##  License: BSD 3-Clause
 
 import os
 from shutil import rmtree
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tethys_apps.settings")
-#local imports
-from tethys_apps.tethysapp.streamflow_prediction_tool.model import (MainSettings, 
-                                                                    mainSessionMaker, 
-                                                                    Watershed)
-                                                   
 from spt_dataset_manager.dataset_manager import (ECMWFRAPIDDatasetManager,
-                                                 GeoServerDatasetManager,
                                                  WRFHydroHRRRDatasetManager)
-                                                  
-def download_single_watershed_ecmwf_data(watershed, 
-                                         ecmwf_rapid_prediction_directory,
-                                         app_instance_id):
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tethys_apps.settings")
+
+#local imports
+from tethys_apps.tethysapp.streamflow_prediction_tool.model import (MainSettings,
+                                                                    Watershed)
+from tethys_apps.tethysapp.streamflow_prediction_tool.app \
+    import StreamflowPredictionTool as app
+
+
+def download_single_watershed_ecmwf_data(watershed,
+                                         ecmwf_rapid_prediction_directory):
     """
     Loads single watersheds ECMWF datasets from data store
     """
@@ -56,7 +56,8 @@ def download_single_watershed_ecmwf_data(watershed,
                     rmtree(os.path.join(path_to_predicitons, prediction_directory))
             except OSError:
                 pass
-            
+
+
 def download_single_watershed_wrf_hydro_data(watershed,
                                              wrf_hydro_rapid_prediction_directory):
     """
@@ -97,7 +98,9 @@ def load_datasets():
     """
     Loads ECMWF prediction datasets from data store for all watersheds
     """
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
+
     main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
 
     ecmwf_rapid_prediction_directory = main_settings.ecmwf_rapid_prediction_directory
@@ -118,12 +121,15 @@ def load_datasets():
     else:
         print("WRF-Hydro prediction location invalid. Please set to continue.")
     session.close()
-    
+
+
 def load_watershed(watershed):
     """
     Loads prediction datasets from data store for one watershed
     """
-    session = mainSessionMaker()
+    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session = session_maker()
+
     main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
 
     if main_settings.ecmwf_rapid_prediction_directory and \
@@ -144,24 +150,3 @@ def load_watershed(watershed):
         print("WRF-Hydro prediction location invalid. Please set to continue.")
     
     session.close()
-    
-if __name__ == "__main__":
-    load_datasets()
-    #engine_url = 'https://ckan.test'
-    #api_key = ':SDKLFGNSD:L-sfl;jgn'
-    """    
-    #ECMWF
-    er_manager = ECMWFRAPIDDatasetManager(engine_url, api_key)
-    er_manager.download_prediction_dataset(watershed='philippines', 
-                                            subbasin='luzon', 
-                                            date_string='20151214.0', 
-                                            extract_directory='/home/alan/work/rapid-io/output/philippines-luzon')
-    """
-    """
-    #WRF-Hydro
-    wr_manager = WRFHydroHRRRDatasetManager(engine_url, api_key)
-    wr_manager.download_prediction_resource(watershed='usa', 
-                                            subbasin='usa', 
-                                            date_string='20150405T2300Z', 
-                                            extract_directory='/home/alan/tethysdev/tethysapp-erfp_tool/wrf_hydro_rapid_predictions/usa')
-    """ 
