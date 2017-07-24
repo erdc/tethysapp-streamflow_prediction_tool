@@ -201,70 +201,7 @@ def map(request):
                                                               'projection': watershed.geoserver_historical_flood_map_layer.projection,
                                                               }
                     historical_flood_map_exists = True
-                
-                """
-                #LOAD IN PREDICTION FLOOD MAPS
-                if watershed.geoserver_search_for_predicted_flood_map and \
-                    watershed.ecmwf_data_store_watershed_name and \
-                    watershed.ecmwf_data_store_subbasin_name:
-                    #get geoserver manager
-                    geoserver_manager = GeoServerDatasetManager(engine_url=geoserver_api_url, 
-                                                                username=watershed.geoserver.username,
-                                                                password=watershed.geoserver.password, 
-                                                                app_instance_id=main_settings.app_instance_id)   
-                    path_to_rapid_output = main_settings.ecmwf_rapid_prediction_directory
-                    path_to_watershed_files = os.path.join(path_to_rapid_output, 
-                                                           watershed.ecmwf_data_store_watershed_name, 
-                                                           watershed.ecmwf_data_store_subbasin_name)
-                                                           
-                    if os.path.exists(path_to_rapid_output) and os.path.exists(path_to_watershed_files):
-                        geoserver_info['predicted_flood_maps'] = {'watershed': watershed.ecmwf_data_store_watershed_name,
-                                                        'subbasin': watershed.ecmwf_data_store_subbasin_name,
-                                                        'geoserver_info_list': []}
-                        flood_map_layer_name_beginning = "%s-%s-floodmap-" % (watershed.ecmwf_data_store_watershed_name,
-                                                                              watershed.ecmwf_data_store_subbasin_name)
-                        directories = sorted([d for d in os.listdir(path_to_watershed_files) \
-                                            if d and os.path.isdir(os.path.join(path_to_watershed_files, d))],
-                                             reverse=True)
-                        flood_map_count = 0
-                        for directory in directories:
-                            date = datetime.strptime(directory.split(".")[0],"%Y%m%d")
-                            hour = int(directory.split(".")[-1])/100
-                            #search for corresponding geoserver layer to load in
-                            if glob(os.path.join(path_to_watershed_files, directory, "*.nc")):
-                                try:
-                                    #load floodmap layer if exists
-                                    resource_name = geoserver_manager.get_layer_name("%s%s" % (flood_map_layer_name_beginning, directory))
-                                    #floodmap_info = geoserver_manager.dataset_engine.get_resource(resource_id=resource_name)
-                                    floodmap_info = geoserver_manager.dataset_engine.get_layer_group(resource_name)
-                                    if floodmap_info['success']: 
-                                        latlon_bbox = floodmap_info['result']['bounds'][:4]
-                                        if (abs(float(latlon_bbox[0])-float(latlon_bbox[2]))>0.001 and\
-                                            abs(float(latlon_bbox[1])-float(latlon_bbox[3]))>0.001):
-                                            geoserver_info['predicted_flood_maps']['geoserver_info_list'].append({'name': resource_name,
-                                                                                 'latlon_bbox': [latlon_bbox[0],latlon_bbox[2],latlon_bbox[1],latlon_bbox[3]],
-                                                                                 'projection': floodmap_info['result']['bounds'][-1],
-                                                                                 'forecast_directory' : directory,
-                                                                                 'forecast_timestamp' : str(date + timedelta(0,int(hour)*60*60))
-                                                                                })
-                                            flood_map_count += 1
-                                        else:
-                                            geoserver_info['predicted_flood_maps']['geoserver_info_list'].append({'error': "Invalid bounding box ...",
-                                                                                                     'forecast_directory' : directory,
-                                                                                                     })
-                                        #limit number of flood maps
-                                        if flood_map_count >= 7:
-                                            break
-                                    else:
-                                        geoserver_info['predicted_flood_maps']['geoserver_info_list'].append({'error': floodmap_info['error'],
-                                                                                                 'forecast_directory' : directory,
-                                                                                                 })
-                                        
-                                except Exception:
-                                    error_msg = "Invalid layer or GeoServer error. Recommended projection for layers is GCS_WGS_1984."
-                                    geoserver_info['predicted_flood_maps']['geoserver_info_list'].append({'error': error_msg })
-                                    pass
-                """
+
                 if geoserver_info:                
                     layers_info.append(geoserver_info)
                 
@@ -588,14 +525,6 @@ def add_watershed(request):
                                              placeholder='e.g.: erfp:ahps-station',
                                              icon_append='glyphicon glyphicon-link')
               
-##    search_floodmap_toggle_switch = ToggleSwitch(display_text='Search for Predicted Flood Maps?',
-##                                                 name='search-floodmap-toggle',
-##                                                 on_label='Yes',
-##                                                 off_label='No',
-##                                                 on_style='success',
-##                                                 off_style='danger',
-##                                                 initial=False,)
-
     shp_upload_toggle_switch = ToggleSwitch(display_text='Upload Shapefile?',
                                             name='shp-upload-toggle',
                                             on_label='Yes',
@@ -625,7 +554,6 @@ def add_watershed(request):
                 'geoserver_historical_flood_map_input': geoserver_historical_flood_map_input,
                 'geoserver_ahps_station_input': geoserver_ahps_station_input,
                 'shp_upload_toggle_switch': shp_upload_toggle_switch,
-##                'search_floodmap_toggle_switch': search_floodmap_toggle_switch,
                 'add_button': add_button,
               }
 
@@ -715,13 +643,8 @@ def edit_watershed(request):
         session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
         session = session_maker()
         #get desired watershed
-        #try:
         watershed  = session.query(Watershed).get(watershed_id)
-        """
-        except ObjectDeletedError:
-            session.close()
-            return JsonResponse({ 'error': "The watershed to update does not exist." })
-        """
+
         watershed_name_input = TextInput(display_text='Watershed Name',
                                          name='watershed-name-input',
                                          placeholder='e.g.: magdalena',
@@ -812,14 +735,6 @@ def edit_watershed(request):
                                                  icon_append='glyphicon glyphicon-link',
                                                  initial=watershed.geoserver_ahps_station_layer.name if watershed.geoserver_ahps_station_layer else "",)
 
-##        search_floodmap_toggle_switch = ToggleSwitch(display_text='Search for Predicted Flood Maps?',
-##                                                     name='search-floodmap-toggle',
-##                                                     on_label='Yes',
-##                                                     off_label='No',
-##                                                     on_style='success',
-##                                                     off_style='danger',
-##                                                     initial=watershed.geoserver_search_for_predicted_flood_map,)
-
         shp_upload_toggle_switch = ToggleSwitch(display_text='Upload Shapefile?',
                                                 name='shp-upload-toggle',
                                                 on_label='Yes',
@@ -849,7 +764,6 @@ def edit_watershed(request):
                     'geoserver_historical_flood_map_input': geoserver_historical_flood_map_input,
                     'geoserver_ahps_station_input': geoserver_ahps_station_input,
                     'shp_upload_toggle_switch': shp_upload_toggle_switch,
-##                    'search_floodmap_toggle_switch': search_floodmap_toggle_switch,
                     'add_button': add_button,
                     'watershed' : watershed,
                   }
