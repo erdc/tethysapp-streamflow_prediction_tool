@@ -122,7 +122,6 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
             var geoserver_gage_layer = "";
             var geoserver_historical_flood_map_layer = "";
             var geoserver_ahps_station_layer = "";
-            var geoserver_search_for_predicted_flood_map = false;
             var drainage_line_shp_files = [];
             var boundary_shp_files = [];
             var gage_shp_files = [];
@@ -171,7 +170,6 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
             geoserver_gage_layer = $('#geoserver-gage-input').val(); //optional
             geoserver_historical_flood_map_layer = $('#geoserver-historical-flood-map-input').val(); //optional
             geoserver_ahps_station_layer = $('#geoserver-ahps-station-input').val(); //optional
-            //geoserver_search_for_predicted_flood_map = $('#search-floodmap-toggle').bootstrapSwitch('state');
             //geoserver upload
             drainage_line_shp_files = $('#drainage-line-shp-upload-input')[0].files;
             if (drainage_line_shp_files.length > 0) {
@@ -239,7 +237,6 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                             data.append("wrf_hydro_data_store_watershed_name",wrf_hydro_data_store_watershed_name);
                             data.append("wrf_hydro_data_store_subbasin_name",wrf_hydro_data_store_subbasin_name);
                             data.append("geoserver_id", geoserver_id);
-                            data.append("geoserver_search_for_predicted_flood_map", geoserver_search_for_predicted_flood_map);
                             data.append("geoserver_drainage_line_layer", geoserver_drainage_line_layer);
                             data.append("geoserver_boundary_layer", geoserver_boundary_layer);
                             data.append("geoserver_gage_layer", geoserver_gage_layer);
@@ -281,7 +278,6 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                                     data.append("wrf_hydro_data_store_watershed_name",wrf_hydro_data_store_watershed_name);
                                     data.append("wrf_hydro_data_store_subbasin_name",wrf_hydro_data_store_subbasin_name);
                                     data.append("geoserver_id", geoserver_id);
-                                    data.append("geoserver_search_for_predicted_flood_map", geoserver_search_for_predicted_flood_map);
                                     data.append("geoserver_drainage_line_layer", geoserver_drainage_line_layer);
                                     data.append("geoserver_boundary_layer", geoserver_boundary_layer);
                                     data.append("geoserver_gage_layer", geoserver_gage_layer);
@@ -314,7 +310,6 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                                         data.append("wrf_hydro_data_store_watershed_name",wrf_hydro_data_store_watershed_name);
                                         data.append("wrf_hydro_data_store_subbasin_name",wrf_hydro_data_store_subbasin_name);
                                         data.append("geoserver_id", geoserver_id);
-                                        data.append("geoserver_search_for_predicted_flood_map", geoserver_search_for_predicted_flood_map);
                                         data.append("geoserver_drainage_line_layer", geoserver_drainage_line_layer);
                                         data.append("geoserver_boundary_layer", geoserver_boundary_layer);
                                         data.append("geoserver_gage_layer", geoserver_gage_layer);
@@ -346,7 +341,6 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                                             data.append("wrf_hydro_data_store_watershed_name",wrf_hydro_data_store_watershed_name);
                                             data.append("wrf_hydro_data_store_subbasin_name",wrf_hydro_data_store_subbasin_name);
                                             data.append("geoserver_id", geoserver_id);
-                                            data.append("geoserver_search_for_predicted_flood_map", geoserver_search_for_predicted_flood_map);
                                             data.append("geoserver_drainage_line_layer", geoserver_drainage_line_layer);
                                             data.append("geoserver_boundary_layer", geoserver_boundary_layer);
                                             data.append("geoserver_gage_layer", geoserver_gage_layer);
@@ -395,7 +389,6 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
                             wrf_hydro_data_store_watershed_name: wrf_hydro_data_store_watershed_name,
                             wrf_hydro_data_store_subbasin_name: wrf_hydro_data_store_subbasin_name,
                             geoserver_id: geoserver_id,
-                            geoserver_search_for_predicted_flood_map: geoserver_search_for_predicted_flood_map,
                             geoserver_drainage_line_layer: geoserver_drainage_line_layer,
                             geoserver_boundary_layer: geoserver_boundary_layer,
                             geoserver_gage_layer: geoserver_gage_layer,
