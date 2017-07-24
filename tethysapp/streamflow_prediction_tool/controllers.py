@@ -7,10 +7,8 @@
 ##  Copyright © 2015-2016 Alan D Snow, Curtis Rae, Shawn Crawley. All rights reserved.
 ##  License: BSD 3-Clause
 
-#from glob import glob
 import json
 import os
-#from datetime import datetime, timedelta
 
 #django imports
 from django.contrib.auth.decorators import user_passes_test, login_required
@@ -20,7 +18,6 @@ from tethys_sdk.gizmos import (Button, MessageBox, SelectInput,
                                TextInput, ToggleSwitch)
 
 #local imports
-#from spt_dataset_manager.dataset_manager import GeoServerDatasetManager
 from .app import StreamflowPredictionTool as app
 from .model import (BaseLayer, DataStore, DataStoreType, Geoserver,
                     MainSettings, Watershed, WatershedGroup)
