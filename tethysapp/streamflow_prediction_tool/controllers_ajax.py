@@ -997,7 +997,6 @@ def watershed_add(request):
         subbasin_clean_name = format_name(subbasin_name)
         data_store_id = post_info.get('data_store_id')
         geoserver_id = post_info.get('geoserver_id')
-        geoserver_search_for_predicted_flood_map = post_info.get('geoserver_search_for_predicted_flood_map')
         #REQUIRED TO HAVE drainage_line from one of these
         #layer names
         geoserver_drainage_line_layer_name = post_info.get('geoserver_drainage_line_layer')
@@ -1176,7 +1175,6 @@ def watershed_add(request):
                               geoserver_gage_layer,
                               geoserver_historical_flood_map_layer,
                               geoserver_ahps_station_layer,
-                              geoserver_search_for_predicted_flood_map,
                               )
         session.add(watershed)
         session.commit()
@@ -1330,7 +1328,6 @@ def watershed_update(request):
         subbasin_clean_name = format_name(subbasin_name)
         data_store_id = post_info.get('data_store_id')
         geoserver_id = post_info.get('geoserver_id')
-        geoserver_search_for_predicted_flood_map = post_info.get('geoserver_search_for_predicted_flood_map')
         #REQUIRED TO HAVE drainage_line from one of these
         #layer names
         geoserver_drainage_line_layer_name = post_info.get('geoserver_drainage_line_layer')
@@ -1604,8 +1601,7 @@ def watershed_update(request):
         watershed.wrf_hydro_data_store_watershed_name = wrf_hydro_data_store_watershed_name
         watershed.wrf_hydro_data_store_subbasin_name = wrf_hydro_data_store_subbasin_name
         watershed.geoserver_id = geoserver_id
-        watershed.geoserver_search_for_predicted_flood_map = geoserver_search_for_predicted_flood_map
-        
+
         
         response = {
                     'success': "Watershed sucessfully updated!", 

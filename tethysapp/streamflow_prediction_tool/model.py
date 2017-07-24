@@ -183,17 +183,16 @@ class Watershed(Base):
                                                 foreign_keys=[geoserver_ahps_station_layer_id],
                                                 single_parent=True,
                                                 cascade="save-update,merge,delete,delete-orphan")
-    geoserver_search_for_predicted_flood_map = Column(Boolean)
-    watershed_groups = relationship("WatershedGroup", 
+    watershed_groups = relationship("WatershedGroup",
                                     secondary='watershed_watershed_group_link')
                               
     def __init__(self, watershed_name, subbasin_name, watershed_clean_name,
-                 subbasin_clean_name, data_store_id, ecmwf_rapid_input_resource_id, 
+                 subbasin_clean_name, data_store_id, ecmwf_rapid_input_resource_id,
                  ecmwf_data_store_watershed_name, ecmwf_data_store_subbasin_name,
                  wrf_hydro_data_store_watershed_name, wrf_hydro_data_store_subbasin_name,
-                 geoserver_id, geoserver_drainage_line_layer, geoserver_boundary_layer, 
+                 geoserver_id, geoserver_drainage_line_layer, geoserver_boundary_layer,
                  geoserver_gage_layer, geoserver_historical_flood_map_layer,
-                 geoserver_ahps_station_layer, geoserver_search_for_predicted_flood_map):
+                 geoserver_ahps_station_layer):
 
         self.watershed_name = watershed_name
         self.subbasin_name = subbasin_name
@@ -211,7 +210,6 @@ class Watershed(Base):
         self.geoserver_gage_layer = geoserver_gage_layer
         self.geoserver_historical_flood_map_layer = geoserver_historical_flood_map_layer
         self.geoserver_ahps_station_layer = geoserver_ahps_station_layer
-        self.geoserver_search_for_predicted_flood_map = geoserver_search_for_predicted_flood_map
 
 class WatershedWatershedGroupLink(Base):
     '''

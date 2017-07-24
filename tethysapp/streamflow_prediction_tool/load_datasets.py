@@ -57,29 +57,7 @@ def download_single_watershed_ecmwf_data(watershed,
             except OSError:
                 pass
             
-            if watershed.geoserver_id > 1 and app_instance_id and watershed.geoserver_search_for_flood_map:
-                try:
-                    #get geoserver engine
-                    geoserver_manager = GeoServerDatasetManager(engine_url=watershed.geoserver.url,
-                                                                username=watershed.geoserver.username,
-                                                                password=watershed.geoserver.password,
-                                                                app_instance_id=app_instance_id)
-                    #remove old geoserver layers
-                    flood_map_layer_name_beginning = "%s-%s-floodmap-" % (watershed.ecmwf_data_store_watershed_name,
-                                                                          watershed.ecmwf_data_store_subbasin_name)
-                    geoserver_directories = sorted([d for d in os.listdir(path_to_predicitons) \
-                                        if os.path.isdir(os.path.join(path_to_predicitons, d))],
-                                         reverse=True)[7:]
-                    for geoserver_directory in geoserver_directories:
-                        layer_name = geoserver_manager.get_layer_name("%s%s" % (flood_map_layer_name_beginning, geoserver_directory))
-                        print("Deleting geoserver layer group: {0}".format(layer_name))
-                        #TODO: CHECK IF EXISTS BEFORE REMOVING
-                        geoserver_manager.purge_remove_geoserver_layer_group(layer_name)
-                except Exception as ex:
-                    print(ex)
-                    pass
-
-def download_single_watershed_wrf_hydro_data(watershed, 
+def download_single_watershed_wrf_hydro_data(watershed,
                                              wrf_hydro_rapid_prediction_directory):
     """
     Loads single watersheds WRF-Hydro datasets from data store
