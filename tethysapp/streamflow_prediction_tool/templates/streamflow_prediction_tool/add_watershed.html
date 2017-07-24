@@ -80,8 +80,6 @@
             <input id="ahps-station-shp-upload-input" name="ahps-station-shp-upload-input" type="file" accept=".shp,.shx,.prj,.dbf" multiple>
         </div>
         <p class="help-block geo_upload">This is the shapefile file representing the AHPS stations. Need .shp, .shx, .prj, .dbf files.</p>
-        <!-- Flood Map Search !-->
-        {% comment %} {% gizmo toggle_switch search_floodmap_toggle_switch %} {% endcomment %}
         {% gizmo button add_button %}
     {% else %}
         <div class="alert alert-danger" role="alert">No GeoServers found. You cannot add a watershed until you do.</div>
