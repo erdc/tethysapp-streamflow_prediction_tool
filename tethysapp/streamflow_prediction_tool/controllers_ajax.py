@@ -13,7 +13,6 @@ from json import load as json_load
 import netCDF4 as NET
 import numpy as np
 import os
-import pandas as pd
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import ObjectDeletedError
@@ -40,7 +39,7 @@ from .functions import (delete_from_database,
                         delete_old_watershed_geoserver_files,
                         ecmwf_find_most_current_files,
                         ecmwf_get_valid_forecast_folder_list,
-                        get_reach_index,
+                        ecmwf_get_forecast_statistics,
                         format_name,
                         handle_uploaded_file,
                         update_geoserver_layer,
@@ -390,73 +389,55 @@ def ecmwf_get_hydrograph(request):
                         if 'watershed_name' in get_info else None
     subbasin_name = format_name(get_info['subbasin_name']) \
                         if 'subbasin_name' in get_info else None
-    reach_id = get_info.get('reach_id')
+    river_id = get_info.get('reach_id')
     start_folder = get_info.get('start_folder')
-    if not reach_id or not watershed_name or not subbasin_name or not start_folder:
+    if not river_id or not watershed_name or not subbasin_name or not start_folder:
         return JsonResponse({'error' : 'ECMWF AJAX request input faulty.'})
 
     # make sure reach id is integet
     try:
-        reach_id = int(reach_id)
+        river_id = int(river_id)
     except TypeError, ValueError:
-        return JsonResponse({'error' : 'Invalid Reach ID %s.' % reach_id})
+        return JsonResponse({'error' : 'Invalid River ID %s.' % river_id})
 
     # find/check current output datasets
     path_to_output_files = os.path.join(path_to_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
-    basin_files, start_date = ecmwf_find_most_current_files(path_to_output_files, start_folder)
-    if not basin_files or not start_date:
+    forecast_nc_list, start_date = ecmwf_find_most_current_files(path_to_output_files, start_folder)
+    if not forecast_nc_list or not start_date:
         return JsonResponse(
             {'error' : 'ECMWF forecast for %s (%s) not found.'
                        % (watershed_name, subbasin_name)
              }
         )
-
-    # combine 52 ensembles
-    qout_datasets = []
-    ensemble_index_list = []
-    for in_qout_nc in basin_files:
-        ensemble_index_list.append(
-            int(os.path.basename(in_qout_nc)[:-3].split("_")[-1])
+    try:
+        forecast_statistics = ecmwf_get_forecast_statistics(forecast_nc_list, river_id)
+    except IndexError:
+        return JsonResponse(
+            {'error' : 'ECMWF River ID %s not found.'
+                       % (river_id)
+             }
         )
-        try:
-            qout_datasets.append(
-                xarray.open_dataset(in_qout_nc, autoclose=True) \
-                    .sel(rivid=reach_id).Qout
-            )
-        except IndexError:
-            return JsonResponse(
-                {'error': 'ECMWF reach with id: %s not found.' % reach_id}
-            )
-
-    merged_ds = xarray.concat(qout_datasets,
-                              pd.Index(ensemble_index_list, name='ensemble'))
-
     # extract the high res ensemble & time
     hres_return_data = None
-    try:
-        hres_ar = merged_ds.sel(ensemble=52).dropna('time')
-        hres_time = (hres_ar.time.values.astype('int64')/1e6).tolist()
-        hres_return_data = zip(hres_time, hres_ar.values.tolist())
-    except IndexError:
-        pass
+    if 'high_res' in forecast_statistics:
+        hres_time = (forecast_statistics['high_res'].time.values.astype('int64')/1e6).tolist()
+        hres_return_data = zip(hres_time, forecast_statistics['high_res'].values.tolist())
 
     # analyze data to get statistic bands
-    merged_ds = merged_ds.dropna('time')
-    mean_ar = merged_ds.mean(dim='ensemble')
-    min_ar = merged_ds.min(dim='ensemble')
-    max_ar = merged_ds.max(dim='ensemble')
-    std_ar = merged_ds.std(dim='ensemble')
-    mean_plus_std_ar = (mean_ar.values + std_ar.values).tolist()
-    mean_minus_std_ar = (mean_ar.values - std_ar.values).tolist()
+    mean_ar = forecast_statistics['mean'].values.tolist()
+    min_ar = forecast_statistics['min'].values.tolist()
+    max_ar = forecast_statistics['max'].values.tolist()
+    std_dev_range_upper = forecast_statistics['std_dev_range_upper'].values.tolist()
+    std_dev_range_lower = forecast_statistics['std_dev_range_lower'].values.tolist()
 
     # conver time to miliseconds
-    low_res_time = (mean_ar.time.values.astype('int64')/1e6).tolist()
+    low_res_time = (forecast_statistics['mean'].time.values.astype('int64')/1e6).tolist()
 
     # return JSON response with data
     return_data = {
-        "mean": zip(low_res_time, mean_ar.values.tolist()),
-        "outer_range": zip(low_res_time, min_ar.values.tolist(), max_ar.values.tolist()),
-        "std_dev_range": zip(low_res_time, mean_minus_std_ar, mean_plus_std_ar),
+        "mean": zip(low_res_time, mean_ar),
+        "outer_range": zip(low_res_time, min_ar, max_ar),
+        "std_dev_range": zip(low_res_time, std_dev_range_lower, std_dev_range_upper),
         "success": "ECMWF Data analysis complete!"
     }
     if hres_return_data:
@@ -531,28 +512,21 @@ def era_interim_get_hydrograph(request):
         return_period_file = return_period_files[0]
         #get/check the index of the reach
         error_found = False
-        try:
-            rp_reach_index = get_reach_index(return_period_file, reach_id)
-        except Exception:
-            return_period_return_data['error'] = 'Return period for reach with id: %s not found.' % reach_id
-            error_found = True
-            pass
-
         if not error_found:
             #get information from dataset
             try:
-                return_period_nc = NET.Dataset(return_period_file, mode="r")
-                rp_max = return_period_nc.variables['max_flow'][rp_reach_index]
-                rp_20 = return_period_nc.variables['return_period_20'][rp_reach_index]
-                rp_10 = return_period_nc.variables['return_period_10'][rp_reach_index]
-                rp_2 = return_period_nc.variables['return_period_2'][rp_reach_index]
-                return_period_nc.close()
-                return_period_return_data["max"] = str(rp_max)
-                return_period_return_data["twenty"] = str(rp_20)
-                return_period_return_data["ten"] = str(rp_10)
-                return_period_return_data["two"] = str(rp_2)
+                with xarray.open_dataset(return_period_file) as return_period_nc:
+                    try:
+                        rpd = return_period_nc.sel(rivid=reach_id)
+                        return_period_return_data["max"] = str(rpd.max_flow.values)
+                        return_period_return_data["twenty"] = str(rpd.return_period_20.values)
+                        return_period_return_data["ten"] = str(rpd.return_period_10.values)
+                        return_period_return_data["two"] = str(rpd.return_period_10.values)
+                    except IndexError:
+                        return_period_return_data['error'] = 'Return period for reach with id: %s not found.' % reach_id
+                        pass
+
             except Exception:
-                return_period_nc.close()
                 return_period_return_data['error'] = "Invalid return period file"
                 pass
 
