@@ -14,8 +14,8 @@ from .model import Watershed
 @authentication_classes((TokenAuthentication,))
 def get_waterml(request):
     """
-    Controller that will show the data in WaterML 1.1 format
-    """
+	Controller that will show the data in WaterML 1.1 format
+	"""
     watershed_name = request.GET['watershed_name']
     subbasin_name = request.GET['subbasin_name']
     reach_id = request.GET['reach_id']
@@ -71,8 +71,8 @@ def get_waterml(request):
 @authentication_classes((TokenAuthentication,))
 def get_historic_data(request):
     """
-    Controller that will show the historic data in WaterML 1.1 format
-    """
+	Controller that will show the historic data in WaterML 1.1 format
+	"""
 
     watershed_name = request.GET['watershed_name']
     subbasin_name = request.GET['subbasin_name']
@@ -115,8 +115,8 @@ def get_historic_data(request):
 @authentication_classes((TokenAuthentication,))
 def get_return_periods(request):
     """
-    Controller that will show the return period data in json format
-    """
+	Controller that will show the return period data in json format
+	"""
 
     try:
         data = era_interim_get_hydrograph(request)
@@ -139,8 +139,8 @@ def get_return_periods(request):
 @authentication_classes((TokenAuthentication,))
 def get_available_dates(request):
     """
-    Controller that will show the available forecast dates in a python list format
-    """
+	Controller that will show the available forecast dates in a python list format
+	"""
 
     try:
         data = ecmwf_get_avaialable_dates(request)

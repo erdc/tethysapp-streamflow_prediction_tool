@@ -28,6 +28,7 @@ from .functions import (ecmwf_get_valid_forecast_folder_list,
                         redirect_with_message,
                         user_permission_test)
 
+
 @require_GET
 @login_required
 def home(request):
@@ -70,15 +71,16 @@ def home(request):
 
     return render(request, 'streamflow_prediction_tool/home.html', context)
 
+
 @require_GET
 @login_required
 def map(request):
     """
     Controller for the app map page.
     """
-    #-------------------------------------------------------------------------------
-    #HELPER FUNCTIONS
-    #-------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------------
+    # HELPER FUNCTIONS
+    # -------------------------------------------------------------------------------
     def find_add_attribute_ci(attribute, layer_attributes, contained_attributes):
         """
         Case insensitive attribute search and add
