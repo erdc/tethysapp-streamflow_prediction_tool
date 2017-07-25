@@ -898,9 +898,10 @@ var ERFP_MAP = (function() {
             };
             //handle subtitles - ECMWF first priority
             if(m_selected_ecmwf_watershed != null && m_selected_ecmwf_subbasin != null) {
-                subtitle = {text: toTitleCase(m_selected_ecmwf_watershed) + " (" +
-                             toTitleCase(m_selected_ecmwf_subbasin) + "): " + m_selected_reach_id}
-                default_chart_settings.subtitle = subtitle;
+                default_chart_settings.subtitle = {
+                    text: toTitleCase(m_selected_ecmwf_watershed) + " (" +
+                          toTitleCase(m_selected_ecmwf_subbasin) + "): " + m_selected_reach_id
+                };
             }
 
             $('#plot_tab_link').tab('show'); //switch to plot tab
