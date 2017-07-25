@@ -17,10 +17,11 @@ from django.shortcuts import render
 from tethys_sdk.gizmos import (Button, MessageBox, SelectInput, 
                                TextInput, ToggleSwitch)
 
+
 #local imports
 from .app import StreamflowPredictionTool as app
-from .model import (BaseLayer, DataStore, DataStoreType, Geoserver,
-                    MainSettings, Watershed, WatershedGroup)
+from .model import (DataStore, DataStoreType, Geoserver,
+                    Watershed, WatershedGroup)
 from .functions import (ecmwf_get_valid_forecast_folder_list,
                         format_watershed_title,
                         redirect_with_message,
@@ -139,12 +140,6 @@ def map(request):
                     missing_attributes.append('watershed')
                     missing_attributes.append('subbasin')
                     
-                #check WRF-Hydro watershed/subbasin attributes
-                if not find_add_attribute_ci('wwatershed', layer_attributes, contained_attributes) \
-                or not find_add_attribute_ci('wsubbasin', layer_attributes, contained_attributes):
-                    missing_attributes.append('wwatershed')
-                    missing_attributes.append('wsubbasin')
-                    
                 #check optional attributes
                 optional_attributes = ['usgs_id', 'nws_id', 'hydroserve']
                 for optional_attribute in optional_attributes:
@@ -218,10 +213,8 @@ def map(request):
         session = session_maker()
 
         #get base layer info
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        base_layer = main_settings.base_layer
-        path_to_ecmwf_rapid_output = main_settings.ecmwf_rapid_prediction_directory
-        
+        path_to_ecmwf_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
+
         watershed_list = []
         watershed_layers_info_array = []
         watershed_group_info_array = []
@@ -325,34 +318,16 @@ def map(request):
                                            off_label='English',
                                            initial=True,)
 
-        ecmwf_toggle_switch = ToggleSwitch(display_text="ECMWF",
-                                           name='ecmwf-toggle',
-                                           on_style='success',
-                                           initial=True,)
-
-        wrf_toggle_switch =  ToggleSwitch(display_text="WRF-Hydro",
-                                          name='wrf-toggle',
-                                          on_style='warning',
-                                          initial=False,)
-
-     
-        base_layer_info = {
-                            'name': base_layer.name,
-                            'api_key':base_layer.api_key,
-                          }
-                          
         context = {
                     'watershed_layers_info_array_json' : json.dumps(watershed_layers_info_array),
                     'watershed_layers_info_array': watershed_layers_info_array,
                     'watershed_group_info_array_json': json.dumps(watershed_group_info_array),
                     'watershed_group_info_array': watershed_group_info_array,
                     'warning_point_start_folder': warning_point_start_folder,
-                    'base_layer_info' : json.dumps(base_layer_info),
+                    'base_layer_info' : json.dumps({'name': 'esri'}),
                     'watershed_select' : watershed_select,
                     'warning_point_date_select' : warning_point_date_select,
                     'units_toggle_switch' : units_toggle_switch,
-                    'ecmwf_toggle_switch' : ecmwf_toggle_switch,
-                    'wrf_toggle_switch' : wrf_toggle_switch,
                     'flood_map_date_selectors' : flood_map_date_selectors,
                     'flood_map_date_selectors_len' : len(flood_map_date_selectors)
                   }
@@ -362,74 +337,6 @@ def map(request):
     #send home
     msg = 'Invalid Request Method.'
     return redirect_with_message(request, "..", msg, severity="WARNING")
-
-
-@user_passes_test(user_permission_test)
-def settings(request):
-    """
-    Controller for the app settings page.
-    """
-    
-    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-    session = session_maker()
-    # Query DB for base layers
-    base_layers = session.query(BaseLayer).all()
-    base_layer_list = []
-    base_layer_api_keys = {}
-    for base_layer in base_layers:
-        base_layer_list.append((base_layer.name, base_layer.id))
-        base_layer_api_keys[base_layer.id] = base_layer.api_key
-
-    #Query DB for settings
-    main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-
-    base_layer_select_input = SelectInput(display_text='Select a Base Layer',
-                                          name='base-layer-select',
-                                          multiple=False,
-                                          options=base_layer_list,
-                                          initial=main_settings.base_layer.name,)
-
-    base_layer_api_key_input = TextInput(display_text='Base Layer API Key',
-                                         name='api-key-input',
-                                         placeholder='e.g.: a1b2c3-d4e5d6-f7g8h9',
-                                         icon_append='glyphicon glyphicon-lock',
-                                         initial=main_settings.base_layer.api_key,)
-              
-    ecmwf_rapid_directory_input = TextInput(display_text='Server Folder Location of ECMWF-RAPID files',
-                                            name='ecmwf-rapid-location-input',
-                                            placeholder='e.g.: /home/username/work/rapid/ecmwf_output',
-                                            icon_append='glyphicon glyphicon-folder-open',
-                                            initial=main_settings.ecmwf_rapid_prediction_directory,)
-
-    era_interim_rapid_directory_input = TextInput(display_text='Server Folder Location of ERA Interim RAPID files',
-                                                  name='era-interim-rapid-location-input',
-                                                  placeholder='e.g.: /home/username/work/rapid/era_interim',
-                                                  icon_append='glyphicon glyphicon-folder-open',
-                                                  initial=main_settings.era_interim_rapid_directory,)
-              
-    wrf_hydro_rapid_directory_input = TextInput(display_text='Server Folder Location of WRF-Hydro RAPID files',
-                                                name='wrf-hydro-rapid-location-input',
-                                                placeholder='e.g.: /home/username/work/rapid/wrf_output',
-                                                icon_append='glyphicon glyphicon-folder-open',
-                                                initial=main_settings.wrf_hydro_rapid_prediction_directory,)
-              
-    submit_button = Button(display_text='Submit',
-                           name='submit-changes-settings',
-                           attributes={'id':'submit-changes-settings'},)
-              
-    context = {
-                'base_layer_select_input': base_layer_select_input,
-                'base_layer_api_key_input': base_layer_api_key_input,
-                'ecmwf_rapid_input': ecmwf_rapid_directory_input,
-                'era_interim_rapid_input': era_interim_rapid_directory_input,
-                'wrf_hydro_rapid_input':wrf_hydro_rapid_directory_input,
-                'submit_button': submit_button,
-                'base_layer_api_keys': json.dumps(base_layer_api_keys),
-                'app_instance_id': main_settings.app_instance_id,
-              }
-    session.close()
-    
-    return render(request, 'streamflow_prediction_tool/settings.html', context)
 
 
 @user_passes_test(user_permission_test)
@@ -472,16 +379,6 @@ def add_watershed(request):
                                                      name='ecmwf-data-store-subbasin-name-input',
                                                      placeholder='e.g.: el_banco',
                                                      icon_append='glyphicon glyphicon-tree-deciduous',)
-
-    wrf_hydro_data_store_watershed_name_input = TextInput(display_text='WRF-Hydro Watershed Data Store Name',
-                                                          name='wrf-hydro-data-store-watershed-name-input',
-                                                          placeholder='e.g.: nfie_wrfhydro_conus',
-                                                          icon_append='glyphicon glyphicon-home',)
-              
-    wrf_hydro_data_store_subbasin_name_input = TextInput(display_text='WRF-Hydro Subbasin Data Store Name',
-                                                         name='wrf-hydro-data-store-subbasin-name-input',
-                                                         placeholder='e.g.: nfie_wrfhydro_conus',
-                                                         icon_append='glyphicon glyphicon-tree-deciduous')
 
     # Query DB for geoservers
     geoservers = session.query(Geoserver).all()
@@ -542,8 +439,6 @@ def add_watershed(request):
                 'data_store_select': data_store_select,
                 'ecmwf_data_store_watershed_name_input': ecmwf_data_store_watershed_name_input,
                 'ecmwf_data_store_subbasin_name_input': ecmwf_data_store_subbasin_name_input,
-                'wrf_hydro_data_store_watershed_name_input': wrf_hydro_data_store_watershed_name_input,
-                'wrf_hydro_data_store_subbasin_name_input': wrf_hydro_data_store_subbasin_name_input,
                 'geoserver_select': geoserver_select,
                 'geoserver_drainage_line_input': geoserver_drainage_line_input,
                 'geoserver_boundary_input': geoserver_boundary_input,
@@ -678,18 +573,6 @@ def edit_watershed(request):
                                                          icon_append='glyphicon glyphicon-tree-deciduous',
                                                          initial=watershed.ecmwf_data_store_subbasin_name,)
     
-        wrf_hydro_data_store_watershed_name_input = TextInput(display_text='WRF-Hydro Watershed Data Store Name',
-                                                              name='wrf-hydro-data-store-watershed-name-input',
-                                                              placeholder='e.g.: magdalena',
-                                                              icon_append='glyphicon glyphicon-home',
-                                                              initial=watershed.wrf_hydro_data_store_watershed_name,)
-                  
-        wrf_hydro_data_store_subbasin_name_input = TextInput(display_text='WRF-Hydro Subbasin Data Store Name',
-                                                             name='wrf-hydro-data-store-subbasin-name-input',
-                                                             placeholder='e.g.: el_banco',
-                                                             icon_append='glyphicon glyphicon-tree-deciduous',
-                                                             initial=watershed.wrf_hydro_data_store_subbasin_name,)
-                                                             
        # Query DB for geoservers
         geoservers = session.query(Geoserver).all()
         geoserver_list = []
@@ -752,8 +635,6 @@ def edit_watershed(request):
                     'data_store_select': data_store_select,
                     'ecmwf_data_store_watershed_name_input': ecmwf_data_store_watershed_name_input,
                     'ecmwf_data_store_subbasin_name_input': ecmwf_data_store_subbasin_name_input,
-                    'wrf_hydro_data_store_watershed_name_input': wrf_hydro_data_store_watershed_name_input,
-                    'wrf_hydro_data_store_subbasin_name_input': wrf_hydro_data_store_subbasin_name_input,
                     'geoserver_select': geoserver_select,
                     'geoserver_drainage_line_input': geoserver_drainage_line_input,
                     'geoserver_boundary_input': geoserver_boundary_input,
