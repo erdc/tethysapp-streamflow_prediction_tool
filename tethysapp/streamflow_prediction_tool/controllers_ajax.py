@@ -13,12 +13,13 @@ from json import load as json_load
 import netCDF4 as NET
 import numpy as np
 import os
+import pandas as pd
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import ObjectDeletedError
 from django.http import HttpResponse, JsonResponse, Http404
 from RAPIDpy.dataset import RAPIDDataset
-
+import xarray
 
 # django imports
 from django.contrib.auth.decorators import user_passes_test, login_required
@@ -383,126 +384,83 @@ def ecmwf_get_hydrograph(request):
     if not os.path.exists(path_to_rapid_output):
         return JsonResponse({'error' : 'Location of RAPID output files faulty. Please check settings.'})
 
-    #get/check information from AJAX request
+    # get/check information from AJAX request
     get_info = request.GET
-    watershed_name = format_name(get_info['watershed_name']) if 'watershed_name' in get_info else None
-    subbasin_name = format_name(get_info['subbasin_name']) if 'subbasin_name' in get_info else None
+    watershed_name = format_name(get_info['watershed_name']) \
+                        if 'watershed_name' in get_info else None
+    subbasin_name = format_name(get_info['subbasin_name']) \
+                        if 'subbasin_name' in get_info else None
     reach_id = get_info.get('reach_id')
     start_folder = get_info.get('start_folder')
     if not reach_id or not watershed_name or not subbasin_name or not start_folder:
         return JsonResponse({'error' : 'ECMWF AJAX request input faulty.'})
 
-    #make sure reach id is integet
+    # make sure reach id is integet
     try:
         reach_id = int(reach_id)
     except TypeError, ValueError:
         return JsonResponse({'error' : 'Invalid Reach ID %s.' % reach_id})
 
-    #find/check current output datasets
+    # find/check current output datasets
     path_to_output_files = os.path.join(path_to_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
     basin_files, start_date = ecmwf_find_most_current_files(path_to_output_files, start_folder)
     if not basin_files or not start_date:
-        return JsonResponse({'error' : 'ECMWF forecast for %s (%s) not found.' % (watershed_name, subbasin_name)})
+        return JsonResponse(
+            {'error' : 'ECMWF forecast for %s (%s) not found.'
+                       % (watershed_name, subbasin_name)
+             }
+        )
 
-    with RAPIDDataset(basin_files[0]) as qout_nc_example:
-        #get/check the index of the reach
+    # combine 52 ensembles
+    qout_datasets = []
+    ensemble_index_list = []
+    for in_qout_nc in basin_files:
+        ensemble_index_list.append(
+            int(os.path.basename(in_qout_nc)[:-3].split("_")[-1])
+        )
         try:
-            reach_index = qout_nc_example.get_river_index(reach_id)
-        except Exception:
-            return JsonResponse({'error' : 'ECMWF reach with id: %s not found.' % reach_id})
+            qout_datasets.append(
+                xarray.open_dataset(in_qout_nc, autoclose=True) \
+                    .sel(rivid=reach_id).Qout
+            )
+        except IndexError:
+            return JsonResponse(
+                {'error': 'ECMWF reach with id: %s not found.' % reach_id}
+            )
 
-        first_half_size = 40 #run 6-hr resolution for all
-        if qout_nc_example.is_time_variable_valid():
-            if qout_nc_example.size_time == 41 or qout_nc_example.size_time == 61:
-                #run at full resolution for high res and 6-hr for low res
-                first_half_size = 41
-            elif qout_nc_example.size_time == 85 or qout_nc_example.size_time == 125:
-                #run at full resolution for all
-                first_half_size = 65
+    merged_ds = xarray.concat(qout_datasets,
+                              pd.Index(ensemble_index_list, name='ensemble'))
 
+    # extract the high res ensemble & time
+    hres_return_data = None
+    try:
+        hres_ar = merged_ds.sel(ensemble=52).dropna('time')
+        hres_time = (hres_ar.time.values.astype('int64')/1e6).tolist()
+        hres_return_data = zip(hres_time, hres_ar.values.tolist())
+    except IndexError:
+        pass
 
-    #get information from datasets
-    all_data_first_half = []
-    all_data_second_half = []
-    high_res_data = []
-    low_res_time = []
-    high_res_time = []
-    for in_nc in basin_files:
-        try:
-            index_str = os.path.basename(in_nc)[:-3].split("_")[-1]
-            index = int(index_str)
+    # analyze data to get statistic bands
+    merged_ds = merged_ds.dropna('time')
+    mean_ar = merged_ds.mean(dim='ensemble')
+    min_ar = merged_ds.min(dim='ensemble')
+    max_ar = merged_ds.max(dim='ensemble')
+    std_ar = merged_ds.std(dim='ensemble')
+    mean_plus_std_ar = (mean_ar.values + std_ar.values).tolist()
+    mean_minus_std_ar = (mean_ar.values - std_ar.values).tolist()
 
-            #Get hydrograph data from ECMWF Ensemble
-            with RAPIDDataset(in_nc) as qout_nc:
-                #get streamflow for reach
-                data_values = qout_nc.get_qout_index(reach_index)
+    # conver time to miliseconds
+    low_res_time = (mean_ar.time.values.astype('int64')/1e6).tolist()
 
-                if(index < 52):
-                    #get time
-                    if low_res_time == []:
-                        low_res_time = [t*1000 for t in qout_nc.get_time_array(datetime_simulation_start=start_date,
-                                                                               simulation_time_step_seconds=6*60*60)]
-                    all_data_first_half.append(data_values[:first_half_size])
-                    all_data_second_half.append(data_values[first_half_size:])
-                if(index == 52):
-                    high_res_time = [t*1000 for t in qout_nc.get_time_array(datetime_simulation_start=start_date,
-                                                                            simulation_time_step_seconds=6*60*60)]
-                    if first_half_size == 65:
-                        #convert to 3hr-6hr
-                        streamflow_1hr = data_values[:90:3]
-                        # calculate time series of 6 hr data from 3 hr data
-                        streamflow_3hr_6hr = data_values[90:]
-                        # get the time series of 6 hr data
-                        all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr_6hr]))
-                    elif qout_nc.size_time == 125:
-                        #convert to 6hr
-                        streamflow_1hr = data_values[:90:6]
-                        # calculate time series of 6 hr data from 3 hr data
-                        streamflow_3hr = data_values[90:109:2]
-                        # get the time series of 6 hr data
-                        streamflow_6hr = data_values[109:]
-                        # concatenate all time series
-                        all_data_first_half.append(np.concatenate([streamflow_1hr, streamflow_3hr, streamflow_6hr]))
-                    else:
-
-                        all_data_first_half.append(data_values)
-                    high_res_data = data_values
-        except Exception, e:
-            print(e)
-            pass
-    return_data = {}
-    if low_res_time:
-        #perform analysis on datasets
-        all_data_first = np.array(all_data_first_half, dtype=np.float64)
-        all_data_second = np.array(all_data_second_half, dtype=np.float64)
-        #get mean
-        mean_data_first = np.mean(all_data_first, axis=0)
-        mean_data_second = np.mean(all_data_second, axis=0)
-        mean_series = np.concatenate([mean_data_first,mean_data_second])
-        #get std dev
-        std_dev_first = np.std(all_data_first, axis=0)
-        std_dev_second = np.std(all_data_second, axis=0)
-        std_dev = np.concatenate([std_dev_first,std_dev_second])
-        #get max
-        max_data_first = np.amax(all_data_first, axis=0)
-        max_data_second = np.amax(all_data_second, axis=0)
-        max_series = np.concatenate([max_data_first,max_data_second])
-        #get min
-        min_data_first = np.amin(all_data_first, axis=0)
-        min_data_second = np.amin(all_data_second, axis=0)
-        min_series = np.concatenate([min_data_first,min_data_second])
-        #mean plus std
-        mean_plus_std = mean_series + std_dev
-        #mean minus std
-        mean_mins_std = (mean_series - std_dev).clip(min=0)
-        #return results of analysis
-        return_data["mean"] = zip(low_res_time, mean_series.tolist())
-        return_data["outer_range"] = zip(low_res_time, min_series.tolist(), max_series.tolist())
-        return_data["std_dev_range"] = zip(low_res_time, mean_mins_std.tolist(), mean_plus_std.tolist())
-        if len(high_res_data) > 0:
-            return_data["high_res"] = zip(high_res_time,high_res_data.tolist())
-        return_data["success"] = "ECMWF Data analysis complete!"
-    return_data["error"] = "Problem generating forecast."
+    # return JSON response with data
+    return_data = {
+        "mean": zip(low_res_time, mean_ar.values.tolist()),
+        "outer_range": zip(low_res_time, min_ar.values.tolist(), max_ar.values.tolist()),
+        "std_dev_range": zip(low_res_time, mean_minus_std_ar, mean_plus_std_ar),
+        "success": "ECMWF Data analysis complete!"
+    }
+    if hres_return_data:
+        return_data['high_res'] = hres_return_data
     return JsonResponse(return_data)
 
 
