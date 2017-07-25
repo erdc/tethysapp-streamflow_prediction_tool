@@ -6,9 +6,11 @@
 ##  Created by Alan D. Snow.
 ##  Copyright © 2015-2016 Alan D. Snow. All rights reserved.
 ##  License: BSD 3-Clause
+from uuid import uuid5, NAMESPACE_DNS
+from datetime import datetime
 
 from tethys_sdk.base import TethysAppBase, url_map_maker
-from tethys_sdk.app_settings import PersistentStoreDatabaseSetting
+from tethys_sdk.app_settings import CustomSetting, PersistentStoreDatabaseSetting
 
 
 class StreamflowPredictionTool(TethysAppBase):
@@ -53,24 +55,12 @@ class StreamflowPredictionTool(TethysAppBase):
                     UrlMap(name='get_warning_points_ajax',
                            url='streamflow-prediction-tool/map/get-warning-points',
                            controller='streamflow_prediction_tool.controllers_ajax.generate_warning_points'),
-                    UrlMap(name='get_wrf_hydro_reach_hydrograph_ajax',
-                           url='streamflow-prediction-tool/map/wrf-hydro-get-hydrograph',
-                           controller='streamflow_prediction_tool.controllers_ajax.wrf_hydro_get_hydrograph'),
                     UrlMap(name='ecmf_get_avaialable_dates_ajax',
                            url='streamflow-prediction-tool/map/ecmwf-get-avaialable-dates',
                            controller='streamflow_prediction_tool.controllers_ajax.ecmwf_get_avaialable_dates'),
-                    UrlMap(name='wrf_hydro_get_avaialable_dates_ajax',
-                           url='streamflow-prediction-tool/map/wrf-hydro-get-avaialable-dates',
-                           controller='streamflow_prediction_tool.controllers_ajax.wrf_hydro_get_avaialable_dates'),
                     UrlMap(name='get_seasonal_streamflow',
                            url='streamflow-prediction-tool/map/get_seasonal_streamflow',
                            controller='streamflow_prediction_tool.controllers_ajax.get_seasonal_streamflow'),
-                    UrlMap(name='settings',
-                           url='streamflow-prediction-tool/settings',
-                           controller='streamflow_prediction_tool.controllers.settings'),
-                    UrlMap(name='update_settings_ajax',
-                           url='streamflow-prediction-tool/settings/update',
-                           controller='streamflow_prediction_tool.controllers_ajax.settings_update'),
                     UrlMap(name='add-watershed',
                            url='streamflow-prediction-tool/add-watershed',
                            controller='streamflow_prediction_tool.controllers.add_watershed'),
@@ -196,3 +186,32 @@ class StreamflowPredictionTool(TethysAppBase):
         )
 
         return ps_settings
+
+    def custom_settings(self):
+        """
+        Custom app settings.
+        """
+        custom_settings = (
+            CustomSetting(
+                name='app_instance_id',
+                type=CustomSetting.TYPE_STRING,
+                description='Unique identifier for this instance of the app.',
+                value=uuid5(NAMESPACE_DNS, '%s%s' % ("spt", datetime.now())),
+                required=True
+            ),
+            CustomSetting(
+                name='ecmwf_forecast_folder',
+                type=CustomSetting.TYPE_STRING,
+                description='Server directory path to ECMWF forecasts.',
+                required=True
+            ),
+            CustomSetting(
+                name='historical_folder',
+                type=CustomSetting.TYPE_STRING,
+                description=('Server directory path to historical streamflow, '
+                             'return period, and seasonal files.'),
+                required=True
+            ),
+        )
+
+        return custom_settings

@@ -27,8 +27,6 @@
     <li class="title">App Navigation</li>
     <li {% if request.path == "/apps/streamflow-prediction-tool/" %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:home' %}">Select Watershed(s)</a></li>
     {% if user.is_superuser or user.is_staff %}
-    <li class="title">Configuration</li>
-    <li {% if "settings" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:settings' %}">Settings</a></li>
     <li class="title">Add</li>
     <li {% if "add-watershed" in request.path and not "add-watershed-group" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:add-watershed' %}">Add a Watershed</a></li>
     <li {% if "add-watershed-group" in request.path %} class="active" {% endif %}><a href="{% url 'streamflow_prediction_tool:add-watershed-group' %}">Add a Watershed Group</a></li>

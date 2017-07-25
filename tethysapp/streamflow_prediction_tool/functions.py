@@ -22,7 +22,7 @@ from sqlalchemy import and_
 
 #local import
 from .app import StreamflowPredictionTool as app
-from .model import GeoServerLayer, MainSettings, Watershed
+from .model import GeoServerLayer, Watershed
 from spt_dataset_manager.dataset_manager import (CKANDatasetManager, 
                                                  GeoServerDatasetManager)
 
@@ -49,7 +49,7 @@ def delete_from_database(session, object_to_delete):
         pass
     object_to_delete = None
                                               
-def delete_old_watershed_prediction_files(watershed, forecast="all"):
+def delete_old_watershed_prediction_files(watershed):
     """
     Removes old watershed prediction files from system if no other watershed has them
     """
@@ -79,44 +79,24 @@ def delete_old_watershed_prediction_files(watershed, forecast="all"):
     #initialize session
     session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
     session = session_maker()
-    main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-    forecast = forecast.lower()
-    
+
     #Remove ECMWF Forecasta
-    if forecast == "all" or forecast == "ecmwf":
-        #Make sure that you don't delete if another watershed is using the
-        #same predictions
-        num_ecmwf_watersheds_with_forecast  = session.query(Watershed) \
-            .filter(
-                and_(
-                    Watershed.ecmwf_data_store_watershed_name == watershed.ecmwf_data_store_watershed_name, 
-                    Watershed.ecmwf_data_store_subbasin_name == watershed.ecmwf_data_store_subbasin_name
-                )
-            ) \
-            .filter(Watershed.id != watershed.id) \
-            .count()
-        if num_ecmwf_watersheds_with_forecast <= 0:
-            delete_prediciton_files("{0}-{1}".format(watershed.ecmwf_data_store_watershed_name, 
-                                                     watershed.ecmwf_data_store_subbasin_name), 
-                                    main_settings.ecmwf_rapid_prediction_directory)
-    
-    #Remove WRF-Hydro Forecasts
-    if forecast == "all" or forecast == "wrf_hydro":
-        #Make sure that you don't delete if another watershed is using the
-        #same predictions
-        num_wrf_hydro_watersheds_with_forecast  = session.query(Watershed) \
-            .filter(
-                and_(
-                    Watershed.wrf_hydro_data_store_watershed_name == watershed.wrf_hydro_data_store_watershed_name, 
-                    Watershed.wrf_hydro_data_store_subbasin_name == watershed.wrf_hydro_data_store_subbasin_name
-                )
-            ) \
-            .filter(Watershed.id != watershed.id) \
-            .count()
-        if num_wrf_hydro_watersheds_with_forecast <= 0:
-            delete_prediciton_files("{0}-{1}".format(watershed.wrf_hydro_data_store_watershed_name, 
-                                                     watershed.wrf_hydro_data_store_subbasin_name), 
-                                    main_settings.wrf_hydro_rapid_prediction_directory)
+    #Make sure that you don't delete if another watershed is using the
+    #same predictions
+    num_ecmwf_watersheds_with_forecast  = session.query(Watershed) \
+        .filter(
+            and_(
+                Watershed.ecmwf_data_store_watershed_name == watershed.ecmwf_data_store_watershed_name,
+                Watershed.ecmwf_data_store_subbasin_name == watershed.ecmwf_data_store_subbasin_name
+            )
+        ) \
+        .filter(Watershed.id != watershed.id) \
+        .count()
+    if num_ecmwf_watersheds_with_forecast <= 0:
+        ecmwf_rapid_prediction_directory = app.get_custom_setting('ecmwf_forecast_folder')
+        delete_prediciton_files("{0}-{1}".format(watershed.ecmwf_data_store_watershed_name,
+                                                 watershed.ecmwf_data_store_subbasin_name),
+                                ecmwf_rapid_prediction_directory)
     
     session.close()
               
@@ -125,19 +105,13 @@ def delete_old_watershed_geoserver_files(watershed):
     """
     Removes old watershed geoserver files from system
     """
-    #initialize session
-    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-    session = session_maker()
-    main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-    
     #initialize geoserver manager
+    app_instance_id = app.get_custom_setting('app_instance_id')
     geoserver_manager = GeoServerDatasetManager(engine_url=watershed.geoserver.url,
                                                 username=watershed.geoserver.username,
                                                 password=watershed.geoserver.password,
-                                                app_instance_id=main_settings.app_instance_id)
+                                                app_instance_id=app_instance_id)
 
-    session.close()
-    
     #delete layers which need to be deleted
     if watershed.geoserver_drainage_line_layer:
         if watershed.geoserver_drainage_line_layer.uploaded:
@@ -170,15 +144,14 @@ def delete_rapid_input_ckan(watershed):
         data_manager.dataset_engine.delete_resource(watershed.ecmwf_rapid_input_resource_id)
         watershed.ecmwf_rapid_input_resource_id = ""
 
-def delete_old_watershed_files(watershed, ecmwf_local_prediction_files_location,
-                               wrf_hydro_local_prediction_files_location):
+def delete_old_watershed_files(watershed, ecmwf_local_prediction_files_location):
     """
     Removes old watershed files from system
     """
     #remove old geoserver files
     delete_old_watershed_geoserver_files(watershed)
-    #remove old ECMWF and WRF-Hydro prediction files
-    delete_old_watershed_prediction_files(watershed, forecast="all")
+    #remove old ECMWF prediction files
+    delete_old_watershed_prediction_files(watershed)
     #remove RAPID input files on CKAN
     delete_rapid_input_ckan(watershed)
     
@@ -249,29 +222,6 @@ def get_reach_index(prediction_file, reach_id):
     data_nc.close()
     
     return np.where(com_ids==int(reach_id))[0][0]
-
-def wrf_hydro_find_most_current_file(path_to_watershed_files, date_string):
-    """""
-    Finds the current output from downscaled WRF-Hydro forecasts
-    """""
-    if(date_string=="most_recent"):
-        if not os.path.exists(path_to_watershed_files):
-            return None
-        prediction_files = sorted(glob(os.path.join(path_to_watershed_files,"*.nc")),
-                                  reverse=True)
-    else:
-        #RapidResult_20150405T2300Z_CF.nc
-        prediction_files = ["RapidResult_%s_CF.nc" % date_string]
-    for prediction_file in prediction_files:
-        try:
-            path_to_file = os.path.join(path_to_watershed_files, prediction_file)
-            if os.path.exists(path_to_file):
-                return path_to_file
-        except Exception as ex:
-            print(ex)
-            pass
-    #there are no files found
-    return None
 
 def format_name(string):
     """

@@ -35,16 +35,7 @@
             <p class="help-block">These files are used on the computatonal node to run the simulation.</p>
         </div>
     
-        <h5>WRF-Hydro Data Storage Input</h5>
-        
-        <p class="help-block">The format of the WRF-Hydro dataset name on the data store server 
-        is wrfp-[watershed name]-[subbasin name]-[year]-[month] (Ex. wrfp-nfie_wrfhydro_conus-nfie_wrfhydro_conus-2015-6).</p>
-        {% gizmo text_input wrf_hydro_data_store_watershed_name_input %}
-        <p class="help-block">This is the watershed name in the WRF-Hydro dataset name.</p>
-        {% gizmo text_input wrf_hydro_data_store_subbasin_name_input %}
-        <p class="help-block">This is the subbasin name in the WRF-Hydro dataset name.</p>
-    
-        <h3>Geoserver Location</h3> 
+        <h3>Geoserver Location</h3>
         <em>Where the reach and catchbasin files are stored.</em><br/><br/>
         {% gizmo select_input geoserver_select %}
         <p class="help-block">Don't see the geoserver you want? Add one <a href="{% url 'streamflow_prediction_tool:add-geoserver' %}">here</a>.</p>

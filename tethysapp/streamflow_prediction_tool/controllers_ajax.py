@@ -41,15 +41,12 @@ from .functions import (delete_from_database,
                         ecmwf_find_most_current_files,
                         ecmwf_get_valid_forecast_folder_list,
                         get_reach_index,
-                        wrf_hydro_find_most_current_file,
                         format_name,
-                        get_cron_command,
                         handle_uploaded_file,
                         update_geoserver_layer,
                         user_permission_test)
 
-from .model import (DataStore, Geoserver, MainSettings,
-                   Watershed, WatershedGroup)
+from .model import (DataStore, Geoserver, Watershed, WatershedGroup)
 
 
 @user_passes_test(user_permission_test)
@@ -214,12 +211,12 @@ def geoserver_add(request):
         session = session_maker()
 
         #validate geoserver credentials
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
+        app_instance_id = app.get_custom_setting('app_instance_id')
         try:
             geoserver_manager = GeoServerDatasetManager(engine_url=geoserver_url.strip(),
                                                         username=geoserver_username.strip(),
                                                         password=geoserver_password.strip(),
-                                                        app_instance_id=main_settings.app_instance_id)
+                                                        app_instance_id=app_instance_id)
         except Exception as ex:
             return JsonResponse({'error' : "GeoServer Error: %s" % ex})
         
@@ -307,12 +304,12 @@ def geoserver_update(request):
             session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
             session = session_maker()
             #validate geoserver credentials
-            main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
+            app_instance_id = app.get_custom_setting('app_instance_id')
             try:
                 geoserver_manager = GeoServerDatasetManager(engine_url=geoserver_url.strip(),
                                                             username=geoserver_username.strip(),
                                                             password=geoserver_password.strip(),
-                                                            app_instance_id=main_settings.app_instance_id)
+                                                            app_instance_id=app_instance_id)
             except Exception as ex:
                 return JsonResponse({'error' : "GeoServer Error: %s" % ex})
 
@@ -352,13 +349,7 @@ def ecmwf_get_avaialable_dates(request):
     Finds a list of directories with valid data and returns dates in select2 format
     """""
     if request.method == 'GET':
-        #Query DB for path to rapid output
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-        session = session_maker()
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        session.close()
-
-        path_to_rapid_output = main_settings.ecmwf_rapid_prediction_directory
+        path_to_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
         if not os.path.exists(path_to_rapid_output):
             return JsonResponse({'error' : 'Location of RAPID output files faulty. Please check settings.'})    
     
@@ -384,60 +375,6 @@ def ecmwf_get_avaialable_dates(request):
         else:
             return JsonResponse({'error' : 'Recent ECMWF forecasts for %s, %s not found.' % (watershed_name, subbasin_name)})
 
-@login_required      
-def wrf_hydro_get_avaialable_dates(request):
-    """""
-    Finds a list of directories with valid data and returns dates in select2 format
-    """""
-    if request.method == 'GET':
-        #Query DB for path to rapid output
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-        session = session_maker()
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        session.close()
-
-        path_to_rapid_output = main_settings.wrf_hydro_rapid_prediction_directory
-        if not os.path.exists(path_to_rapid_output):
-            return JsonResponse({'error' : 'Location of WRF-Hydro RAPID output files faulty. Please check settings.'})
-
-        #get/check information from AJAX request
-        get_info = request.GET
-        watershed_name = format_name(get_info['watershed_name']) if 'watershed_name' in get_info else None
-        subbasin_name = format_name(get_info['subbasin_name']) if 'subbasin_name' in get_info else None
-        if not watershed_name or not subbasin_name:
-            return JsonResponse({'error' : 'AJAX request input faulty'})
-
-        #find/check current output datasets
-        path_to_watershed_files = os.path.join(path_to_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
-
-        if not os.path.exists(path_to_watershed_files):
-            return JsonResponse({'error' : 'WRF-Hydro forecast for %s (%s) not found.' % (watershed_name, subbasin_name) })
-
-        prediction_files = sorted([d for d in os.listdir(path_to_watershed_files) \
-                                if not os.path.isdir(os.path.join(path_to_watershed_files, d))],
-                                reverse=True)
-        output_files = []
-        directory_count = 0
-        for prediction_file in prediction_files:
-            date_string = prediction_file.split("_")[1]
-            date = datetime.datetime.strptime(date_string,"%Y%m%dT%H%MZ")
-            path_to_file = os.path.join(path_to_watershed_files, prediction_file)
-            if os.path.exists(path_to_file):
-                output_files.append({
-                    'id' : date_string,
-                    'text' : str(date)
-                })
-                directory_count += 1
-                #limit number of directories
-                if(directory_count>64):
-                    break
-        if len(output_files)>0:
-            return JsonResponse({
-                        "success" : "File search complete!",
-                        "output_files" : output_files,
-                    })
-        else:
-            return JsonResponse({'error' : 'Recent WRF-Hydro forecasts for %s (%s) not found.' % (watershed_name, subbasin_name)})
 
 @login_required
 def ecmwf_get_hydrograph(request):
@@ -445,12 +382,7 @@ def ecmwf_get_hydrograph(request):
     Plots 52 ECMWF ensembles analysis with min., max., avg. ,std. dev.
     """""
     if request.method == 'GET':
-        #Query DB for path to rapid output
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-        session = session_maker()
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        session.close()
-        path_to_rapid_output = main_settings.ecmwf_rapid_prediction_directory
+        path_to_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
         if not os.path.exists(path_to_rapid_output):
             return JsonResponse({'error' : 'Location of RAPID output files faulty. Please check settings.'})    
     
@@ -576,18 +508,14 @@ def ecmwf_get_hydrograph(request):
         return_data["error"] = "Problem generating forecast."
         return JsonResponse(return_data)
 
+
 @login_required                     
 def era_interim_get_hydrograph(request):
     """""
     Returns ERA Interim hydrograph
     """""
     if request.method == 'GET':
-        #Query DB for path to rapid output
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-        session = session_maker()
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        session.close()
-        path_to_era_interim_data = main_settings.era_interim_rapid_directory
+        path_to_era_interim_data = app.get_custom_setting('historical_folder')
         if not os.path.exists(path_to_era_interim_data):
             return JsonResponse({'error' : 'Location of ERA-Interim files faulty. Please check settings.'})
 
@@ -682,75 +610,15 @@ def era_interim_get_hydrograph(request):
                               'return_period' : return_period_return_data
                           })
 
-        
 
-@login_required 
-def wrf_hydro_get_hydrograph(request):
-    """""
-    Returns WRF-Hydro hydrograph
-    """""
-    if request.method == 'GET':
-        #Query DB for path to rapid output
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-        session = session_maker()
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        session.close()
-        path_to_rapid_output = main_settings.wrf_hydro_rapid_prediction_directory
-        if not os.path.exists(path_to_rapid_output):
-            return JsonResponse({'error' : 'Location of WRF-Hydro RAPID output files faulty. Please check settings.'})
-
-        #get information from GET request
-        get_info = request.GET
-        watershed_name = format_name(get_info['watershed_name']) if 'watershed_name' in get_info else None
-        subbasin_name = format_name(get_info['subbasin_name']) if 'subbasin_name' in get_info else None
-        reach_id = get_info.get('reach_id')
-        date_string = get_info.get('date_string')
-        if not reach_id or not watershed_name or not subbasin_name or not date_string:
-            return JsonResponse({'error' : 'WRF-Hydro AJAX request input faulty.'})
-        #find/check current output datasets
-        #20150405T2300Z
-        path_to_output_files = os.path.join(path_to_rapid_output, "{0}-{1}".format(watershed_name, subbasin_name))
-        forecast_file = wrf_hydro_find_most_current_file(path_to_output_files, date_string)
-        if not forecast_file:
-            return JsonResponse({'error' : 'WRF-Hydro forecast for %s (%s) not found.' % (watershed_name, subbasin_name)})
-
-        #get information from dataset
-        try:
-            #get/check the index of the reach
-            with RAPIDDataset(forecast_file) as qout_nc:
-                error_found = False
-                #get/check the index of the reach
-                try:
-                    reach_index = qout_nc.get_river_index(reach_id)
-                except Exception:
-                    return JsonResponse({'error' : 'WRF-Hydro reach with id: %s not found.' % reach_id})
-
-                if not error_found:
-                    #get information from dataset
-                    data_values = qout_nc.get_qout_index(reach_index)
-                    time = [t*1000 for t in qout_nc.get_time_array()]
-        except Exception:
-            return JsonResponse({'error' : "Invalid WRF-Hydro forecast file"})
-            pass
-
-        return JsonResponse({
-                "success" : "WRF-Hydro data analysis complete!",
-                "wrf_hydro" : zip(time, data_values.tolist()),
-        })
-        
 @login_required
 def generate_warning_points(request):
     """
     Controller for getting warning points for user on map
     """
     if request.method == 'GET':
-        #Query DB for path to rapid output
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-        session = session_maker()
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        session.close()
-        path_to_ecmwf_rapid_output = main_settings.ecmwf_rapid_prediction_directory
-        path_to_era_interim_data = main_settings.era_interim_rapid_directory
+        path_to_ecmwf_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
+        path_to_era_interim_data = app.get_custom_setting('historical_folder')
         if not os.path.exists(path_to_ecmwf_rapid_output) or not os.path.exists(path_to_era_interim_data):
             return JsonResponse({'error' : 'Location of RAPID output files faulty. Please check settings.'})    
     
@@ -804,18 +672,14 @@ def generate_warning_points(request):
                              'warning_points' : warning_points,
                             })
 
+
 @login_required                     
 def era_interim_get_csv(request):
     """""
     Returns ERA Interim data as csv
     """""
     if request.method == 'GET':
-        #Query DB for path to rapid output
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-        session = session_maker()
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        session.close()
-        path_to_era_interim_data = main_settings.era_interim_rapid_directory
+        path_to_era_interim_data = app.get_custom_setting('historical_folder')
         if not os.path.exists(path_to_era_interim_data):
             raise Http404('Location of ERA-Interim files faulty. Please check settings.')
 
@@ -883,12 +747,7 @@ def get_seasonal_streamflow(request):
     Returns seasonal streamflow for unique river ID
     """""
     if request.method == 'GET':
-        #Query DB for path to rapid output
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-        session = session_maker()
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        session.close()
-        path_to_era_interim_data = main_settings.era_interim_rapid_directory
+        path_to_era_interim_data = app.get_custom_setting('historical_folder')
         if not os.path.exists(path_to_era_interim_data):
             raise Http404('Location of ERA-Interim files faulty. Please check settings.')
 
@@ -937,53 +796,6 @@ def get_seasonal_streamflow(request):
         raise Http404('Seasonal Average data for %s (%s) not found.' % (watershed_name, subbasin_name))
 
 @user_passes_test(user_permission_test)
-def settings_update(request):
-    """
-    Controller for updating the settings.
-    """
-    if request.is_ajax() and request.method == 'POST':
-        #get/check information from AJAX request
-        post_info = request.POST
-        base_layer_id = post_info.get('base_layer_id')
-        api_key = post_info.get('api_key')
-        ecmwf_rapid_prediction_directory = post_info.get('ecmwf_rapid_location')
-        era_interim_rapid_directory = post_info.get('era_interim_rapid_location')
-        wrf_hydro_rapid_prediction_directory = post_info.get('wrf_hydro_rapid_location')
-
-        #update cron jobs
-        try:
-            cron_manager = CronTab(user=True)
-            cron_manager.remove_all(comment="erfp-dataset-download")
-            cron_command = get_cron_command()
-            if cron_command:
-                #create job to run every hour  
-                cron_job = cron_manager.new(command=cron_command, 
-                                            comment="erfp-dataset-download")
-                cron_job.every(1).hours()
-            else:
-               JsonResponse({ 'error': "Location of virtual environment not found. No changes made." }) 
-       
-            #writes content to crontab
-            cron_manager.write_to_user(user=True)
-        except Exception:
-            return JsonResponse({ 'error': "CRON setup error." })
-
-        #initialize session
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-        session = session_maker()
-        #update main settings
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        main_settings.base_layer_id = base_layer_id
-        main_settings.ecmwf_rapid_prediction_directory = ecmwf_rapid_prediction_directory    
-        main_settings.era_interim_rapid_directory = era_interim_rapid_directory    
-        main_settings.wrf_hydro_rapid_prediction_directory = wrf_hydro_rapid_prediction_directory    
-        main_settings.base_layer.api_key = api_key
-        session.commit()
-        session.close()
-
-        return JsonResponse({ 'success': "Settings Sucessfully Updated!" })
-
-@user_passes_test(user_permission_test)    
 def watershed_add(request):
     """
     Controller for adding a watershed.
@@ -1024,37 +836,17 @@ def watershed_add(request):
             return JsonResponse({'error' : 'One or more ids are faulty.'})
          
         #check ECMWF inputs
-        ecmwf_ready = False
         ecmwf_rapid_input_resource_id = ""
 
         ecmwf_data_store_watershed_name = format_name(post_info.get('ecmwf_data_store_watershed_name'))
         ecmwf_data_store_subbasin_name = format_name(post_info.get('ecmwf_data_store_subbasin_name'))
         
         if not ecmwf_data_store_watershed_name or not ecmwf_data_store_subbasin_name:
-            ecmwf_data_store_watershed_name = ""
-            ecmwf_data_store_subbasin_name = ""
-        else:
-            ecmwf_ready = True
-        
-        #check wrf-hydro inputs
-        wrf_hydro_ready = False
-        wrf_hydro_data_store_watershed_name = format_name(post_info.get('wrf_hydro_data_store_watershed_name'))
-        wrf_hydro_data_store_subbasin_name = format_name(post_info.get('wrf_hydro_data_store_subbasin_name'))
-        
-        if not wrf_hydro_data_store_watershed_name or not wrf_hydro_data_store_subbasin_name:
-            wrf_hydro_data_store_watershed_name = ""
-            wrf_hydro_data_store_subbasin_name = ""
-        else:
-            wrf_hydro_ready = True
-
-        #need at least one to be OK to proceed
-        if not ecmwf_ready and not wrf_hydro_ready:
-            return JsonResponse({'error' : "Must have an ECMWF or WRF-Hydro watershed/subbasin name to continue." })
+            return JsonResponse({'error' : "Must have an ECMWF watershed/subbasin name to continue." })
 
         #initialize session
         session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
         session = session_maker()
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
 
         #check to see if duplicate exists
         num_similar_watersheds  = session.query(Watershed) \
@@ -1077,10 +869,11 @@ def watershed_add(request):
             session.close()
             return JsonResponse({ 'error': "The geoserver does not exist." })
         try:
+            app_instance_id = app.get_custom_setting('app_instance_id')
             geoserver_manager = GeoServerDatasetManager(engine_url=geoserver.url,
                                                         username=geoserver.username,
                                                         password=geoserver.password,
-                                                        app_instance_id=main_settings.app_instance_id)
+                                                        app_instance_id=app_instance_id)
         except Exception as ex:
             session.close()
             return JsonResponse({'error' : "GeoServer Error: %s" % ex})
@@ -1167,9 +960,7 @@ def watershed_add(request):
                               ecmwf_rapid_input_resource_id,
                               ecmwf_data_store_watershed_name.strip(),
                               ecmwf_data_store_subbasin_name.strip(),
-                              wrf_hydro_data_store_watershed_name.strip(),
-                              wrf_hydro_data_store_subbasin_name.strip(),
-                              geoserver_id, 
+                              geoserver_id,
                               geoserver_drainage_line_layer,
                               geoserver_boundary_layer,
                               geoserver_gage_layer,
@@ -1230,12 +1021,11 @@ def watershed_ecmwf_rapid_file_upload(request):
                                  tmp_file_location, 
                                  ecmwf_rapid_input_zip)
             #upload file to CKAN server
-            main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-            #get dataset manager
+            app_instance_id = app.get_custom_setting('app_instance_id')
             data_manager = RAPIDInputDatasetManager(watershed.data_store.api_endpoint,
                                                     watershed.data_store.api_key,
                                                     "ecmwf",
-                                                    main_settings.app_instance_id,
+                                                    app_instance_id,
                                                     watershed.data_store.owner_org)
 
             #remove RAPID input files on CKAN if exists
@@ -1297,10 +1087,10 @@ def watershed_delete(request):
                 return JsonResponse({ 'error': "The watershed to delete does not exist." })
                 
             #remove watershed geoserver, local prediction files, RAPID Input Files
-            main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-            delete_old_watershed_files(watershed, main_settings.ecmwf_rapid_prediction_directory,
-                                       main_settings.wrf_hydro_rapid_prediction_directory)
-                                       
+            ecmwf_rapid_prediction_directory = app.get_custom_setting('ecmwf_forecast_folder')
+
+            delete_old_watershed_files(watershed, ecmwf_rapid_prediction_directory)
+
                                        
             delete_from_database(session, watershed)
             #NOTE: CASCADE removes associated geoserver layers
@@ -1380,41 +1170,14 @@ def watershed_update(request):
             return JsonResponse({ 'error': "The geoserver does not exist." })
 
             
-        #make sure data store information is correct
-        ecmwf_data_store_watershed_name = ""
-        ecmwf_data_store_subbasin_name = ""
-        wrf_hydro_data_store_watershed_name = ""
-        wrf_hydro_data_store_subbasin_name = ""
-        
         #check ecmwf inputs
-        ecmwf_ready = False
         ecmwf_data_store_watershed_name = format_name(post_info.get('ecmwf_data_store_watershed_name'))
         ecmwf_data_store_subbasin_name = format_name(post_info.get('ecmwf_data_store_subbasin_name'))
         
         if not ecmwf_data_store_watershed_name or not ecmwf_data_store_subbasin_name:
-            ecmwf_data_store_watershed_name = ""
-            ecmwf_data_store_subbasin_name = ""
-        else:
-            ecmwf_ready = True
-        
-        #check wrf-hydro inputs
-        wrf_hydro_ready = False
-        wrf_hydro_data_store_watershed_name = format_name(post_info.get('wrf_hydro_data_store_watershed_name'))
-        wrf_hydro_data_store_subbasin_name = format_name(post_info.get('wrf_hydro_data_store_subbasin_name'))
-        
-        if not wrf_hydro_data_store_watershed_name or not wrf_hydro_data_store_subbasin_name:
-            wrf_hydro_data_store_watershed_name = ""
-            wrf_hydro_data_store_subbasin_name = ""
-        else:
-            wrf_hydro_ready = True
-
-        #need at least one to be OK to proceed
-        if not ecmwf_ready and not wrf_hydro_ready:
             session.close()
-            return JsonResponse({'error' : "Must have an ECMWF or WRF-Hydro watershed/subbasin name to continue" })
+            return JsonResponse({'error' : "Must have an ECMWF watershed/subbasin name to continue" })
 
-        main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-        
         #GEOSERVER SECTION
         #remove old geoserver files if geoserver changed
         if int(geoserver_id) != watershed.geoserver_id:
@@ -1428,10 +1191,11 @@ def watershed_update(request):
             return JsonResponse({'error' : 'Missing geoserver drainage line.'})
 
         try:
+            app_instance_id = app.get_custom_setting('app_instance_id')
             geoserver_manager = GeoServerDatasetManager(engine_url=geoserver.url,
                                                         username=geoserver.username,
                                                         password=geoserver.password,
-                                                        app_instance_id=main_settings.app_instance_id)
+                                                        app_instance_id=app_instance_id)
         except Exception as ex:
             session.close()
             return JsonResponse({'error' : "GeoServer Error: %s" % ex})
@@ -1576,10 +1340,6 @@ def watershed_update(request):
                                                 % (watershed.data_store.api_endpoint, ex)})
             
 
-        if(wrf_hydro_data_store_watershed_name != watershed.wrf_hydro_data_store_watershed_name or 
-           wrf_hydro_data_store_subbasin_name != watershed.wrf_hydro_data_store_subbasin_name):
-            delete_old_watershed_prediction_files(watershed, forecast="wrf_hydro")
-
         #remove CKAN files on old CKAN instance
         if watershed.data_store_id != data_store_id:
             #remove RAPID input files on CKAN if exists
@@ -1598,8 +1358,6 @@ def watershed_update(request):
         watershed.data_store_id = data_store_id
         watershed.ecmwf_data_store_watershed_name = ecmwf_data_store_watershed_name
         watershed.ecmwf_data_store_subbasin_name = ecmwf_data_store_subbasin_name
-        watershed.wrf_hydro_data_store_watershed_name = wrf_hydro_data_store_watershed_name
-        watershed.wrf_hydro_data_store_subbasin_name = wrf_hydro_data_store_subbasin_name
         watershed.geoserver_id = geoserver_id
 
         

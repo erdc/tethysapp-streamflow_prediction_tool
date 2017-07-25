@@ -10,52 +10,10 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-from uuid import uuid5, NAMESPACE_DNS
-from datetime import datetime
+
 
 Base = declarative_base()
 
-
-class BaseLayer(Base):
-    '''
-    BaseLayer SQLAlchemy DB Model
-    '''
-    __tablename__ = 'base_layer'
-
-    # Columns
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    api_key = Column(String)
-
-    def __init__(self, name, api_key):
-        self.name = name
-        self.api_key = api_key
-
-
-class MainSettings(Base):
-    '''
-    Main Settings SQLAlchemy DB Model
-    '''
-    __tablename__ = 'main_settings'
-
-    # Columns
-    id = Column(Integer, primary_key=True)
-    base_layer_id = Column(Integer,ForeignKey('base_layer.id'))
-    base_layer = relationship("BaseLayer")
-    ecmwf_rapid_prediction_directory = Column(String)
-    era_interim_rapid_directory = Column(String)
-    wrf_hydro_rapid_prediction_directory = Column(String)
-    app_instance_id = Column(String)
-
-    def __init__(self, base_layer_id, ecmwf_rapid_prediction_directory, 
-                 era_interim_rapid_directory, wrf_hydro_rapid_prediction_directory):
-
-        self.base_layer_id = base_layer_id
-        self.ecmwf_rapid_prediction_directory = ecmwf_rapid_prediction_directory
-        self.era_interim_rapid_directory = era_interim_rapid_directory
-        self.wrf_hydro_rapid_prediction_directory = wrf_hydro_rapid_prediction_directory
-        self.app_instance_id = uuid5(NAMESPACE_DNS, '%s%s' % ("sfpt", datetime.now())).hex
-        
 
 class DataStore(Base):
     '''
@@ -71,14 +29,6 @@ class DataStore(Base):
     data_store_type = relationship("DataStoreType")
     api_endpoint = Column(String)
     api_key = Column(String)
-
-    def __init__(self, server_name, owner_org, data_store_type_id, 
-                       api_endpoint, api_key):
-        self.name = server_name
-        self.owner_org = owner_org
-        self.data_store_type_id = data_store_type_id
-        self.api_endpoint = api_endpoint
-        self.api_key = api_key
 
 
 class DataStoreType(Base):
