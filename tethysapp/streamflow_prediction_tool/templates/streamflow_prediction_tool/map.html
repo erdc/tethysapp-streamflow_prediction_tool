@@ -31,11 +31,14 @@
 {% endblock %}
 
 {% block header_buttons %}
-  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Search for River">
-    <a data-toggle="modal" data-target="#search_modal"><span class="glyphicon glyphicon-search"></span></a>
+  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="View Chart">
+    <a data-toggle="modal" data-target="#chart_modal"><span class="glyphicon glyphicon-globe"></span></a>
   </div>
   <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Warning Flag Settings">
     <a data-toggle="modal" data-target="#warning_modal"><span class="glyphicon glyphicon-warning-sign"></span></a>
+  </div>
+  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Search for River">
+    <a data-toggle="modal" data-target="#search_modal"><span class="glyphicon glyphicon-search"></span></a>
   </div>
 {% endblock %}
 
@@ -99,12 +102,10 @@
     <div id="chart_modal" class="modal fade" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-body">
                     <div id="message" class="alert alert-info hidden" role="alert">
                     </div>
                     <div id="message-error"></div>
-                </div> <!-- /.modal-header -->
-                <div class="modal-body">
                     <!-- Chart Area -->
                     <div id="toggle-row">
                         {% gizmo toggle_switch units_toggle_switch %}
