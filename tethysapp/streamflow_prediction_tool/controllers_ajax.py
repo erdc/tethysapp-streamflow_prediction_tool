@@ -888,21 +888,24 @@ def watershed_add(request):
         return JsonResponse({'error' : "AHPS Station layer update error: %s" % ex})
 
     #add watershed
-    watershed = Watershed(watershed_name.strip(),
-                          subbasin_name.strip(),
-                          watershed_clean_name,
-                          subbasin_clean_name,
-                          data_store_id,
-                          ecmwf_rapid_input_resource_id,
-                          ecmwf_data_store_watershed_name.strip(),
-                          ecmwf_data_store_subbasin_name.strip(),
-                          geoserver_id,
-                          geoserver_drainage_line_layer,
-                          geoserver_boundary_layer,
-                          geoserver_gage_layer,
-                          geoserver_historical_flood_map_layer,
-                          geoserver_ahps_station_layer,
-                          )
+    watershed = \
+        Watershed(
+            watershed_name=watershed_name.strip(),
+            subbasin_name=subbasin_name.strip(),
+            watershed_clean_name=watershed_clean_name,
+            subbasin_clean_name=subbasin_clean_name,
+            data_store_id=data_store_id,
+            ecmwf_rapid_input_resource_id=ecmwf_rapid_input_resource_id,
+            ecmwf_data_store_watershed_name=ecmwf_data_store_watershed_name.strip(),
+            ecmwf_data_store_subbasin_name=ecmwf_data_store_subbasin_name.strip(),
+            geoserver_id=geoserver_id,
+            geoserver_drainage_line_layer=geoserver_drainage_line_layer,
+            geoserver_boundary_layer=geoserver_boundary_layer,
+            geoserver_gage_layer=geoserver_gage_layer,
+            geoserver_historical_flood_map_layer=geoserver_historical_flood_map_layer,
+            geoserver_ahps_station_layer=geoserver_ahps_station_layer,
+        )
+
     session.add(watershed)
     session.commit()
 
@@ -910,7 +913,8 @@ def watershed_add(request):
     response = {
                 'success': "Watershed Sucessfully Added!",
                 'watershed_id' : watershed.id,
-                'geoserver_drainage_line_layer': geoserver_drainage_line_layer.name if geoserver_drainage_line_layer else geoserver_drainage_line_layer_name,
+                'geoserver_drainage_line_layer': geoserver_drainage_line_layer.name \
+                    if geoserver_drainage_line_layer else geoserver_drainage_line_layer_name,
                 }
     session.close()
 

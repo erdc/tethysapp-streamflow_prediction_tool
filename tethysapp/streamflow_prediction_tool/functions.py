@@ -409,7 +409,7 @@ def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
             
         if not geoserver_layer:
             #create new layer in database
-            geoserver_layer = GeoServerLayer("")
+            geoserver_layer = GeoServerLayer(name="")
             
         #upload shapefile
         upload_geoserver_layer(geoserver_manager, 
@@ -429,7 +429,7 @@ def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
                 geoserver_layer.uploaded = False
         else:
             #create new layer in database
-            geoserver_layer = GeoServerLayer(geoserver_layer_name)
+            geoserver_layer = GeoServerLayer(name=geoserver_layer_name)
                 
     #REMOVE LAYER FROM GEOSERVER AND DATABASE
     elif not geoserver_layer_name and geoserver_layer and not layer_required:
