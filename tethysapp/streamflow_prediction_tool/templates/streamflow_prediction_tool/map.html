@@ -31,8 +31,11 @@
 {% endblock %}
 
 {% block header_buttons %}
-  <div id="btn_search" class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Search for River">
+  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Search for River">
     <a data-toggle="modal" data-target="#search_modal"><span class="glyphicon glyphicon-search"></span></a>
+  </div>
+  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Warning Flag Settings">
+    <a data-toggle="modal" data-target="#warning_modal"><span class="glyphicon glyphicon-warning-sign"></span></a>
   </div>
 {% endblock %}
 
@@ -44,114 +47,13 @@
 
 
 {% block app_content %}
-    <div class="container-fluid">
-        <div class="row-fluid" style="height:100%">
-            <!-- Map Area -->
-            <div class="col-md-5" style="height:100%">
-                <div id="map" class="map" base-layer-info="{{base_layer_info}}" watershed-layers-info-array="{{watershed_layers_info_array_json}}"
-                watershed-group-info-array="{{watershed_group_info_array_json}}" warning-point-start-folder="{{warning_point_start_folder}}"></div>
-            </div>
-            <!-- Chart Area -->
-            <div class="col-md-5" style="height: 100%:">
-                <div id="message" class="alert alert-info row" role="alert">
-                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                    Click on a river segment or search by river reach ID to view streamflow predictions.
-                </div>
-                <div id="message-error" class="row"></div>
-                <div class="row" id="toggle-row">
-                    {% gizmo toggle_switch units_toggle_switch %}
-                </div>
-                <div>
-                    <!-- Nav tabs -->
-                    <ul class="nav nav-tabs" role="tablist">
-                        <li role="presentation" class="active"><a id="plot_tab_link" href="#plot_tab" aria-controls="plot_tab" role="tab" data-toggle="tab">Plot</a></li>
-                        <li role="presentation"><a href="#warnings" aria-controls="warnings" role="tab" data-toggle="tab">Warnings</a></li>
-                        <li role="presentation"><a href="#download" aria-controls="download" role="tab" data-toggle="tab">Download</a></li>
-                        <li role="presentation"><a id="season_tab_link" href="#season" aria-controls="season" role="tab" data-toggle="tab">Season</a></li>
-                    </ul>
-                
-                    <!-- Tab panes -->
-                    <div class="tab-content">
-                        <div role="tabpanel" class="tab-pane active" id="plot_tab">
-                            <div class="row" id="long-term-chart-row">
-                                <div class="panel panel-default">
-                                    <div class="panel-body">
-                                        <label class="long-term-select select-label hidden" for="long-term-select">ECMWF Available Dates</label>
-                                        <div id="long-term-select" class="hidden long-term-select sfpt-select"></div>
-                                        <div id="long-term-chart" class="panel-body sfpt-chart" style="height: 50%;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div role="tabpanel" class="tab-pane" id="warnings">
-                            <div class="panel panel-default">
-                                <div class="panel-body">
-                                    <h6>Warning Points Control Panel</h6>
-                                    {% if warning_point_date_select %}
-                                        <div id="message_warning_points" class="alert alert-info row hidden" role="alert">
-                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                                            Loading warning points. Please wait ...
-                                        </div>
-                                        <div id="warning_input_area">
-                                            {% gizmo select_input warning_point_date_select %}
-                                            <div id="warning-date-slider-range"></div>
-                                            <span class="warning-val" id="warning-start"></span>
-                                            <span style="font: 700 12px Arial;"> to </span>
-                                            <span class="warning-val" id="warning-end"></span>
-                                        </div>
-                                    {% else %}
-                                        <div id="message_warning_points" class="alert alert-danger" role="alert">
-                                            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                                            No forecasts found.
-                                        </div>
-                                    {% endif %}
-
-                                </div>
-                            </div>
-                        </div>
-                        <div role="tabpanel" class="tab-pane" id="download">
-                            <div class="panel panel-default">
-                                <div class="panel-body">
-                                    <h6>Download ERA Interim Data</h6>
-                                        <div id="era_message" class="alert alert-info" role="alert">
-                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                                            Click on a river segment or search by river reach ID before downloading data.
-                                        </div>
-                                        <div id="download_interim" class="btn-group hidden" role="group">
-                                            <a class="btn btn-warning" role="button" id="submit-download-interim-csv-daily">
-                                                <span class="glyphicon glyphicon-play"></span> Download Daily Interim Data
-                                            </a>
-                                            <a class="btn btn-success" role="button" id="submit-download-interim-csv">
-                                                <span class="glyphicon glyphicon-play"></span> Download Interim Data
-                                            </a>
-                                        </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div role="tabpanel" class="tab-pane" id="season">
-                            <div class="panel panel-default">
-                                <div class="panel-body">
-                                    <div id="seasonal_streamflow_data" class="panel-body" style="height: 50%;">
-                                        <h6>Seasonal Streamflow Chart</h6>
-                                        <div id="era_message" class="alert alert-info" role="alert">
-                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                                            Click on a river segment or search by river reach ID before displaying data.
-                                        </div>
-                                    </div>
-                                    <div id="retrieve_seasonal_streamflow_chart" class="btn-group hidden" role="group">
-                                        <a class="btn btn-warning" role="button" id="submit-retreive-seasonal-streamflow-chart">
-                                            <span class="glyphicon glyphicon-play"></span> Retrieve Seasonal Streamflow Chart
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-    
-                </div>
-
-            </div>
-        </div>
+    <div id="intro_message" class="alert alert-info" role="alert">
+        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+        Click on a river segment or search by river reach ID to view streamflow predictions.
+    </div>
+    <!-- Map Area -->
+    <div id="map" class="map" base-layer-info="{{base_layer_info}}" watershed-layers-info-array="{{watershed_layers_info_array_json}}"
+    watershed-group-info-array="{{watershed_group_info_array_json}}" warning-point-start-folder="{{warning_point_start_folder}}"></div>
     </div>
     <div id="map-view-legend" class="map-view-legend ol-unselectable ol-control">
         <div> 
@@ -193,6 +95,85 @@
 {% endblock %}
 
 {% block after_app_content %}
+    <!-- Chart Modal -->
+    <div id="chart_modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div id="message" class="alert alert-info hidden" role="alert">
+                    </div>
+                    <div id="message-error"></div>
+                </div> <!-- /.modal-header -->
+                <div class="modal-body">
+                    <!-- Chart Area -->
+                    <div id="toggle-row">
+                        {% gizmo toggle_switch units_toggle_switch %}
+                    </div>
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active"><a id="plot_tab_link" href="#plot_tab" aria-controls="plot_tab" role="tab" data-toggle="tab">Plot</a></li>
+                        <li role="presentation"><a href="#download" aria-controls="download" role="tab" data-toggle="tab">Download</a></li>
+                        <li role="presentation"><a id="season_tab_link" href="#season" aria-controls="season" role="tab" data-toggle="tab">Season</a></li>
+                    </ul>
+
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div role="tabpanel" class="tab-pane active" id="plot_tab">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <label class="long-term-select select-label hidden" for="long-term-select">ECMWF Available Dates</label>
+                                    <div id="long-term-select" class="hidden long-term-select"></div>
+                                    <div id="long-term-chart" class="panel-body"></div>
+                                </div>
+                            </div>
+                        </div> <!-- /.tab-pane -->
+                        <div role="tabpanel" class="tab-pane" id="download">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <h6>Download ERA Interim Data</h6>
+                                        <div id="era_message" class="alert alert-info" role="alert">
+                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                            Click on a river segment or search by river reach ID before downloading data.
+                                        </div>
+                                        <div id="download_interim" class="btn-group hidden" role="group">
+                                            <a class="btn btn-warning" role="button" id="submit-download-interim-csv-daily">
+                                                <span class="glyphicon glyphicon-play"></span> Download Daily Interim Data
+                                            </a>
+                                            <a class="btn btn-success" role="button" id="submit-download-interim-csv">
+                                                <span class="glyphicon glyphicon-play"></span> Download Interim Data
+                                            </a>
+                                        </div>
+                                </div>
+                            </div>
+                        </div> <!-- /.tab-pane -->
+                        <div role="tabpanel" class="tab-pane" id="season">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div id="seasonal_streamflow_data" class="panel-body" style="height: 50%;">
+                                        <h6>Seasonal Streamflow Chart</h6>
+                                        <div id="era_message" class="alert alert-info" role="alert">
+                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                            Click on a river segment or search by river reach ID before displaying data.
+                                        </div>
+                                    </div>
+                                    <div id="retrieve_seasonal_streamflow_chart" class="btn-group hidden" role="group">
+                                        <a class="btn btn-warning" role="button" id="submit-retreive-seasonal-streamflow-chart">
+                                            <span class="glyphicon glyphicon-play"></span> Retrieve Seasonal Streamflow Chart
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> <!-- /.tab-pane -->
+                    </div> <!-- /.tab-content -->
+                </div> <!-- /.modal-body -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div> <!-- /.modal-footer -->
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <!-- Search for River Modal -->
     <div id="search_modal" class="modal fade" tabindex="-1" role="dialog">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -213,6 +194,41 @@
             <button type="button" class="btn btn-danger" id="submit-search-reach-id">
                 <span class="glyphicon glyphicon-play"></span> Search
             </button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <!-- Warning Settings Modal -->
+    <div id="warning_modal" class="modal fade" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Warning Points Control Panel</h4>
+          </div>
+          <div class="modal-body">
+            {% if warning_point_date_select %}
+                <div id="message_warning_points" class="alert alert-info row hidden" role="alert">
+                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                    Loading warning points. Please wait ...
+                </div>
+                <div id="warning_input_area">
+                    {% gizmo select_input warning_point_date_select %}
+                    <div id="warning-date-slider-range"></div>
+                    <span class="warning-val" id="warning-start"></span>
+                    <span style="font: 700 12px Arial;"> to </span>
+                    <span class="warning-val" id="warning-end"></span>
+                </div>
+            {% else %}
+                <div id="message_warning_points" class="alert alert-danger" role="alert">
+                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                    No forecasts found.
+                </div>
+            {% endif %}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           </div>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->

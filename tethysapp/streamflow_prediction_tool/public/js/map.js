@@ -93,32 +93,9 @@ var ERFP_MAP = (function() {
     resetChartSelectMessage = function() {
         //remove old chart reguardless
         clearOldChart('long-term');
-        $('.short-term-select').addClass('hidden');
         $('.long-term-select').addClass('hidden');
         //clear messages
         clearAllMessages();
-    };
-
-    //FUNCTION: resize content based
-    resizeAppContent = function() {
-        var map_div = $('#inner-app-content').children().first();
-        map_div.attr("style","height:" + parseInt($(document).height()*0.8) + "px");
-        if (typeof m_map != 'undefined') {
-            m_map.updateSize();
-        }
-        var document_width = $(document).width();
-
-        if (document_width > 900) {
-            $('#app-content-wrapper').addClass('show-nav');
-        }
-
-        var container = $('.container');
-        container.removeClass('no-padding');
-
-        var height_ratio = 0.97;
-        if (document_width > 1500) {
-            height_ratio = 0.57;
-        }
     };
 
     //FUNCTION: binds dom elements to layer
@@ -950,6 +927,8 @@ var ERFP_MAP = (function() {
                         var long_term_chart = $("#long-term-chart").highcharts();
                         long_term_chart.rangeSelector.clickButton(0,0,true);
                         $('#long-term-chart').removeClass('hidden');
+                        $(window).resize();
+
                     } else {
                         m_long_term_chart_data_ajax_load_failed = true;
                         appendErrorMessage(data["error"], "ecmwf_error", "message-error");
@@ -1042,6 +1021,7 @@ var ERFP_MAP = (function() {
                                 if ("era_interim" in data) {
                                     if (!("error" in data.era_interim)) {
                                         $('#long-term-chart').removeClass('hidden');
+                                        $(window).resize();
                                     }
                                 }
                             });
@@ -1128,6 +1108,8 @@ var ERFP_MAP = (function() {
                                     appendErrorMessage("Recent USGS data not found.", "usgs_error", "message-error");
                                 }
                             }
+                            $('#long-term-chart').removeClass('hidden');
+                            $(window).resize();
                         }
                     })
                     .fail(function (request, status, error) {
@@ -1176,6 +1158,7 @@ var ERFP_MAP = (function() {
                     
                         addSeriesToCharts(ahps_series);
                         $('#long-term-chart').removeClass('hidden');
+                        $(window).resize();
                     }
                 })
                 .fail(function(request, status, error) {
@@ -1212,6 +1195,8 @@ var ERFP_MAP = (function() {
                                         color: Highcharts.getOptions().colors[5],
                                     };
                         addSeriesToCharts(hydro_server_series);
+                        $('#long-term-chart').removeClass('hidden');
+                        $(window).resize();
                     }
                 })
                 .fail(function(request, status, error) {
@@ -1231,6 +1216,9 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: displays hydrograph at stream segment
     displayHydrograph = function() {
+        $('#chart_modal').modal('show');
+        $('#long-term-chart').addClass('hidden');
+
         //check if old ajax call still running
         if(!isNotLoadingPastRequest()) {
             //updateInfoAlert
@@ -1303,6 +1291,7 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: Loads Hydrograph from Selected feature
     loadHydrographFromFeature = function(selected_feature) {
+        $('#intro_message').addClass('hidden');
         //check if old ajax call still running
         if(!isNotLoadingPastRequest()) {
             //updateInfoAlert
@@ -1722,7 +1711,6 @@ var ERFP_MAP = (function() {
     // Initialization: jQuery function that gets called when 
     // the DOM tree finishes loading
     $(function() {
-        resizeAppContent();
         $('#map_top_navigation').find('.form-group').addClass('inline-block');
         //initialize map global variables
         m_map_projection = 'EPSG:3857';
@@ -2344,13 +2332,6 @@ var ERFP_MAP = (function() {
 
         //init tooltip
         $('.boot_tooltip').tooltip();
-
-        //resize app content based on window size and nav bar
-        $('.toggle-nav').off();
-
-        $(window).resize(function() {
-            resizeAppContent();
-        });
 
     });
 
