@@ -584,7 +584,7 @@ var ERFP_MAP = (function() {
                 });
                 drainage_line = new ol.layer.Vector({
                     source: drainage_line_vector_source,
-                    maxResolution: 300
+                    maxResolution: 300,
                     style: [
                         new ol.style.Style({
                             stroke: new ol.style.Stroke({
