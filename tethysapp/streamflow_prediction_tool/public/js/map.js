@@ -2153,7 +2153,7 @@ var ERFP_MAP = (function() {
         //make drainage line layers selectable
         m_select_interaction = new ol.interaction.Select({
                                     layers: m_drainage_line_layers,
-                                    hitTolerance: 10,
+                                    hitTolerance: 50,
                                 });
 
         var all_map_layers = [m_basemap_layer].concat(all_watershed_layers);
