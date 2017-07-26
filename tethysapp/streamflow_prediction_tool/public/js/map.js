@@ -523,7 +523,21 @@ var ERFP_MAP = (function() {
                 });
                 drainage_line = new ol.layer.Vector({
                     source: drainage_line_vector_source,
-                    maxResolution: 7000
+                    maxResolution: 7000,
+                    style: [
+                        new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: 'rgba(255,255,255,0.01)',
+                                width: 30
+                            })
+                        }),
+                        new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: '#50B0E9',
+                                width: 2
+                            })
+                        })
+                    ]
                 });
             } 
             else if(watershed_layers_info.drainage_line.geoserver_method == "river_order_query") {
@@ -586,7 +600,21 @@ var ERFP_MAP = (function() {
                 });
                 drainage_line = new ol.layer.Vector({
                     source: drainage_line_vector_source,
-                    maxResolution: 7000
+                    maxResolution: 7000,
+                    style: [
+                        new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: 'rgba(255,255,255,0.01)',
+                                width: 30
+                            })
+                        }),
+                        new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: '#50B0E9',
+                                width: 2
+                            })
+                        })
+                    ]
                 });
             } 
             else { //watershed_layers_info.drainage_line.geoserver_method == "simple"
@@ -607,7 +635,21 @@ var ERFP_MAP = (function() {
                 });
                 drainage_line = new ol.layer.Vector({
                     source: drainage_line_vector_source,
-                    maxResolution: 1000
+                    maxResolution: 1000,
+                    style: [
+                        new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: 'rgba(255,255,255,0.01)',
+                                width: 30
+                            })
+                        }),
+                        new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: '#50B0E9',
+                                width: 2
+                            })
+                        })
+                    ]
                 });
                 
             }
@@ -1654,7 +1696,7 @@ var ERFP_MAP = (function() {
                 step: 16,
                 connect: true,
                 snap: true,
-                start: [date_array[0].getTime(), date_array[15].getTime()],
+                start: [date_array[0].getTime(), date_array[5].getTime()],
                 format: wNumb({
                     decimals: 0
                 })
