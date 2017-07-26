@@ -472,7 +472,7 @@ var ERFP_MAP = (function() {
                 });
                 drainage_line = new ol.layer.Vector({
                     source: drainage_line_vector_source,
-                    maxResolution: 7000,
+                    maxResolution: 1000,
                     style: [
                         new ol.style.Style({
                             stroke: new ol.style.Stroke({
@@ -549,7 +549,7 @@ var ERFP_MAP = (function() {
                 });
                 drainage_line = new ol.layer.Vector({
                     source: drainage_line_vector_source,
-                    maxResolution: 7000,
+                    maxResolution: 1000,
                     style: [
                         new ol.style.Style({
                             stroke: new ol.style.Stroke({
@@ -584,7 +584,7 @@ var ERFP_MAP = (function() {
                 });
                 drainage_line = new ol.layer.Vector({
                     source: drainage_line_vector_source,
-                    maxResolution: 1000,
+                    maxResolution: 300
                     style: [
                         new ol.style.Style({
                             stroke: new ol.style.Stroke({
@@ -1861,7 +1861,7 @@ var ERFP_MAP = (function() {
                                                           boundary_layer_id,
                                                           true, 
                                                           0.5);
-                        boundary_layer.setMinResolution(1000);
+                        boundary_layer.setMinResolution(300);
                         if (boundary_layer != null) {
                             if (divide_into_groups) {
                                 group_boundary_layers.push(boundary_layer);
@@ -1914,7 +1914,7 @@ var ERFP_MAP = (function() {
                                                                       divide_into_groups, 
                                                                       0.5);
 
-                        historical_flood_map_layer.setMaxResolution(1000);
+                        historical_flood_map_layer.setMaxResolution(300);
                         if (historical_flood_map_layer != null) {
                             if (divide_into_groups) {
                                 group_historical_flood_map_layers.push(historical_flood_map_layer);
@@ -1952,7 +1952,7 @@ var ERFP_MAP = (function() {
                                     layer.set('subbasin_name', watershed_layers_info.subbasin);
                                     layer.set('date_timestep', flood_map_info.forecast_directory);
                                     layer.set("flood_map_sublayer_id", flood_map_sublayer_id);
-                                    layer.setMaxResolution(1000);
+                                    layer.setMaxResolution(300);
                                     predicted_flood_maps.push(layer);
                                 }
                                 else {
