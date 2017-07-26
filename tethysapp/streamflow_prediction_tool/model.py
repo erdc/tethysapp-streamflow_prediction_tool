@@ -10,56 +10,15 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-from uuid import uuid5, NAMESPACE_DNS
-from datetime import datetime
+
 
 Base = declarative_base()
 
 
-class BaseLayer(Base):
-    '''
-    BaseLayer SQLAlchemy DB Model
-    '''
-    __tablename__ = 'base_layer'
-
-    # Columns
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    api_key = Column(String)
-
-    def __init__(self, name, api_key):
-        self.name = name
-        self.api_key = api_key
-
-class MainSettings(Base):
-    '''
-    Main Settings SQLAlchemy DB Model
-    '''
-    __tablename__ = 'main_settings'
-
-    # Columns
-    id = Column(Integer, primary_key=True)
-    base_layer_id = Column(Integer,ForeignKey('base_layer.id'))
-    base_layer = relationship("BaseLayer")
-    ecmwf_rapid_prediction_directory = Column(String)
-    era_interim_rapid_directory = Column(String)
-    wrf_hydro_rapid_prediction_directory = Column(String)
-    app_instance_id = Column(String)
-
-    def __init__(self, base_layer_id, ecmwf_rapid_prediction_directory, 
-                 era_interim_rapid_directory, wrf_hydro_rapid_prediction_directory):
-
-        self.base_layer_id = base_layer_id
-        self.ecmwf_rapid_prediction_directory = ecmwf_rapid_prediction_directory
-        self.era_interim_rapid_directory = era_interim_rapid_directory
-        self.wrf_hydro_rapid_prediction_directory = wrf_hydro_rapid_prediction_directory
-        self.app_instance_id = uuid5(NAMESPACE_DNS, '%s%s' % ("sfpt", datetime.now())).hex
-        
-
 class DataStore(Base):
-    '''
+    """
     DataStore SQLAlchemy DB Model
-    '''
+    """
     __tablename__ = 'data_store'
 
     # Columns
@@ -71,18 +30,11 @@ class DataStore(Base):
     api_endpoint = Column(String)
     api_key = Column(String)
 
-    def __init__(self, server_name, owner_org, data_store_type_id, 
-                       api_endpoint, api_key):
-        self.name = server_name
-        self.owner_org = owner_org
-        self.data_store_type_id = data_store_type_id
-        self.api_endpoint = api_endpoint
-        self.api_key = api_key
 
 class DataStoreType(Base):
-    '''
+    """
     DataStoreType SQLAlchemy DB Model
-    '''
+    """
     __tablename__ = 'data_store_type'
 
     # Columns
@@ -90,14 +42,11 @@ class DataStoreType(Base):
     code_name = Column(String)
     human_readable_name = Column(String)
 
-    def __init__(self, code_name, human_readable_name):
-        self.code_name = code_name
-        self.human_readable_name = human_readable_name
 
 class Geoserver(Base):
-    '''
+    """
     Geoserver SQLAlchemy DB Model
-    '''
+    """
     __tablename__ = 'geoserver'
 
     # Columns
@@ -106,41 +55,28 @@ class Geoserver(Base):
     url = Column(String)
     username = Column(String)
     password = Column(String)
-    
-    def __init__(self, name, url, username, password):
-        self.name = name
-        self.url = url
-        self.username = username
-        self.password = password
+
 
 class GeoServerLayer(Base):
-    '''
+    """
     Geoserver Layer SQLAlchemy DB Model
-    '''
+    """
     __tablename__ = 'geoserver_layer'
 
     # Columns
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    uploaded = Column(Boolean)
-    latlon_bbox = Column(String)
-    projection = Column(String)
-    attribute_list = Column(String)
-    wfs_url = Column(String)
+    uploaded = Column(Boolean, default=False)
+    latlon_bbox = Column(String, default="")
+    projection = Column(String, default="")
+    attribute_list = Column(String, default="")
+    wfs_url = Column(String, default="")
     
-    def __init__(self, name, uploaded=False, latlon_bbox="", projection="",
-                 attribute_list="", wfs_url=""):
-        self.name = name
-        self.uploaded = uploaded
-        self.latlon_bbox = latlon_bbox
-        self.projection = projection
-        self.attribute_list = attribute_list
-        self.wfs_url = wfs_url
-    
+
 class Watershed(Base):
-    '''
+    """
     Watershed SQLAlchemy DB Model
-    '''
+    """
     __tablename__ = 'watershed'
 
     # Columns
@@ -160,8 +96,6 @@ class Watershed(Base):
     ecmwf_rapid_input_resource_id = Column(String)
     ecmwf_data_store_watershed_name = Column(String)
     ecmwf_data_store_subbasin_name = Column(String)
-    wrf_hydro_data_store_watershed_name = Column(String)
-    wrf_hydro_data_store_subbasin_name = Column(String)
     geoserver = relationship("Geoserver")
     geoserver_drainage_line_layer = relationship("GeoServerLayer", 
                                                  foreign_keys=[geoserver_drainage_line_layer_id],
@@ -183,48 +117,23 @@ class Watershed(Base):
                                                 foreign_keys=[geoserver_ahps_station_layer_id],
                                                 single_parent=True,
                                                 cascade="save-update,merge,delete,delete-orphan")
-    geoserver_search_for_predicted_flood_map = Column(Boolean)
-    watershed_groups = relationship("WatershedGroup", 
+    watershed_groups = relationship("WatershedGroup",
                                     secondary='watershed_watershed_group_link')
-                              
-    def __init__(self, watershed_name, subbasin_name, watershed_clean_name,
-                 subbasin_clean_name, data_store_id, ecmwf_rapid_input_resource_id, 
-                 ecmwf_data_store_watershed_name, ecmwf_data_store_subbasin_name,
-                 wrf_hydro_data_store_watershed_name, wrf_hydro_data_store_subbasin_name,
-                 geoserver_id, geoserver_drainage_line_layer, geoserver_boundary_layer, 
-                 geoserver_gage_layer, geoserver_historical_flood_map_layer,
-                 geoserver_ahps_station_layer, geoserver_search_for_predicted_flood_map):
 
-        self.watershed_name = watershed_name
-        self.subbasin_name = subbasin_name
-        self.watershed_clean_name = watershed_clean_name
-        self.subbasin_clean_name = subbasin_clean_name
-        self.data_store_id = data_store_id
-        self.ecmwf_rapid_input_resource_id = ecmwf_rapid_input_resource_id
-        self.ecmwf_data_store_watershed_name = ecmwf_data_store_watershed_name
-        self.ecmwf_data_store_subbasin_name = ecmwf_data_store_subbasin_name
-        self.wrf_hydro_data_store_watershed_name = wrf_hydro_data_store_watershed_name
-        self.wrf_hydro_data_store_subbasin_name = wrf_hydro_data_store_subbasin_name
-        self.geoserver_id = geoserver_id
-        self.geoserver_drainage_line_layer = geoserver_drainage_line_layer
-        self.geoserver_boundary_layer = geoserver_boundary_layer
-        self.geoserver_gage_layer = geoserver_gage_layer
-        self.geoserver_historical_flood_map_layer = geoserver_historical_flood_map_layer
-        self.geoserver_ahps_station_layer = geoserver_ahps_station_layer
-        self.geoserver_search_for_predicted_flood_map = geoserver_search_for_predicted_flood_map
 
 class WatershedWatershedGroupLink(Base):
-    '''
+    """
     SQLAlchemy many-to-many link between watershed and watershed_group
-    '''
+    """
     __tablename__ = 'watershed_watershed_group_link'
     watershed_group_id = Column(Integer, ForeignKey('watershed_group.id'), primary_key=True)
     watershed_id = Column(Integer, ForeignKey('watershed.id'), primary_key=True)
 
+
 class WatershedGroup(Base):
-    '''
+    """
     WatershedGroup SQLAlchemy DB Model
-    '''
+    """
     __tablename__ = 'watershed_group'
 
     # Columns
@@ -232,7 +141,3 @@ class WatershedGroup(Base):
     name = Column(String)
     watersheds = relationship("Watershed", 
                               secondary='watershed_watershed_group_link')
-
-    def __init__(self, name):
-        self.name = name
-        

@@ -5,8 +5,11 @@
 
 #inner-app-content {
     padding: 0;
-    padding-top: 10px;
     height: 100%
+}
+
+#chart_modal .modal-dialog {
+    width: 80%
 }
 
 #app-navigation li {
@@ -33,24 +36,11 @@
     width: 100%;
 }
 
-.sfpt-chart {
-    width:100%;
-}
-
-.no-padding {
-    padding-left: 10px;
-}
-
-.units-toggle {
-    top: 5px;
-    right: 40px;
-}
-
-.sfpt-select {
+.long-term-select {
     width: 100%;
 }
 
-.select-label{
+.select-label {
     padding-left: 10px;
 }
 
