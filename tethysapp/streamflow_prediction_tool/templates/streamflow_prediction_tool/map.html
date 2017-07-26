@@ -30,6 +30,15 @@
   <link rel="stylesheet" href="{% static 'streamflow_prediction_tool/css/map.css' %}" type="text/css">
 {% endblock %}
 
+{% block header_buttons %}
+  <div id="btn_search" class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Search for River">
+    <a data-toggle="modal" data-target="#search_modal"><span class="glyphicon glyphicon-search"></span></a>
+  </div>
+{% endblock %}
+{% block app_title %}
+  {{ block.super }}
+{% endblock %}
+
 {% block exit_button_override %}
   <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Back">
     <a href="{% url 'streamflow_prediction_tool:home' %}"><span class="glyphicon glyphicon-arrow-left"></span></a>
@@ -59,7 +68,6 @@
                     <!-- Nav tabs -->
                     <ul class="nav nav-tabs" role="tablist">
                         <li role="presentation" class="active"><a id="plot_tab_link" href="#plot_tab" aria-controls="plot_tab" role="tab" data-toggle="tab">Plot</a></li>
-                        <li role="presentation"><a href="#search" aria-controls="search" role="tab" data-toggle="tab">Search</a></li>
                         <li role="presentation"><a href="#warnings" aria-controls="warnings" role="tab" data-toggle="tab">Warnings</a></li>
                         <li role="presentation"><a href="#download" aria-controls="download" role="tab" data-toggle="tab">Download</a></li>
                         <li role="presentation"><a id="season_tab_link" href="#season" aria-controls="season" role="tab" data-toggle="tab">Season</a></li>
@@ -74,24 +82,6 @@
                                         <label class="long-term-select select-label hidden" for="long-term-select">ECMWF Available Dates</label>
                                         <div id="long-term-select" class="hidden long-term-select sfpt-select"></div>
                                         <div id="long-term-chart" class="panel-body sfpt-chart" style="height: 50%;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div role="tabpanel" class="tab-pane" id="search">                    
-                            <div class="panel panel-default">
-                                <div id="search_layers" class="panel-body">
-                                    <h6>Search by River Reach ID</h6>
-                                    {% gizmo select_input watershed_select %}
-                                    <div class="form-group">
-                                        <label class="control-label" for="reach-id-input">Reach ID</label>
-                                        <input class="form-control" id="reach-id-input" type="input">
-                                        <p class="help-block" id="reach-id-help-message"></p>
-                                    </div>
-                                    <div class="btn-group">
-                                        <a class="btn btn-danger" role="button" id="submit-search-reach-id">
-                                            <span class="glyphicon glyphicon-play"></span> Search for Reach
-                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -203,6 +193,33 @@
             2-Year Warnings
         </div>
     </div>
+{% endblock %}
+
+{% block after_app_content %}
+    <div id="search_modal" class="modal fade" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search by River Reach ID</h4>
+          </div>
+          <div class="modal-body">
+            {% gizmo select_input watershed_select %}
+            <div class="form-group">
+                <label class="control-label" for="reach-id-input">Reach ID</label>
+                <input class="form-control" id="reach-id-input" type="input">
+                <p class="help-block" id="reach-id-help-message"></p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-danger" id="submit-search-reach-id">
+                <span class="glyphicon glyphicon-play"></span> Search
+            </button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 {% endblock %}
 
 {% block app_navigation_items %}
