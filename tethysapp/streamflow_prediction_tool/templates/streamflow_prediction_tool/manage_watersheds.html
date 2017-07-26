@@ -26,10 +26,6 @@
 {% block app_content %}
     <h3>Manage Watersheds</h3>
     <div id="main_message"></div>
-    <form id="add_cron_form" method="post">
-        {% csrf_token %}
-        {% gizmo dowload_cron_button %}
-    </form>
     <div id="manage_watershed_table" data-page="{{ initial_page }}" data-num_watersheds="{{ num_watersheds }}"></div>
 {% endblock %}
 

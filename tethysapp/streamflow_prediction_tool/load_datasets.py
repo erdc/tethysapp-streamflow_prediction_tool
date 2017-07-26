@@ -11,7 +11,7 @@ from shutil import rmtree
 
 from spt_dataset_manager.dataset_manager import (ECMWFRAPIDDatasetManager)
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tethys_apps.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tethys_portal.settings")
 
 # local imports
 from tethys_apps.tethysapp.streamflow_prediction_tool.model import Watershed
