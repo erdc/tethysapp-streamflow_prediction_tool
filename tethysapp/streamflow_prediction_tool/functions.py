@@ -1,30 +1,31 @@
 # -*- coding: utf-8 -*-
-##
-##  functions.py
-##  streamflow_prediction_tool
-##
-##  Created by Alan D. Snow.
-##  Copyright © 2015-2016 Alan D. Snow. All rights reserved.
-##  License: BSD 3-Clause
+#
+#  functions.py
+#  streamflow_prediction_tool
+#
+#  Created by Alan D. Snow, 2015-2017
+#  License: BSD 3-Clause
 
 import datetime
-from django.contrib import messages
-from django.shortcuts import redirect
 from glob import glob
 from json import dumps as json_dumps
-import netCDF4 as NET
-import numpy as np
 import os
 from pytz import utc
 import re
 from shutil import rmtree
-from sqlalchemy import and_
 
-#local import
+from django.contrib import messages
+from django.shortcuts import redirect
+import pandas as pd
+from sqlalchemy import and_
+import xarray
+
+# local import
 from .app import StreamflowPredictionTool as app
-from .model import GeoServerLayer, MainSettings, Watershed
+from .model import GeoServerLayer, Watershed
 from spt_dataset_manager.dataset_manager import (CKANDatasetManager, 
                                                  GeoServerDatasetManager)
+
 
 def redirect_with_message(request, url, message, severity="INFO"):
     """
@@ -38,7 +39,8 @@ def redirect_with_message(request, url, message, severity="INFO"):
         elif severity=="ERROR":
             messages.error(request, message)
     return redirect(url)
-                                                 
+
+
 def delete_from_database(session, object_to_delete):
     """
     This attempts to delete an object from the database
@@ -48,8 +50,9 @@ def delete_from_database(session, object_to_delete):
     except Exception:
         pass
     object_to_delete = None
-                                              
-def delete_old_watershed_prediction_files(watershed, forecast="all"):
+
+
+def delete_old_watershed_prediction_files(watershed):
     """
     Removes old watershed prediction files from system if no other watershed has them
     """
@@ -79,44 +82,24 @@ def delete_old_watershed_prediction_files(watershed, forecast="all"):
     #initialize session
     session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
     session = session_maker()
-    main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-    forecast = forecast.lower()
-    
+
     #Remove ECMWF Forecasta
-    if forecast == "all" or forecast == "ecmwf":
-        #Make sure that you don't delete if another watershed is using the
-        #same predictions
-        num_ecmwf_watersheds_with_forecast  = session.query(Watershed) \
-            .filter(
-                and_(
-                    Watershed.ecmwf_data_store_watershed_name == watershed.ecmwf_data_store_watershed_name, 
-                    Watershed.ecmwf_data_store_subbasin_name == watershed.ecmwf_data_store_subbasin_name
-                )
-            ) \
-            .filter(Watershed.id != watershed.id) \
-            .count()
-        if num_ecmwf_watersheds_with_forecast <= 0:
-            delete_prediciton_files("{0}-{1}".format(watershed.ecmwf_data_store_watershed_name, 
-                                                     watershed.ecmwf_data_store_subbasin_name), 
-                                    main_settings.ecmwf_rapid_prediction_directory)
-    
-    #Remove WRF-Hydro Forecasts
-    if forecast == "all" or forecast == "wrf_hydro":
-        #Make sure that you don't delete if another watershed is using the
-        #same predictions
-        num_wrf_hydro_watersheds_with_forecast  = session.query(Watershed) \
-            .filter(
-                and_(
-                    Watershed.wrf_hydro_data_store_watershed_name == watershed.wrf_hydro_data_store_watershed_name, 
-                    Watershed.wrf_hydro_data_store_subbasin_name == watershed.wrf_hydro_data_store_subbasin_name
-                )
-            ) \
-            .filter(Watershed.id != watershed.id) \
-            .count()
-        if num_wrf_hydro_watersheds_with_forecast <= 0:
-            delete_prediciton_files("{0}-{1}".format(watershed.wrf_hydro_data_store_watershed_name, 
-                                                     watershed.wrf_hydro_data_store_subbasin_name), 
-                                    main_settings.wrf_hydro_rapid_prediction_directory)
+    #Make sure that you don't delete if another watershed is using the
+    #same predictions
+    num_ecmwf_watersheds_with_forecast  = session.query(Watershed) \
+        .filter(
+            and_(
+                Watershed.ecmwf_data_store_watershed_name == watershed.ecmwf_data_store_watershed_name,
+                Watershed.ecmwf_data_store_subbasin_name == watershed.ecmwf_data_store_subbasin_name
+            )
+        ) \
+        .filter(Watershed.id != watershed.id) \
+        .count()
+    if num_ecmwf_watersheds_with_forecast <= 0:
+        ecmwf_rapid_prediction_directory = app.get_custom_setting('ecmwf_forecast_folder')
+        delete_prediciton_files("{0}-{1}".format(watershed.ecmwf_data_store_watershed_name,
+                                                 watershed.ecmwf_data_store_subbasin_name),
+                                ecmwf_rapid_prediction_directory)
     
     session.close()
               
@@ -125,19 +108,13 @@ def delete_old_watershed_geoserver_files(watershed):
     """
     Removes old watershed geoserver files from system
     """
-    #initialize session
-    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
-    session = session_maker()
-    main_settings  = session.query(MainSettings).order_by(MainSettings.id).first()
-    
     #initialize geoserver manager
+    app_instance_id = app.get_custom_setting('app_instance_id')
     geoserver_manager = GeoServerDatasetManager(engine_url=watershed.geoserver.url,
                                                 username=watershed.geoserver.username,
                                                 password=watershed.geoserver.password,
-                                                app_instance_id=main_settings.app_instance_id)
+                                                app_instance_id=app_instance_id)
 
-    session.close()
-    
     #delete layers which need to be deleted
     if watershed.geoserver_drainage_line_layer:
         if watershed.geoserver_drainage_line_layer.uploaded:
@@ -154,7 +131,8 @@ def delete_old_watershed_geoserver_files(watershed):
     if watershed.geoserver_ahps_station_layer:
         if watershed.geoserver_ahps_station_layer.uploaded:
             geoserver_manager.purge_remove_geoserver_layer(watershed.geoserver_ahps_station_layer.name)
-        
+
+
 def delete_rapid_input_ckan(watershed):
     """
     This function deletes RAPID input on CKAN
@@ -170,23 +148,24 @@ def delete_rapid_input_ckan(watershed):
         data_manager.dataset_engine.delete_resource(watershed.ecmwf_rapid_input_resource_id)
         watershed.ecmwf_rapid_input_resource_id = ""
 
-def delete_old_watershed_files(watershed, ecmwf_local_prediction_files_location,
-                               wrf_hydro_local_prediction_files_location):
+
+def delete_old_watershed_files(watershed, ecmwf_local_prediction_files_location):
     """
     Removes old watershed files from system
     """
     #remove old geoserver files
     delete_old_watershed_geoserver_files(watershed)
-    #remove old ECMWF and WRF-Hydro prediction files
-    delete_old_watershed_prediction_files(watershed, forecast="all")
+    #remove old ECMWF prediction files
+    delete_old_watershed_prediction_files(watershed)
     #remove RAPID input files on CKAN
     delete_rapid_input_ckan(watershed)
-    
+
+
 def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
     """""
     Finds the current output from downscaled ECMWF forecasts
     """""
-    if(start_folder=="most_recent"):
+    if start_folder == "most_recent":
         if not os.path.exists(path_to_watershed_files):
             return None, None
         directories = sorted([d for d in os.listdir(path_to_watershed_files) \
@@ -207,8 +186,9 @@ def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
         except Exception as ex:
             print(ex)
             pass
-    #there are no files found
+    # there are no files found
     return None, None
+
 
 def ecmwf_get_valid_forecast_folder_list(main_watershed_forecast_folder, file_extension):
     """
@@ -237,41 +217,51 @@ def ecmwf_get_valid_forecast_folder_list(main_watershed_forecast_folder, file_ex
                 break                
     return output_directories
 
-def get_reach_index(prediction_file, reach_id):
-    """
-    Gets the index of the reach from the COMID 
-    """
-    data_nc = NET.Dataset(prediction_file, mode="r")
-    river_id = 'rivid'
-    if 'COMID' in data_nc.variables.keys():
-        river_id = 'COMID'
-    com_ids = data_nc.variables[river_id][:]
-    data_nc.close()
-    
-    return np.where(com_ids==int(reach_id))[0][0]
 
-def wrf_hydro_find_most_current_file(path_to_watershed_files, date_string):
-    """""
-    Finds the current output from downscaled WRF-Hydro forecasts
-    """""
-    if(date_string=="most_recent"):
-        if not os.path.exists(path_to_watershed_files):
-            return None
-        prediction_files = sorted(glob(os.path.join(path_to_watershed_files,"*.nc")),
-                                  reverse=True)
-    else:
-        #RapidResult_20150405T2300Z_CF.nc
-        prediction_files = ["RapidResult_%s_CF.nc" % date_string]
-    for prediction_file in prediction_files:
+def ecmwf_get_forecast_statistics(forecast_nc_list, river_id, return_data=""):
+    """
+    Returns the statistics for the 52 member forecast
+    """
+    # combine 52 ensembles
+    qout_datasets = []
+    ensemble_index_list = []
+    for forecast_nc in forecast_nc_list:
+        ensemble_index_list.append(
+            int(os.path.basename(forecast_nc)[:-3].split("_")[-1])
+        )
+        qout_datasets.append(
+            xarray.open_dataset(forecast_nc, autoclose=True) \
+                .sel(rivid=river_id).Qout
+        )
+
+    merged_ds = xarray.concat(qout_datasets,
+                              pd.Index(ensemble_index_list, name='ensemble'))
+
+    return_dict = {}
+    if return_data == 'high_res' or not return_data:
+        # extract the high res ensemble & time
         try:
-            path_to_file = os.path.join(path_to_watershed_files, prediction_file)
-            if os.path.exists(path_to_file):
-                return path_to_file
-        except Exception as ex:
-            print(ex)
+            return_dict['high_res'] = merged_ds.sel(ensemble=52).dropna('time')
+        except IndexError:
             pass
-    #there are no files found
-    return None
+
+    if return_data != 'high_res' or not return_data:
+        # analyze data to get statistic bands
+        merged_ds = merged_ds.dropna('time')
+
+        if return_data == 'mean' or 'std' in return_data or not return_data:
+            return_dict['mean'] = merged_ds.mean(dim='ensemble')
+            std_ar = merged_ds.std(dim='ensemble')
+            if return_data == 'std_dev_range_upper' or not return_data:
+                return_dict['std_dev_range_upper'] = return_dict['mean'] + std_ar
+            if return_data == 'std_dev_range_lower' or not return_data:
+                return_dict['std_dev_range_lower'] = return_dict['mean'] - std_ar
+        if return_data == "outer_range_lower" or not return_data:
+            return_dict['min'] = merged_ds.min(dim='ensemble')
+        if return_data == "outer_range_upper" or not return_data:
+            return_dict['max'] = merged_ds.max(dim='ensemble')
+
+    return return_dict
 
 def format_name(string):
     """
@@ -285,6 +275,7 @@ def format_name(string):
     else:
         formatted_string = ""
     return formatted_string
+
 
 def format_watershed_title(watershed, subbasin):
     """
@@ -302,25 +293,6 @@ def format_watershed_title(watershed, subbasin):
         return (watershed + " (" + subbasin[:max_length-3].strip() + " ...)")
     return (watershed + " (" + subbasin + ")")
 
-def get_cron_command():
-    """
-    Gets cron command for downloading datasets
-    """
-    #/usr/lib/tethys/src/tethys_apps/tethysapp/erfp_tool/cron/load_datasets.py
-    local_directory = os.path.dirname(os.path.abspath(__file__))
-    delimiter = ""
-    if "/" in local_directory:
-        delimiter = "/"
-    elif "\\" in local_directory:
-        delimiter = "\\"
-    virtual_env_path = ""
-    if delimiter and local_directory:
-        virtual_env_path = delimiter.join(local_directory.split(delimiter)[:-4])
-        command = '%s %s' % (os.path.join(virtual_env_path,'bin','python'), 
-                              os.path.join(local_directory, 'load_datasets.py'))
-        return command
-    else:
-        return None
 
 def handle_uploaded_file(f, file_path, file_name):
     """
@@ -338,6 +310,7 @@ def handle_uploaded_file(f, file_path, file_name):
     with open(os.path.join(file_path,file_name), 'wb+') as destination:
         for chunk in f.chunks():
             destination.write(chunk)
+
 
 def upload_geoserver_layer(geoserver_manager, resource_name, 
                            shp_file_list, geoserver_layer):
@@ -359,6 +332,7 @@ def upload_geoserver_layer(geoserver_manager, resource_name,
     else:
         raise Exception("Problems uploading {}".format(resource_name))
 
+
 def update_geoserver_layer_information(geoserver_manager, geoserver_layer):
     """
     Update information about geoserver layer
@@ -376,6 +350,7 @@ def update_geoserver_layer_information(geoserver_manager, geoserver_layer):
     else:
         raise Exception("Problems uploading {0}: {1} ...".format(geoserver_layer.name, 
                                                              layer_info['error']))
+
 
 def update_geoserver_layer_group_information(geoserver_manager, geoserver_layer):
     """
@@ -397,6 +372,7 @@ def update_geoserver_layer_group_information(geoserver_manager, geoserver_layer)
         raise Exception("Problems uploading {0}: {1} ...".format(geoserver_layer.name, 
                                                              layer_info['error']))
 
+
 def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
                            geoserver_manager, session, layer_required=False,
                            is_layer_group=False):
@@ -413,7 +389,7 @@ def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
             
         if not geoserver_layer:
             #create new layer in database
-            geoserver_layer = GeoServerLayer("")
+            geoserver_layer = GeoServerLayer(name="")
             
         #upload shapefile
         upload_geoserver_layer(geoserver_manager, 
@@ -433,7 +409,7 @@ def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
                 geoserver_layer.uploaded = False
         else:
             #create new layer in database
-            geoserver_layer = GeoServerLayer(geoserver_layer_name)
+            geoserver_layer = GeoServerLayer(name=geoserver_layer_name)
                 
     #REMOVE LAYER FROM GEOSERVER AND DATABASE
     elif not geoserver_layer_name and geoserver_layer and not layer_required:
@@ -449,6 +425,7 @@ def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
         else:
             update_geoserver_layer_information(geoserver_manager, geoserver_layer)
     return geoserver_layer
+
 
 def user_permission_test(user):
     """

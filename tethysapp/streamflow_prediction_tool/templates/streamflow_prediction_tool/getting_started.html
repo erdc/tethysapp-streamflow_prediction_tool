@@ -23,35 +23,15 @@
     instance of the Streamflow Prediction Tool in a new window, using one window to read and the other to execute.
 </p>
 <p>
-    <strong>Click <a href="#" target="_blank">here</a> to open a new window.</strong>
-</p>
-<p>
 <ol>
     <li id="adjust-settings" class="how-to-steps">Adjust App Settings</li>
-    <p>Before you can do anything, you must make sure that your app settings are correct. On the <strong>left menu bar</strong>
-    under the <strong>Configuration</strong> heading click the <strong>Settings</strong> option.</p>
-    <p>You should see the following screen:</p>
-    <br>
-    <img src="{% static 'streamflow_prediction_tool/images/screenshot_settings.png' %}" class="screenshots">
-    <br><br>
-    <p>
-        This page contains the settings that pertain to your instance of the Streamflow Prediction
-        Tool. A description of each field shown is given here:
-    </p>
+    <p>Before you can do anything, you must make sure that your app settings are correct.
+       Go to <a href="http://localhost:8000/admin/tethys_apps/tethysapp/" target="_blank">http://localhost:8000/admin/tethys_apps/tethysapp</a> and select 'Streamflow Prediciton Tool'
     <p>
         <ul>
             <h4><li>App ID</li></h4>
                 <p>This is the ID assigned to your instance of the app. It is used in certain background tasks and assures that any data you upload is unique and does not tamper with that added by others.</p>
-            <h4><li>Select a Base Layer</li></h4>
-                <p>This specifies the source from which your map base layer in the map viewer will be pulled. There are currently three options: MapQuest, Esri, or BingMaps. If BingMaps is selected, you must provide an API key.</p>
-            <h4><li>Base Layer API Key</li></h4>
-                <p>
-                    This option only appears when the BingMaps base layer is selected. In this case, an API key must be provided
-                    or the map will not function properly. If you would like to use a BingMaps base layer but
-                    don't know how to get a Bing Maps key, click
-                    <a href="https://msdn.microsoft.com/en-us/library/ff428642.aspx" target="_blank">here</a>.
-                </p>
-            <h4><li>Server Folder Location of...</li></h4>
+            <h4><li>Server Folders</li></h4>
                 <p>
                     These locations correspond to the local server directories where your uploaded files will be stored.
                     <br><br>
@@ -61,7 +41,7 @@
                     is hosted by the ci-water server. If you installed the Tethys Platform on your own computer, then your computer may serve as a local server.
                     Whatever the host server may be, if you do not have access to it then <strong>DO NOT CHANGE THESE FILE PATHS</strong>.
                     <br><br>
-                    There are three fields each corresponding to a different server foler location: one for ECMWF-RAPID files, one for ERA Interim RAPID files, and one for WRF-Hydro RAPID files.
+                    There are two fields each corresponding to a different server foler location: one for ECMWF-RAPID files, one for ERA Interim RAPID files.
                     Each folder must have read and write permissions granted. To change permissions, locate the folder, right click on it
                     and select either "Get Info" (MAC users), or "Properties" (Linux or Windows users). There will be a tab containing
                     "Permissions" in its heading. Choose to change or edit these permissions and set them to both Read and Write.
@@ -185,10 +165,6 @@
                         <p>This is the name of the ECMWF subbasin as it will be recorded on the data store server. Thus, this name differs from the display name given above.</p>
                         <h6><li>ECMWF RAPID Input Files (Optional)</li></h6>
                         <p>You can choose to upload RAPID input files for your watershed if you have them.</p>
-                        <h6><li>WRF-Hydro Watershed Data Store Name</li></h6>
-                        <p>This is the name of the WRF-Hydro watershed as it will be recorded on the data store server. Thus, this name differs from the display name given above.</p>
-                        <h6><li>WRF-Hydro Subbasin Data Store Name</li></h6>
-                        <p>This is the name of the WRF-Hydro subbasin as it will be recorded on the data store server. Thus, this name differs from the display name given above.</p>
                     </ul>
                 </ul>
             <h4><li>Select a Geoserver</li></h4>

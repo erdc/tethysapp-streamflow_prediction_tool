@@ -1,5 +1,6 @@
 import os
 from setuptools import setup, find_packages
+import sys
 from tethys_apps.app_installation import custom_develop_command, custom_install_command
 
 ### Apps Definition ###
@@ -30,3 +31,21 @@ setup(
         'develop': custom_develop_command(app_package, app_package_dir, dependencies)
     }
 )
+
+# install crontab job for app
+from crontab import CronTab
+
+local_directory = os.path.dirname(os.path.abspath(__file__))
+cron_command = '%s %s' % (sys.executable,
+                          os.path.join(local_directory, 'tethysapp',
+                                       'streamflow_prediction_tool',
+                                       'load_datasets.py'))
+cron_manager = CronTab(user=True)
+cron_manager.remove_all(comment="spt-dataset-download")
+# create job to run every hour
+cron_job = cron_manager.new(command=cron_command,
+                            comment="spt-dataset-download")
+cron_job.every(1).hours()
+
+# writes content to crontab
+cron_manager.write_to_user(user=True)
