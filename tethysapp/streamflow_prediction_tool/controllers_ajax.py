@@ -94,12 +94,15 @@ def data_store_add(request):
 
 
     #add Data Store
-    session.add(DataStore(data_store_name,
-                          data_store_owner_org,
-                          data_store_type_id,
-                          data_store_endpoint,
-                          data_store_api_key,
-                          ))
+    session.add(
+        DataStore(name=data_store_name,
+                  owner_org=data_store_owner_org,
+                  data_store_type_id=data_store_type_id,
+                  api_endpoint=data_store_endpoint,
+                  api_key=data_store_api_key,
+        )
+    )
+
     session.commit()
     session.close()
 
@@ -231,12 +234,15 @@ def geoserver_add(request):
         session.close()
         return JsonResponse({ 'error': "A geoserver with the same name or url exists." })
 
-    #add Data Store
-    session.add(Geoserver(geoserver_name.strip(),
-                          geoserver_manager.engine_url,
-                          geoserver_username.strip(),
-                          geoserver_password.strip()
-                          ))
+    # add GeoServer
+    session.add(
+        Geoserver(name=geoserver_name.strip(),
+                  url=geoserver_manager.engine_url,
+                  username=geoserver_username.strip(),
+                  password=geoserver_password.strip()
+        )
+    )
+
     session.commit()
     session.close()
     return JsonResponse({ 'success': "Geoserver Sucessfully Added!" })
