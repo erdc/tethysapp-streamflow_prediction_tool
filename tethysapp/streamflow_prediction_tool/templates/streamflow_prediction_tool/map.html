@@ -50,7 +50,7 @@
 
 
 {% block app_content %}
-    <div id="intro_message" class="alert alert-info" role="alert">
+    <div class="alert alert-info intro_message" role="alert">
         <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
         Click on a river segment or search by river reach ID to view streamflow predictions.
     </div>
@@ -103,8 +103,11 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-body">
-                    <div id="message" class="alert alert-info hidden" role="alert">
+                    <div class="alert alert-info intro_message" role="alert">
+                        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                        Click on a river segment or search by river reach ID to view streamflow predictions.
                     </div>
+                    <div id="message" class="alert alert-info hidden" role="alert"></div>
                     <div id="message-error"></div>
                     <!-- Chart Area -->
                     <div id="toggle-row">
