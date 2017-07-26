@@ -9,8 +9,12 @@
 
 import json
 import os
+import sys
+
+from crontab import CronTab
 
 # django imports
+from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test, login_required
 from django.views.decorators.http import require_GET
 from django.shortcuts import render
@@ -455,7 +459,6 @@ def add_watershed(request):
     return render(request, 'streamflow_prediction_tool/add_watershed.html', context)
 
 
-@require_GET
 @user_passes_test(user_permission_test)
 def manage_watersheds(request):        
     """
@@ -473,10 +476,40 @@ def manage_watersheds(request):
                             affirmative_button='Save Changes',
                             affirmative_attributes='id=edit_modal_submit',
                             width=500)
+
+    dowload_cron_button = Button(display_text='Add/Update Download Cron Job',
+                                 icon='glyphicon glyphicon-plus',
+                                 style='success',
+                                 name='submit_add_cron',
+                                 attributes={'form': 'add_cron_form'},
+                                 submit=True)
+
+    # Handle form submission
+    if request.POST and 'submit_add_cron' in request.POST:
+        # Add/update cron job to download forecast data
+        try:
+            local_directory = os.path.dirname(os.path.abspath(__file__))
+            cron_command = '%s %s' % (sys.executable,
+                                      os.path.join(local_directory, 'load_datasets.py'))
+            cron_manager = CronTab(user=True)
+            cron_manager.remove_all(comment="spt-dataset-download")
+            # create job to run every hour
+            cron_job = cron_manager.new(command=cron_command,
+                                        comment="spt-dataset-download")
+            cron_job.every(1).hours()
+
+            # writes content to crontab
+            cron_manager.write_to_user(user=True)
+            messages.success(request, "CRON setup complete!")
+
+        except Exception as e:
+            messages.error(request, "CRON setup error. {}".format(e))
+
     context = {
         'initial_page': 0,
         'num_watersheds': num_watersheds,
-        'edit_modal' : edit_modal
+        'edit_modal' : edit_modal,
+        'dowload_cron_button': dowload_cron_button,
     }
 
     return render(request, 'streamflow_prediction_tool/manage_watersheds.html', context)

@@ -7,15 +7,16 @@
 #  License: BSD 3-Clause
 
 import datetime
-from django.contrib import messages
-from django.shortcuts import redirect
 from glob import glob
 from json import dumps as json_dumps
 import os
-import pandas as pd
 from pytz import utc
 import re
 from shutil import rmtree
+
+from django.contrib import messages
+from django.shortcuts import redirect
+import pandas as pd
 from sqlalchemy import and_
 import xarray
 
@@ -291,27 +292,6 @@ def format_watershed_title(watershed, subbasin):
     if(subbasin_length>max_length):
         return (watershed + " (" + subbasin[:max_length-3].strip() + " ...)")
     return (watershed + " (" + subbasin + ")")
-
-
-def get_cron_command():
-    """
-    Gets cron command for downloading datasets
-    """
-    #/usr/lib/tethys/src/tethys_apps/tethysapp/erfp_tool/cron/load_datasets.py
-    local_directory = os.path.dirname(os.path.abspath(__file__))
-    delimiter = ""
-    if "/" in local_directory:
-        delimiter = "/"
-    elif "\\" in local_directory:
-        delimiter = "\\"
-    virtual_env_path = ""
-    if delimiter and local_directory:
-        virtual_env_path = delimiter.join(local_directory.split(delimiter)[:-4])
-        command = '%s %s' % (os.path.join(virtual_env_path,'bin','python'), 
-                              os.path.join(local_directory, 'load_datasets.py'))
-        return command
-    else:
-        return None
 
 
 def handle_uploaded_file(f, file_path, file_name):
