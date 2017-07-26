@@ -1291,7 +1291,7 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: Loads Hydrograph from Selected feature
     loadHydrographFromFeature = function(selected_feature) {
-        $('#intro_message').addClass('hidden');
+        $('.intro_message').addClass('hidden');
         //check if old ajax call still running
         if(!isNotLoadingPastRequest()) {
             //updateInfoAlert
