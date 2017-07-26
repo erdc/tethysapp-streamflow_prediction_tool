@@ -316,10 +316,11 @@ def map(request):
                                                 name='warning_point_date_select',
                                                 options=available_forecast_date_select_input,)
 
-    units_toggle_switch = ToggleSwitch(display_text='Units',
+    units_toggle_switch = ToggleSwitch(display_text='Units:',
                                        name='units-toggle',
                                        on_label='Metric',
                                        off_label='English',
+                                       size='mini',
                                        initial=True,)
 
     context = {
