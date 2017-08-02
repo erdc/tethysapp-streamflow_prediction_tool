@@ -23,12 +23,21 @@ def init_main_db(engine, first_time):
         session = session_maker()
 
         # add all possible data story types
-        session.add(DataStoreType("local", "Computations Local (None)"))
-        session.add(DataStoreType("ckan", "CKAN"))
-        session.add(DataStoreType("hydroshare", "HydroShare"))
+        local_ds_type = \
+            DataStoreType(code_name="local",
+                          human_readable_name="Computations Local (None)")
+        session.add(local_ds_type)
+        session.add(DataStoreType(code_name="ckan",
+                                  human_readable_name="CKAN"))
+        session.add(DataStoreType(code_name="hydroshare",
+                                  human_readable_name="HydroShare"))
         
         # add all possible data stores
-        session.add(DataStore("Local Server", "", 1, "local", ""))
+        session.add(DataStore(name="Local Server",
+                              owner_org="",
+                              data_store_type=local_ds_type,
+                              api_endpoint="local",
+                              api_key=""))
 
         session.commit()
         session.close()
