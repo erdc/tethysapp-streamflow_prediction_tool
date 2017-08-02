@@ -29,9 +29,7 @@ def init_main_db(engine, first_time):
         session.add(local_ds_type)
         session.add(DataStoreType(code_name="ckan",
                                   human_readable_name="CKAN"))
-        session.add(DataStoreType(code_name="hydroshare",
-                                  human_readable_name="HydroShare"))
-        
+
         # add all possible data stores
         session.add(DataStore(name="Local Server",
                               owner_org="",
