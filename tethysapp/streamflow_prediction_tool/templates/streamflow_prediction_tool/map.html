@@ -59,7 +59,7 @@
     watershed-group-info-array="{{watershed_group_info_array_json}}" warning-point-start-folder="{{warning_point_start_folder}}"></div>
     </div>
     <div id="map-view-legend" class="map-view-legend ol-unselectable ol-control">
-        <div> 
+        <div>
             <svg width="20" height="20" viewPort="0 0 20 20" version="1.1"
          xmlns="http://www.w3.org/2000/svg">
                 <polyline points="19 1, 1 6, 19 14, 1 19" stroke="blue" fill="transparent" stroke-width="2"/>
@@ -71,7 +71,7 @@
          xmlns="http://www.w3.org/2000/svg">
                 <polygon points="1 10, 5 3, 13 1, 19 9, 14 19, 9 13" stroke="black" fill="grey" stroke-width="2"/>
             </svg>
-            Watershed Boundary 
+            Watershed Boundary
         </div>
         <div>
             <svg width="20" height="20" viewPort="0 0 20 20" version="1.1"
@@ -323,7 +323,7 @@
                     </li>
             {% endif%}
             {% if flood_map_date_selectors_len > forloop.counter0 %}
-                {% with flood_map_date_selector=flood_map_date_selectors|slice:"forloop.counter0"|first %} 
+                {% with flood_map_date_selector=flood_map_date_selectors|slice:"forloop.counter0"|first %}
                 {% if "predicted_flood_maps" in watershed and flood_map_date_selector %}
                     <li class="dropdown" watershed="{{watershed_layers_info.flood_maps.watershed}}" subbasin="{{watershed_layers_info.flood_maps.subbasin}}">
                         <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Predicted Flood Maps<span class="caret"></span></a>
