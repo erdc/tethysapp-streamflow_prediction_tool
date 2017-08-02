@@ -13,6 +13,10 @@
     width: 50%;
 }
 
+#layers_modal .modal-dialog {
+    width: 30%;
+}
+
 #app-navigation li {
     list-style-type: none;
 }
