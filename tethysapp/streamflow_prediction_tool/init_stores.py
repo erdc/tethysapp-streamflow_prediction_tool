@@ -17,9 +17,7 @@ def init_main_db(engine, first_time):
     # Initial data
     if first_time:
         # make session
-        session_maker = \
-            app.get_persistent_store_database('main_db',
-                                              as_sessionmaker=True)
+        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
         session = session_maker()
 
         # add all possible data story types

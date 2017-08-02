@@ -30,6 +30,13 @@ class DataStore(Base):
     api_endpoint = Column(String)
     api_key = Column(String)
 
+    def __init__(self, server_name, owner_org, data_store_type_id, api_endpoint, api_key):
+        self.name = server_name
+        self.owner_org = owner_org
+        self.data_store_type_id = data_store_type_id
+        self.api_endpoint = api_endpoint
+        self.api_key = api_key
+
 
 class DataStoreType(Base):
     """
@@ -41,6 +48,10 @@ class DataStoreType(Base):
     id = Column(Integer, primary_key=True)
     code_name = Column(String)
     human_readable_name = Column(String)
+
+    def __init__(self, code_name, human_readable_name):
+        self.code_name = code_name
+        self.human_readable_name = human_readable_name
 
 
 class Geoserver(Base):
