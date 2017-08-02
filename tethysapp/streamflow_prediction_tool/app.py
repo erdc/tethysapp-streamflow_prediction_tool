@@ -169,6 +169,9 @@ class StreamflowPredictionTool(TethysAppBase):
                     UrlMap(name='watershed_list',
                            url='streamflow-prediction-tool/api/GetWatersheds',
                            controller='streamflow_prediction_tool.api.get_watershed_list'),
+                    UrlMap(name='warning_points',
+                           url='streamflow-prediction-tool/api/GetWarningPoints',
+                           controller='streamflow_prediction_tool.api.get_warning_points'),
         )
         return url_maps
 
