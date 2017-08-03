@@ -31,7 +31,7 @@ import os
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-#    'sphinx.ext.githubpages',
+    # 'sphinx.ext.githubpages',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -262,7 +262,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'StreamflowPredictionTool.tex', u'Streamflow Prediction Tool Documentation',
+    (master_doc, 'StreamflowPredictionTool.tex',
+     u'Streamflow Prediction Tool Documentation',
      u'Alan D. Snow', 'manual'),
 ]
 
@@ -304,7 +305,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'streamflowpredictiontool', u'Streamflow Prediction Tool Documentation',
+    (master_doc, 'streamflowpredictiontool',
+     u'Streamflow Prediction Tool Documentation',
      [author], 1)
 ]
 
@@ -319,7 +321,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'StreamflowPredictionTool', u'Streamflow Prediction Tool Documentation',
+    (master_doc, 'StreamflowPredictionTool',
+     u'Streamflow Prediction Tool Documentation',
      author, 'StreamflowPredictionTool', 'One line description of project.',
      'Miscellaneous'),
 ]
@@ -340,11 +343,13 @@ texinfo_documents = [
 #
 # texinfo_no_detailmenu = False
 
-# on_rtd is whether we are on readthedocs.org, this line of code grabbed from docs.readthedocs.org
+# on_rtd is whether we are on readthedocs.org, this line
+# of code grabbed from docs.readthedocs.org
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
-# otherwise, readthedocs.org uses their theme by default, so no need to specify it
+# otherwise, readthedocs.org uses their theme by default,
+# so no need to specify it

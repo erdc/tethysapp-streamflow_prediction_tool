@@ -149,7 +149,7 @@ def delete_rapid_input_ckan(watershed):
         watershed.ecmwf_rapid_input_resource_id = ""
 
 
-def delete_old_watershed_files(watershed, ecmwf_local_prediction_files_location):
+def delete_old_watershed_files(watershed):
     """
     Removes old watershed files from system
     """
@@ -213,7 +213,7 @@ def ecmwf_get_valid_forecast_folder_list(main_watershed_forecast_folder, file_ex
                 })
                 directory_count += 1
             #limit number of directories
-            if(directory_count>64):
+            if directory_count > 64:
                 break                
     return output_directories
 
@@ -285,13 +285,13 @@ def format_watershed_title(watershed, subbasin):
     watershed = watershed.strip()
     subbasin = subbasin.strip()
     watershed_length = len(watershed)
-    if(watershed_length>max_length):
+    if watershed_length > max_length :
         return watershed[:max_length-1].strip() + "..."
     max_length -= watershed_length
     subbasin_length = len(subbasin)
-    if(subbasin_length>max_length):
-        return (watershed + " (" + subbasin[:max_length-3].strip() + " ...)")
-    return (watershed + " (" + subbasin + ")")
+    if subbasin_length > max_length:
+        return watershed + " (" + subbasin[:max_length-3].strip() + " ...)"
+    return watershed + " (" + subbasin + ")"
 
 
 def handle_uploaded_file(f, file_path, file_name):
@@ -360,7 +360,7 @@ def update_geoserver_layer_group_information(geoserver_manager, geoserver_layer)
         
     if layer_info['success']:
         raw_latlon_bbox = layer_info['result']['bounds'][:4]
-        if (abs(float(raw_latlon_bbox[0])-float(raw_latlon_bbox[2]))>0.001 and\
+        if (abs(float(raw_latlon_bbox[0])-float(raw_latlon_bbox[2]))>0.001 and
             abs(float(raw_latlon_bbox[1])-float(raw_latlon_bbox[3]))>0.001):
             latlon_bbox=json_dumps([raw_latlon_bbox[0],raw_latlon_bbox[2],
                                     raw_latlon_bbox[1],raw_latlon_bbox[3]])
