@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-api.py
-streamflow_prediction_tool
+"""api.py
 
-Author: Michael Suffront & Alan D. Snow, 2017
-License: BSD 3-Clause
+    Author: Michael Suffront & Alan D. Snow, 2017
+    License: BSD 3-Clause
 """
 import datetime as dt
 import json
