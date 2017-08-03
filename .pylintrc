@@ -1,0 +1,4 @@
+[MESSAGES CONTROL]
+disable = len-as-condition,too-many-locals
+[TYPECHECK]
+ignored-modules = crontab
