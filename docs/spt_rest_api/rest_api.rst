@@ -100,3 +100,25 @@ Example
 -------
 >>> import requests
 >>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWatersheds/', headers={'Authorization': 'Token asdfqwer1234'})
+
+GetWarningPoints
+================
+
++----------------+--------------------------------------------------+---------------+
+| Parameter      | Description                                      | Example       |
++================+==================================================+===============+
+| watershed_name | The name of watershed or main area of interest.  | Nepal         |
++----------------+--------------------------------------------------+---------------+
+| subbasin_name  | The name of the sub basin or sub area.           | Central       |
++----------------+--------------------------------------------------+---------------+
+| reach_id       | The identifier for the stream reach.             | 5             |
++----------------+--------------------------------------------------+---------------+
+| return_period  | The return period that the warning is based on   | (2,10, or 20) |
++----------------+--------------------------------------------------+---------------+
+| start_folder   | The date of the forecast (YYYYMMDD.HHHH) [*]_.   | 20170110.1200 |
++----------------+--------------------------------------------------+---------------+
+
+Example
+-------
+>>> import requests
+>>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWarningPoints/?watershed_name=nepal&subbasin_name=central&return_period=20&forecast_folder=20170802.0', headers={'Authorization': 'Token asdfqwer1234'})
