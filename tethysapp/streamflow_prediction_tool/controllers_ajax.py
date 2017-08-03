@@ -1346,7 +1346,7 @@ def watershed_group_add(request):
         return JsonResponse({ 'error': "A watershed group with the same name." })
 
     #add Watershed Group
-    group = WatershedGroup(watershed_group_name)
+    group = WatershedGroup(name=watershed_group_name)
 
     #update watersheds
     watersheds  = session.query(Watershed) \
