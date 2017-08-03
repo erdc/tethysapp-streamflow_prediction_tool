@@ -1,4 +1,4 @@
 [MESSAGES CONTROL]
-disable = len-as-condition,too-many-locals
+disable = len-as-condition,too-many-locals,too-many-branches,too-many-nested-blocks, too-many-statements,too-many-lines,bad-continuation
 [TYPECHECK]
 ignored-modules = crontab
