@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""spt_download_forecasts.py
+
+    Created by Alan D. Snow, 2017.
+    License: BSD 3-Clause
+"""
 import os
 from shutil import rmtree
 
@@ -54,9 +60,11 @@ def _download_single_watershed_ecmwf_data(watershed,
 
 
 class Command(BaseCommand):
+    """Command to run the download in manage function"""
     help = 'Loads ECMWF prediction datasets for all watersheds.'
 
     def handle(self, *args, **options):
+        """Method run when command called."""
         session_maker = app.get_persistent_store_database('main_db',
                                                           as_sessionmaker=True)
         session = session_maker()
