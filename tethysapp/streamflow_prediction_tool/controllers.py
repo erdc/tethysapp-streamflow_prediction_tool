@@ -17,7 +17,7 @@ from tethys_sdk.gizmos import (Button, MessageBox, SelectInput,
 
 # local imports
 from .app import StreamflowPredictionTool as app
-from .model import (DataStore, DataStoreType, Geoserver,
+from .model import (DataStore, DataStoreType, GeoServer,
                     Watershed, WatershedGroup)
 from .functions import (ecmwf_get_valid_forecast_folder_list,
                         format_watershed_title,
@@ -475,46 +475,46 @@ def add_watershed(request):
                   icon_append='glyphicon glyphicon-tree-deciduous')
 
     # Query DB for geoservers
-    geoservers = session.query(Geoserver).all()
+    geoservers = session.query(GeoServer).all()
     geoserver_list = []
     for geoserver in geoservers:
         geoserver_list.append(("%s (%s)" % (geoserver.name, geoserver.url),
                                geoserver.id))
     session.close()
     if geoserver_list:
-        geoserver_select = SelectInput(display_text='Select a Geoserver',
+        geoserver_select = SelectInput(display_text='Select a GeoServer',
                                        name='geoserver-select',
                                        options=geoserver_list, )
     else:
         geoserver_select = None
 
     geoserver_drainage_line_input = \
-        TextInput(display_text='Geoserver Drainage Line Layer',
+        TextInput(display_text='GeoServer Drainage Line Layer',
                   name='geoserver-drainage-line-input',
                   placeholder='e.g.: erfp:streams',
                   icon_append='glyphicon glyphicon-link')
 
     geoserver_boundary_input = \
-        TextInput(display_text='Geoserver Boundary Layer (Optional)',
+        TextInput(display_text='GeoServer Boundary Layer (Optional)',
                   name='geoserver-boundary-input',
                   placeholder='e.g.: erfp:boundary',
                   icon_append='glyphicon glyphicon-link')
 
     geoserver_gage_input = \
-        TextInput(display_text='Geoserver Gage Layer  (Optional)',
+        TextInput(display_text='GeoServer Gage Layer  (Optional)',
                   name='geoserver-gage-input',
                   placeholder='e.g.: erfp:gage',
                   icon_append='glyphicon glyphicon-link')
 
     geoserver_hist_flood_input = \
-        TextInput(display_text='Geoserver Historical Flood Map '
+        TextInput(display_text='GeoServer Historical Flood Map '
                                'Layer Group (Optional)',
                   name='geoserver-historical-flood-map-input',
                   placeholder='e.g.: erfp:historical_flood_map',
                   icon_append='glyphicon glyphicon-link')
 
     geoserver_ahps_station_input = \
-        TextInput(display_text='Geoserver AHPS Station Layer (Optional)',
+        TextInput(display_text='GeoServer AHPS Station Layer (Optional)',
                   name='geoserver-ahps-station-input',
                   placeholder='e.g.: erfp:ahps-station',
                   icon_append='glyphicon glyphicon-link')
@@ -696,13 +696,13 @@ def edit_watershed(request):
                   initial=watershed.ecmwf_data_store_subbasin_name)
 
     # Query DB for geoservers
-    geoservers = session.query(Geoserver).all()
+    geoservers = session.query(GeoServer).all()
     geoserver_list = []
     for geoserver in geoservers:
         geoserver_list.append(("%s (%s)" % (geoserver.name, geoserver.url),
                                geoserver.id))
 
-    geoserver_select = SelectInput(display_text='Select a Geoserver',
+    geoserver_select = SelectInput(display_text='Select a GeoServer',
                                    name='geoserver-select',
                                    options=geoserver_list,
                                    initial=["%s (%s)" %
@@ -710,7 +710,7 @@ def edit_watershed(request):
                                              watershed.geoserver.url)])
 
     geoserver_drainage_line_input = TextInput(
-        display_text='Geoserver Drainage Line Layer',
+        display_text='GeoServer Drainage Line Layer',
         name='geoserver-drainage-line-input',
         placeholder='e.g.: erfp:streams',
         icon_append='glyphicon glyphicon-link',
@@ -718,7 +718,7 @@ def edit_watershed(request):
                     if watershed.geoserver_drainage_line_layer else "")
 
     geoserver_boundary_input = TextInput(
-        display_text='Geoserver Boundary Layer (Optional)',
+        display_text='GeoServer Boundary Layer (Optional)',
         name='geoserver-boundary-input',
         placeholder='e.g.: erfp:boundary',
         icon_append='glyphicon glyphicon-link',
@@ -726,7 +726,7 @@ def edit_watershed(request):
                     if watershed.geoserver_boundary_layer else "")
 
     geoserver_gage_input = TextInput(
-        display_text='Geoserver Gage Layer (Optional)',
+        display_text='GeoServer Gage Layer (Optional)',
         name='geoserver-gage-input',
         placeholder='e.g.: erfp:gage',
         icon_append='glyphicon glyphicon-link',
@@ -734,7 +734,7 @@ def edit_watershed(request):
                     if watershed.geoserver_gage_layer else "")
 
     geoserver_hist_flood_input = TextInput(
-        display_text='Geoserver Historical Flood Map Layer Group (Optional)',
+        display_text='GeoServer Historical Flood Map Layer Group (Optional)',
         name='geoserver-historical-flood-map-input',
         placeholder='e.g.: erfp:historical_flood_map',
         icon_append='glyphicon glyphicon-link',
@@ -742,7 +742,7 @@ def edit_watershed(request):
                     if watershed.geoserver_historical_flood_map_layer else "")
 
     geoserver_ahps_station_input = TextInput(
-        display_text='Geoserver AHPS Station Layer (Optional)',
+        display_text='GeoServer AHPS Station Layer (Optional)',
         name='geoserver-ahps-station-input',
         placeholder='e.g.: erfp:ahps-station',
         icon_append='glyphicon glyphicon-link',
@@ -924,24 +924,24 @@ def add_geoserver(request):
     """
     Controller for the app add_geoserver page.
     """
-    geoserver_name_input = TextInput(display_text='Geoserver Name',
+    geoserver_name_input = TextInput(display_text='GeoServer Name',
                                      name='geoserver-name-input',
-                                     placeholder='e.g.: My Geoserver',
+                                     placeholder='e.g.: My GeoServer',
                                      icon_append='glyphicon glyphicon-tag')
 
     geoserver_url_input = \
-        TextInput(display_text='Geoserver Url',
+        TextInput(display_text='GeoServer Url',
                   name='geoserver-url-input',
                   placeholder='e.g.: http://localhost:8181/geoserver',
                   icon_append='glyphicon glyphicon-cloud-download')
 
     geoserver_username_input = \
-        TextInput(display_text='Geoserver Username',
+        TextInput(display_text='GeoServer Username',
                   name='geoserver-username-input',
                   placeholder='e.g.: admin',
                   icon_append='glyphicon glyphicon-user')
 
-    add_button = Button(display_text='Add Geoserver',
+    add_button = Button(display_text='Add GeoServer',
                         icon='glyphicon glyphicon-plus',
                         style='success',
                         name='submit-add-geoserver',
@@ -968,7 +968,7 @@ def manage_geoservers(request):
     session_maker = app.get_persistent_store_database('main_db',
                                                       as_sessionmaker=True)
     session = session_maker()
-    num_geoservers = session.query(Geoserver).count()
+    num_geoservers = session.query(GeoServer).count()
     session.close()
 
     context = {
@@ -997,8 +997,8 @@ def manage_geoservers_table(request):
     # Query DB for data store types
     geoserver_slice = slice((page * results_per_page),
                             ((page + 1) * results_per_page))
-    geoservers = session.query(Geoserver) \
-                        .order_by(Geoserver.name, Geoserver.url) \
+    geoservers = session.query(GeoServer) \
+                        .order_by(GeoServer.name, GeoServer.url) \
                         .all()[geoserver_slice]
 
     prev_button = Button(display_text='Previous',
