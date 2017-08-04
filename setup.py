@@ -59,7 +59,6 @@ def init_crontab():
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
-        develop.run(self)
         custom_develop_command(
             APP_PACKAGE,
             APP_PACKAGE_DIR,
@@ -71,7 +70,6 @@ class PostDevelopCommand(develop):
 class PostInstallCommand(install):
     """Post-installation for installation mode."""
     def run(self):
-        install.run(self)
         custom_install_command(
             APP_PACKAGE,
             APP_PACKAGE_DIR,
