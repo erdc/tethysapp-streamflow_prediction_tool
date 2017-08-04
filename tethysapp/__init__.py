@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+"""__init__.py
+    The app parent directory.
+"""
 # this is a namespace package
 try:
     import pkg_resources
