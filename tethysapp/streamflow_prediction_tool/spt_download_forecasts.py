@@ -1,19 +1,18 @@
-# -*- coding: utf-8 -*-
-"""load_datasets.py
-
-    Created by Alan D. Snow, 2015
-    License: BSD 3-Clause
-"""
 import os
 from shutil import rmtree
 
+from django.core.management.base import BaseCommand
+
 from spt_dataset_manager.dataset_manager import ECMWFRAPIDDatasetManager
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tethys_portal.settings")
+from tethys_apps.tethysapp.streamflow_prediction_tool.model \
+        import Watershed
+from tethys_apps.tethysapp.streamflow_prediction_tool.app \
+    import StreamflowPredictionTool as app
 
 
-def download_single_watershed_ecmwf_data(watershed,
-                                         ecmwf_rapid_prediction_directory):
+def _download_single_watershed_ecmwf_data(watershed,
+                                          ecmwf_rapid_prediction_directory):
     """
     Loads single watersheds ECMWF datasets from data store
     """
@@ -54,29 +53,24 @@ def download_single_watershed_ecmwf_data(watershed,
                 pass
 
 
-def load_datasets():
-    """
-    Loads ECMWF prediction datasets from data store for all watersheds
-    """
-    from tethys_apps.tethysapp.streamflow_prediction_tool.model \
-        import Watershed
-    from tethys_apps.tethysapp.streamflow_prediction_tool.app \
-        import StreamflowPredictionTool as app
+class Command(BaseCommand):
+    help = 'Loads ECMWF prediction datasets for all watersheds.'
 
-    session_maker = app.get_persistent_store_database('main_db',
-                                                      as_sessionmaker=True)
-    session = session_maker()
+    def handle(self, *args, **options):
+        session_maker = app.get_persistent_store_database('main_db',
+                                                          as_sessionmaker=True)
+        session = session_maker()
 
-    ecmwf_rapid_prediction_directory = \
-        app.get_custom_setting('ecmwf_forecast_folder')
-    if ecmwf_rapid_prediction_directory \
-            and os.path.exists(ecmwf_rapid_prediction_directory):
-        for watershed in session.query(Watershed).all():
-            download_single_watershed_ecmwf_data(
-                watershed,
-                ecmwf_rapid_prediction_directory
-            )
-    else:
-        print("ECMWF prediction location invalid. Please set to continue.")
+        ecmwf_rapid_prediction_directory = \
+            app.get_custom_setting('ecmwf_forecast_folder')
+        if ecmwf_rapid_prediction_directory \
+                and os.path.exists(ecmwf_rapid_prediction_directory):
+            for watershed in session.query(Watershed).all():
+                _download_single_watershed_ecmwf_data(
+                    watershed,
+                    ecmwf_rapid_prediction_directory
+                )
+        else:
+            print("ECMWF prediction location invalid. Please set to continue.")
 
-    session.close()
+        session.close()
