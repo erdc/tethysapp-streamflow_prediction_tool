@@ -33,17 +33,29 @@ DEPENDENCIES = [
 ]
 
 
-def init_crontab():
+def _path_to_download_script():
+    """Returns path to SPT download script"""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                       'tethysapp',
+                       'streamflow_prediction_tool',
+                       'spt_download_forecasts.py')
+
+
+def install_spt_crontab(tethys_home_dir):
     """
-    Install crontab job for app
+    Install crontab job for SPT app
     """
     from crontab import CronTab
 
-    local_directory = os.path.dirname(os.path.abspath(__file__))
-    cron_command = '%s %s' % (sys.executable,
-                              os.path.join(local_directory, 'tethysapp',
-                                           'streamflow_prediction_tool',
-                                           'load_datasets.py'))
+    if not tethys_home_dir:
+        tethys_home_dir = os.environ['TETHYS_HOME']
+
+    manage_scrip_path = os.path.join(tethys_home_dir,
+                                     'src', 'manage.py')
+
+    cron_command = '%s %s %s' % (sys.executable,
+                                 manage_scrip_path,
+                                 'spt_download_forecasts')
     cron_manager = CronTab(user=True)
     cron_manager.remove_all(comment="spt-dataset-download")
     # create job to run every hour
@@ -55,15 +67,39 @@ def init_crontab():
     cron_manager.write_to_user(user=True)
 
 
+def setup_download_command(tethys_home_dir):
+    """
+    Create symbolic link to command file
+    to tethys command directory
+    """
+    if not tethys_home_dir:
+        tethys_home_dir = os.environ['TETHYS_HOME']
+
+    spt_download_script = _path_to_download_script()
+    path_to_tethys_command = \
+        os.path.join(tethys_home_dir,
+                     'src',
+                     'tethys_apps',
+                     'management',
+                     'commands',
+                     os.path.basename(spt_download_script))
+
+    os.symlink(spt_download_script, path_to_tethys_command)
+
+
 class SetupCrontabCommand(Command):
     """Custom command for initializing crontab."""
     description = "Custom command to setup cron job that downloads data " \
                   "for the Streamflow Prediction Tool"
-    user_options = []
+    user_options = [
+        ('tethys-home=', None, 'Path to directory above source code '
+                               'for Tethys Platform '
+                               '(e.g. /home/frank/tethys).'),
+    ]
 
     def initialize_options(self):
         """Set default values for options."""
-        return
+        self.tethys_home = None
 
     def finalize_options(self):
         """Post-process options."""
@@ -71,7 +107,8 @@ class SetupCrontabCommand(Command):
 
     def run(self):
         """Run command."""
-        init_crontab()
+        install_spt_crontab(self.tethys_home)
+        setup_download_command(self.tethys_home)
 
 
 setup(
