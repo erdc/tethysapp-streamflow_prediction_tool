@@ -31,11 +31,11 @@ before_install:
 #-----------------------------------------------------------------------------
 - source activate tethys
 - conda install xarray netcdf4
-- conda install pylint flake8
 
 install:
 - cd $TRAVIS_BUILD_DIR
-- python setup.py develop
+- pip install -e .[tests]
+- python setup.py cron
 
 script:
 - flake8

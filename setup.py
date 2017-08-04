@@ -8,8 +8,7 @@ import os
 import sys
 
 from setuptools import setup, find_packages
-from setuptools.command.develop import develop
-from setuptools.command.install import install
+from setuptools import Command
 
 from tethys_apps.app_installation import (custom_develop_command,
                                           custom_install_command)
@@ -56,25 +55,22 @@ def init_crontab():
     cron_manager.write_to_user(user=True)
 
 
-class PostDevelopCommand(develop):
-    """Post-installation for development mode."""
-    def run(self):
-        custom_develop_command(
-            APP_PACKAGE,
-            APP_PACKAGE_DIR,
-            DEPENDENCIES
-        )
-        init_crontab()
+class SetupCrontabCommand(Command):
+    """Custom command for initializing crontab."""
+    description = "Custom command to setup cron job that downloads data " \
+                  "for the Streamflow Prediction Tool"
+    user_options = []
 
+    def initialize_options(self):
+        """Set default values for options."""
+        return
 
-class PostInstallCommand(install):
-    """Post-installation for installation mode."""
+    def finalize_options(self):
+        """Post-process options."""
+        return
+
     def run(self):
-        custom_install_command(
-            APP_PACKAGE,
-            APP_PACKAGE_DIR,
-            DEPENDENCIES
-        )
+        """Run command."""
         init_crontab()
 
 
@@ -108,7 +104,16 @@ setup(
     zip_safe=False,
     install_requires=DEPENDENCIES,
     cmdclass={
-        'install': PostInstallCommand,
-        'develop': PostDevelopCommand,
+        'install': custom_install_command(
+            APP_PACKAGE,
+            APP_PACKAGE_DIR,
+            DEPENDENCIES
+        ),
+        'develop': custom_develop_command(
+            APP_PACKAGE,
+            APP_PACKAGE_DIR,
+            DEPENDENCIES
+        ),
+        'cron': SetupCrontabCommand,
     }
 )
