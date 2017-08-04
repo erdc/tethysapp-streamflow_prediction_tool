@@ -26,11 +26,10 @@ before_install:
 - bash install_tethys.sh -b release --python-version $TRAVIS_PYTHON_VERSION
 - export PATH=$HOME/tethys/miniconda/bin:$PATH
 - conda config --set always_yes yes
-- source ~/.bashrc
 #-----------------------------------------------------------------------------
 # Activate Tethys Conda Environment & Install Dependencies
 #-----------------------------------------------------------------------------
-- t
+- source activate tethys
 - conda install xarray netcdf4
 - conda install pylint flake8
 
