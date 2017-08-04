@@ -30,10 +30,6 @@ from spt_dataset_manager.dataset_manager import (GeoServerDatasetManager,
 
 from .app import StreamflowPredictionTool as app
 from .functions import (delete_from_database,
-                        delete_rapid_input_ckan,
-                        delete_old_watershed_prediction_files,
-                        delete_old_watershed_files,
-                        delete_old_watershed_geoserver_files,
                         ecmwf_find_most_current_files,
                         ecmwf_get_valid_forecast_folder_list,
                         ecmwf_get_forecast_statistics,
@@ -42,7 +38,7 @@ from .functions import (delete_from_database,
                         update_geoserver_layer,
                         user_permission_test)
 
-from .model import (DataStore, Geoserver, Watershed, WatershedGroup)
+from .model import DataStore, GeoServer, Watershed, WatershedGroup
 
 
 @require_POST
@@ -231,11 +227,11 @@ def geoserver_add(request):
         return JsonResponse({'error' : "GeoServer Error: %s" % ex})
 
     # check to see if duplicate exists
-    num_similar_geoservers  = session.query(Geoserver) \
+    num_similar_geoservers  = session.query(GeoServer) \
         .filter(
             or_(
-                Geoserver.name == geoserver_name,
-                Geoserver.url == geoserver_manager.engine_url
+                GeoServer.name == geoserver_name,
+                GeoServer.url == geoserver_manager.engine_url
             )
         ) \
         .count()
@@ -247,7 +243,7 @@ def geoserver_add(request):
 
     # add GeoServer
     session.add(
-        Geoserver(name=geoserver_name.strip(),
+        GeoServer(name=geoserver_name.strip(),
                   url=geoserver_manager.engine_url,
                   username=geoserver_username.strip(),
                   password=geoserver_password.strip()
@@ -256,7 +252,7 @@ def geoserver_add(request):
 
     session.commit()
     session.close()
-    return JsonResponse({'success': "Geoserver Sucessfully Added!"})
+    return JsonResponse({'success': "GeoServer Sucessfully Added!"})
 
 
 @require_POST
@@ -275,7 +271,7 @@ def geoserver_delete(request):
     try:
         # delete geoserver
         try:
-            geoserver = session.query(Geoserver).get(geoserver_id)
+            geoserver = session.query(GeoServer).get(geoserver_id)
         except ObjectDeletedError:
             session.close()
             return JsonResponse({ 'error': "The geoserver to delete does not exist." })
@@ -285,7 +281,7 @@ def geoserver_delete(request):
     except IntegrityError:
         session.close()
         return JsonResponse({ 'error': "This geoserver is connected with a watershed! Must remove connection to delete." })
-    return JsonResponse({ 'success': "Geoserver sucessfully deleted!" })
+    return JsonResponse({ 'success': "GeoServer sucessfully deleted!" })
 
 
 @require_POST
@@ -309,7 +305,7 @@ def geoserver_update(request):
     try:
         int(geoserver_id)
     except ValueError:
-        return JsonResponse({'error' : 'Geoserver id is faulty.'})
+        return JsonResponse({'error' : 'GeoServer id is faulty.'})
 
 
     if int(geoserver_id) != 1:
@@ -328,12 +324,12 @@ def geoserver_update(request):
             return JsonResponse({'error' : "GeoServer Error: %s" % ex})
 
         # check to see if duplicate exists
-        num_similar_geoservers  = session.query(Geoserver) \
+        num_similar_geoservers  = session.query(GeoServer) \
           .filter(
-                  or_(Geoserver.name == geoserver_name,
-                      Geoserver.url == geoserver_manager.engine_url)
+                  or_(GeoServer.name == geoserver_name,
+                      GeoServer.url == geoserver_manager.engine_url)
                   ) \
-          .filter(Geoserver.id != geoserver_id) \
+          .filter(GeoServer.id != geoserver_id) \
           .count()
 
         if num_similar_geoservers > 0:
@@ -344,7 +340,7 @@ def geoserver_update(request):
 
         # update geoserver
         try:
-            geoserver = session.query(Geoserver).get(geoserver_id)
+            geoserver = session.query(GeoServer).get(geoserver_id)
         except ObjectDeletedError:
             session.close()
             return JsonResponse({
@@ -357,7 +353,7 @@ def geoserver_update(request):
         geoserver.password = geoserver_password.strip()
         session.commit()
         session.close()
-        return JsonResponse({'success': "Geoserver sucessfully updated!"})
+        return JsonResponse({'success': "GeoServer sucessfully updated!"})
     return JsonResponse({'error': "Cannot change this geoserver."})
 
 
@@ -910,7 +906,7 @@ def watershed_add(request):
 
     # get desired geoserver
     try:
-        geoserver  = session.query(Geoserver).get(geoserver_id)
+        geoserver  = session.query(GeoServer).get(geoserver_id)
     except ObjectDeletedError:
         session.close()
         return JsonResponse({'error': "The geoserver does not exist."})
@@ -1160,12 +1156,6 @@ def watershed_delete(request):
                 'error': "The watershed to delete does not exist."
             })
 
-        # remove watershed geoserver, local prediction files, RAPID Input Files
-        ecmwf_rapid_prediction_directory = \
-            app.get_custom_setting('ecmwf_forecast_folder')
-
-        delete_old_watershed_files(watershed)
-
         delete_from_database(session, watershed)
         # NOTE: CASCADE removes associated geoserver layers
 
@@ -1238,7 +1228,7 @@ def watershed_update(request):
         return JsonResponse({ 'error': "The watershed to update does not exist." })
     # get desired geoserver
     try:
-        geoserver  = session.query(Geoserver).get(geoserver_id)
+        geoserver  = session.query(GeoServer).get(geoserver_id)
     except ObjectDeletedError:
         session.close()
         return JsonResponse({ 'error': "The geoserver does not exist." })
@@ -1256,8 +1246,7 @@ def watershed_update(request):
     # remove old geoserver files if geoserver changed
     if int(geoserver_id) != watershed.geoserver_id:
        # remove old geoserver files
-       delete_old_watershed_geoserver_files(watershed)
-
+       watershed.delete_geoserver_files()
 
     # validate geoserver inputs
     if not drainage_line_shp_file and not geoserver_drainage_line_layer_name:
@@ -1399,30 +1388,36 @@ def watershed_update(request):
                                                                         layer_required=False)
     except Exception as ex:
         session.close()
-        return JsonResponse({'error' : "AHPS Station layer update error: %s" % ex})
+        return JsonResponse({
+            'error' : "AHPS Station layer update error: %s" % ex
+        })
 
     # remove old prediction files if watershed/subbasin name changed
     if(ecmwf_data_store_watershed_name != watershed.ecmwf_data_store_watershed_name or
        ecmwf_data_store_subbasin_name != watershed.ecmwf_data_store_subbasin_name):
-        delete_old_watershed_prediction_files(watershed)
+        watershed.delete_prediction_files()
         # remove RAPID input files on CKAN if exists
         try:
-            delete_rapid_input_ckan(watershed)
+            watershed.delete_rapid_input_ckan()
         except Exception as ex:
             session.close()
-            return JsonResponse({'error' : "Invalid CKAN instance %s. Cannot delete RAPID input files on CKAN: %s" \
-                                            % (watershed.data_store.api_endpoint, ex)})
+            return JsonResponse({
+                'error' : "Invalid CKAN instance %s. Cannot delete RAPID input files on CKAN: %s"
+                          % (watershed.data_store.api_endpoint, ex)
+            })
 
 
     # remove CKAN files on old CKAN instance
     if watershed.data_store_id != data_store_id:
         # remove RAPID input files on CKAN if exists
         try:
-            delete_rapid_input_ckan(watershed)
+            watershed.delete_rapid_input_ckan()
         except Exception as ex:
             session.close()
-            return JsonResponse({'error' : "Invalid CKAN instance %s. Cannot delete RAPID input files on CKAN: %s" \
-                                            % (watershed.data_store.api_endpoint, ex)})
+            return JsonResponse({
+                'error' : "Invalid CKAN instance %s. Cannot delete RAPID input files on CKAN: %s"
+                          % (watershed.data_store.api_endpoint, ex)
+            })
 
     # change watershed attributes
     watershed.watershed_name = watershed_name.strip()
@@ -1434,20 +1429,19 @@ def watershed_update(request):
     watershed.ecmwf_data_store_subbasin_name = ecmwf_data_store_subbasin_name
     watershed.geoserver_id = geoserver_id
 
-
     response = {
-                'success': "Watershed sucessfully updated!",
-                'geoserver_drainage_line_layer': watershed.geoserver_drainage_line_layer.name \
-                                                 if watershed.geoserver_drainage_line_layer else "",
-                'geoserver_boundary_layer': watershed.geoserver_boundary_layer.name \
-                                             if watershed.geoserver_boundary_layer else "",
-                'geoserver_gage_layer': watershed.geoserver_gage_layer.name \
-                                        if watershed.geoserver_gage_layer else "",
-                'geoserver_historical_flood_map_layer': watershed.geoserver_historical_flood_map_layer.name \
-                                        if watershed.geoserver_historical_flood_map_layer else "",
-                'geoserver_ahps_station_layer': watershed.geoserver_ahps_station_layer.name \
-                                                if watershed.geoserver_ahps_station_layer else "",
-                }
+        'success': "Watershed sucessfully updated!",
+        'geoserver_drainage_line_layer': watershed.geoserver_drainage_line_layer.name \
+                                         if watershed.geoserver_drainage_line_layer else "",
+        'geoserver_boundary_layer': watershed.geoserver_boundary_layer.name \
+                                     if watershed.geoserver_boundary_layer else "",
+        'geoserver_gage_layer': watershed.geoserver_gage_layer.name \
+                                if watershed.geoserver_gage_layer else "",
+        'geoserver_historical_flood_map_layer': watershed.geoserver_historical_flood_map_layer.name \
+                                if watershed.geoserver_historical_flood_map_layer else "",
+        'geoserver_ahps_station_layer': watershed.geoserver_ahps_station_layer.name \
+                                        if watershed.geoserver_ahps_station_layer else "",
+    }
 
     # update database
     session.commit()
