@@ -7,18 +7,18 @@
 from csv import writer as csv_writer
 from glob import glob
 from json import load as json_load
+import os
+
 import netCDF4 as NET
 import numpy as np
-import os
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import ObjectDeletedError
-from django.http import HttpResponse, JsonResponse, Http404
-from RAPIDpy.dataset import RAPIDDataset
 import xarray
 
 # django imports
 from django.contrib.auth.decorators import user_passes_test, login_required
+from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.http import require_GET, require_POST
 
 # tethys imports
@@ -416,11 +416,11 @@ def ecmwf_get_avaialable_dates(request):
             "success": "Data analysis complete!",
             "output_directories": output_directories,
         })
-    else:
-        return JsonResponse({
-            'error': 'Recent ECMWF forecasts for %s, %s not found.'
-                     % (watershed_name, subbasin_name)
-        })
+
+    return JsonResponse({
+        'error': 'Recent ECMWF forecasts for %s, %s not found.'
+                 % (watershed_name, subbasin_name)
+    })
 
 
 @require_GET
@@ -553,14 +553,12 @@ def era_interim_get_hydrograph(request):
     if historical_data_files:
         try:
             # get/check the index of the reach
-            with RAPIDDataset(historical_data_files[0]) as qout_nc:
-                # get/check the index of the reach
-                reach_index = qout_nc.get_river_index(reach_id)
+            with xarray.open_dataset(historical_data_files[0]) as qout_nc:
                 # get information from dataset
-                data_values = qout_nc.get_qout_index(reach_index)
-                time = [t * 1000 for t in qout_nc.get_time_array()]
+                qout_data = qout_nc.sel(rivid=reach_id).Qout
+                time = qout_data.time.values.astype('int64') / 1e6
                 era_interim_return_data['series'] = \
-                    zip(time, data_values.tolist())
+                    zip(time, qout_data.values.tolist())
         except IndexError:
             era_interim_return_data['error'] = \
                 'ERA Interim reach with ID: %s not found.' % reach_id
@@ -743,11 +741,8 @@ def era_interim_get_csv(request):
     if historical_data_files:
         try:
             # get/check the index of the reach
-            with RAPIDDataset(historical_data_files[0]) as qout_nc:
-                # get/check the index of the reach
-                reach_index = qout_nc.get_river_index(reach_id)
-
-                # get information from dataset
+            with xarray.open_dataset(historical_data_files[0]) as qout_nc:
+                # prepare to write response
                 response = HttpResponse(content_type='text/csv')
                 response['Content-Disposition'] = \
                     'attachment; filename=streamflow_{0}_{1}_{2}.csv' \
@@ -757,26 +752,15 @@ def era_interim_get_csv(request):
 
                 writer = csv_writer(response)
                 writer.writerow(['datetime', 'streamflow (m3/s)'])
+
+                qout_data = qout_nc.sel(rivid=reach_id).Qout\
+                                   .to_dataframe().Qout
                 if daily.lower() == 'true':
-                    # return daily values
-                    daily_time_index_array = \
-                        qout_nc.get_daily_time_index_array()
-                    data_values = \
-                        qout_nc.get_daily_qout_index(reach_index,
-                                                     daily_time_index_array)
-                    datetime_array = \
-                        qout_nc.get_time_array(return_datetime=True)
-                    for index, daily_time_index in \
-                            enumerate(daily_time_index_array):
-                        writer.writerow([datetime_array[daily_time_index],
-                                         data_values[index]])
-                else:
-                    # return raw data
-                    data_values = qout_nc.get_qout_index(reach_index)
-                    datetime_array = \
-                        qout_nc.get_time_array(return_datetime=True)
-                    for index, data_value in enumerate(data_values):
-                        writer.writerow([datetime_array[index], data_value])
+                    # calculate daily values
+                    qout_data = qout_data.resample('D').mean()
+
+                for row_data in qout_data.iteritems():
+                    writer.writerow(row_data)
 
                 return response
 
@@ -884,9 +868,8 @@ def watershed_add(request):
     drainage_line_shp_file = request.FILES.getlist('drainage_line_shp_file')
     # CHECK DATA
     # make sure information exists
-    if not watershed_name or not subbasin_name or not data_store_id \
-            or not geoserver_id or not watershed_clean_name \
-            or not subbasin_clean_name:
+    if not (watershed_name or subbasin_name or data_store_id or geoserver_id
+            or watershed_clean_name or subbasin_clean_name):
         return JsonResponse({'error': 'Request input missing data.'})
     # make sure ids are ids
     try:
@@ -1236,9 +1219,8 @@ def watershed_update(request):
     ahps_station_shp_file = request.FILES.getlist('ahps_station_shp_file')
     # CHECK INPUT
     # check if variables exist
-    if not watershed_id or not watershed_name or not subbasin_name \
-            or not data_store_id or not geoserver_id \
-            or not watershed_clean_name or not subbasin_clean_name:
+    if not (watershed_id or watershed_name or subbasin_name or data_store_id
+            or geoserver_id or watershed_clean_name or subbasin_clean_name):
         return JsonResponse({'error': 'Request input missing data.'})
     # make sure ids are ids
     try:
