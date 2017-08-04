@@ -56,7 +56,7 @@ def data_store_add(request):
     data_store_api_key = post_info.get('data_store_api_key')
 
     if not data_store_name or not data_store_type_id or \
-        not data_store_endpoint or not data_store_api_key:
+            not data_store_endpoint or not data_store_api_key:
         return JsonResponse({'error': "Request missing data."})
 
     # initialize session
@@ -65,13 +65,13 @@ def data_store_add(request):
     session = session_maker()
 
     # check to see if duplicate exists
-    num_similar_data_stores  = session.query(DataStore) \
+    num_similar_data_stores = session.query(DataStore) \
         .filter(
-            or_(
-                DataStore.name == data_store_name,
-                DataStore.api_endpoint == data_store_endpoint
-            )
-        ) \
+        or_(
+            DataStore.name == data_store_name,
+            DataStore.api_endpoint == data_store_endpoint
+        )
+    ) \
         .count()
     if num_similar_data_stores > 0:
         return JsonResponse({
@@ -89,23 +89,24 @@ def data_store_add(request):
                          "Password incorrect; "
                          "Endpoint must end in \"api/3/action\""
             })
-    except Exception, ex:
-        return JsonResponse({ 'error': "%s" % ex })
+    except Exception as ex:
+        return JsonResponse({'error': "%s" % ex})
 
     # add Data Store
     session.add(
-        DataStore(name=data_store_name,
-                  owner_org=data_store_owner_org,
-                  data_store_type_id=data_store_type_id,
-                  api_endpoint=data_store_endpoint,
-                  api_key=data_store_api_key,
+        DataStore(
+            name=data_store_name,
+            owner_org=data_store_owner_org,
+            data_store_type_id=data_store_type_id,
+            api_endpoint=data_store_endpoint,
+            api_key=data_store_api_key
         )
     )
 
     session.commit()
     session.close()
 
-    return JsonResponse({ 'success': "Data Store Sucessfully Added!" })
+    return JsonResponse({'success': "Data Store Sucessfully Added!"})
 
 
 @require_POST
@@ -121,17 +122,22 @@ def data_store_delete(request):
     if int(data_store_id) != 1:
         try:
             # initialize session
-            session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+            session_maker = \
+                app.get_persistent_store_database('main_db',
+                                                  as_sessionmaker=True)
             session = session_maker()
             # update data store
-            data_store  = session.query(DataStore).get(data_store_id)
+            data_store = session.query(DataStore).get(data_store_id)
             session.delete(data_store)
             session.commit()
             session.close()
         except IntegrityError:
-            return JsonResponse({ 'error': "This data store is connected with a watershed! Must remove connection to delete." })
-        return JsonResponse({ 'success': "Data Store Sucessfully Deleted!" })
-    return JsonResponse({ 'error': "Cannot change this data store." })
+            return JsonResponse({
+                'error': "This data store is connected with a watershed! "
+                         "Must remove connection to delete."
+            })
+        return JsonResponse({'success': "Data Store Sucessfully Deleted!"})
+    return JsonResponse({'error': "Cannot change this data store."})
 
 
 @require_POST
@@ -150,18 +156,20 @@ def data_store_update(request):
 
     if int(data_store_id) != 1:
         # initialize session
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session_maker = app.get_persistent_store_database('main_db',
+                                                          as_sessionmaker=True)
         session = session_maker()
         # check to see if duplicate exists
-        num_similar_data_stores  = session.query(DataStore) \
+        num_similar_data_stores = session.query(DataStore) \
             .filter(
-                or_(
-                    DataStore.name == data_store_name,
-                    DataStore.api_endpoint == data_store_api_endpoint
-                )
-            ) \
+            or_(
+                DataStore.name == data_store_name,
+                DataStore.api_endpoint == data_store_api_endpoint
+            )
+        ) \
             .filter(DataStore.id != data_store_id) \
             .count()
+
         if num_similar_data_stores > 0:
             session.close()
             return JsonResponse({
@@ -179,19 +187,19 @@ def data_store_update(request):
                     'error': "Data Store Credentials Invalid. "
                              "Endpoint must end in \"api/3/action\""
                 })
-        except Exception, ex:
-            return JsonResponse({ 'error': "%s" % ex })
+        except Exception as ex:
+            return JsonResponse({'error': "%s" % ex})
 
         # update data store
-        data_store  = session.query(DataStore).get(data_store_id)
+        data_store = session.query(DataStore).get(data_store_id)
         data_store.name = data_store_name
         data_store.owner_org = data_store_owner_org
-        data_store.api_endpoint= data_store_api_endpoint
+        data_store.api_endpoint = data_store_api_endpoint
         data_store.api_key = data_store_api_key
         session.commit()
         session.close()
-        return JsonResponse({ 'success': "Data Store Sucessfully Updated!" })
-    return JsonResponse({ 'error': "Cannot change this data store." })
+        return JsonResponse({'success': "Data Store Sucessfully Updated!"})
+    return JsonResponse({'error': "Cannot change this data store."})
 
 
 @require_POST
@@ -209,31 +217,33 @@ def geoserver_add(request):
 
     # check data
     if not geoserver_name or not geoserver_url or not \
-        geoserver_username or not geoserver_password:
-        return JsonResponse({ 'error': "Missing input data." })
+            geoserver_username or not geoserver_password:
+        return JsonResponse({'error': "Missing input data."})
 
     # initialize session
-    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session_maker = app.get_persistent_store_database('main_db',
+                                                      as_sessionmaker=True)
     session = session_maker()
 
     # validate geoserver credentials
     app_instance_id = app.get_custom_setting('app_instance_id')
     try:
-        geoserver_manager = GeoServerDatasetManager(engine_url=geoserver_url.strip(),
-                                                    username=geoserver_username.strip(),
-                                                    password=geoserver_password.strip(),
-                                                    app_instance_id=app_instance_id)
+        geoserver_manager = \
+            GeoServerDatasetManager(engine_url=geoserver_url.strip(),
+                                    username=geoserver_username.strip(),
+                                    password=geoserver_password.strip(),
+                                    app_instance_id=app_instance_id)
     except Exception as ex:
-        return JsonResponse({'error' : "GeoServer Error: %s" % ex})
+        return JsonResponse({'error': "GeoServer Error: %s" % ex})
 
     # check to see if duplicate exists
-    num_similar_geoservers  = session.query(GeoServer) \
+    num_similar_geoservers = session.query(GeoServer) \
         .filter(
-            or_(
-                GeoServer.name == geoserver_name,
-                GeoServer.url == geoserver_manager.engine_url
-            )
-        ) \
+        or_(
+            GeoServer.name == geoserver_name,
+            GeoServer.url == geoserver_manager.engine_url
+        )
+    ) \
         .count()
     if num_similar_geoservers > 0:
         session.close()
@@ -243,10 +253,11 @@ def geoserver_add(request):
 
     # add GeoServer
     session.add(
-        GeoServer(name=geoserver_name.strip(),
-                  url=geoserver_manager.engine_url,
-                  username=geoserver_username.strip(),
-                  password=geoserver_password.strip()
+        GeoServer(
+            name=geoserver_name.strip(),
+            url=geoserver_manager.engine_url,
+            username=geoserver_username.strip(),
+            password=geoserver_password.strip()
         )
     )
 
@@ -266,7 +277,8 @@ def geoserver_delete(request):
     geoserver_id = post_info.get('geoserver_id')
 
     # initialize session
-    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session_maker = app.get_persistent_store_database('main_db',
+                                                      as_sessionmaker=True)
     session = session_maker()
     try:
         # delete geoserver
@@ -274,14 +286,19 @@ def geoserver_delete(request):
             geoserver = session.query(GeoServer).get(geoserver_id)
         except ObjectDeletedError:
             session.close()
-            return JsonResponse({ 'error': "The geoserver to delete does not exist." })
+            return JsonResponse({
+                'error': "The geoserver to delete does not exist."
+            })
         session.delete(geoserver)
         session.commit()
         session.close()
     except IntegrityError:
         session.close()
-        return JsonResponse({ 'error': "This geoserver is connected with a watershed! Must remove connection to delete." })
-    return JsonResponse({ 'success': "GeoServer sucessfully deleted!" })
+        return JsonResponse({
+            'error': "This geoserver is connected with a watershed! "
+                     "Must remove connection to delete."
+        })
+    return JsonResponse({'success': "GeoServer sucessfully deleted!"})
 
 
 @require_POST
@@ -299,38 +316,38 @@ def geoserver_update(request):
     geoserver_password = post_info.get('geoserver_password')
     # check data
     if not geoserver_id or not geoserver_name or not geoserver_url or not \
-        geoserver_username or not geoserver_password:
-        return JsonResponse({ 'error': "Missing input data." })
+            geoserver_username or not geoserver_password:
+        return JsonResponse({'error': "Missing input data."})
     # make sure id is id
     try:
         int(geoserver_id)
     except ValueError:
-        return JsonResponse({'error' : 'GeoServer id is faulty.'})
-
+        return JsonResponse({'error': 'GeoServer id is faulty.'})
 
     if int(geoserver_id) != 1:
-
         # initialize session
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session_maker = app.get_persistent_store_database('main_db',
+                                                          as_sessionmaker=True)
         session = session_maker()
         # validate geoserver credentials
         app_instance_id = app.get_custom_setting('app_instance_id')
         try:
-            geoserver_manager = GeoServerDatasetManager(engine_url=geoserver_url.strip(),
-                                                        username=geoserver_username.strip(),
-                                                        password=geoserver_password.strip(),
-                                                        app_instance_id=app_instance_id)
+            geoserver_manager = \
+                GeoServerDatasetManager(engine_url=geoserver_url.strip(),
+                                        username=geoserver_username.strip(),
+                                        password=geoserver_password.strip(),
+                                        app_instance_id=app_instance_id)
         except Exception as ex:
-            return JsonResponse({'error' : "GeoServer Error: %s" % ex})
+            return JsonResponse({'error': "GeoServer Error: %s" % ex})
 
         # check to see if duplicate exists
-        num_similar_geoservers  = session.query(GeoServer) \
-          .filter(
-                  or_(GeoServer.name == geoserver_name,
-                      GeoServer.url == geoserver_manager.engine_url)
-                  ) \
-          .filter(GeoServer.id != geoserver_id) \
-          .count()
+        num_similar_geoservers = session.query(GeoServer) \
+            .filter(
+            or_(GeoServer.name == geoserver_name,
+                GeoServer.url == geoserver_manager.engine_url)
+        ) \
+            .filter(GeoServer.id != geoserver_id) \
+            .count()
 
         if num_similar_geoservers > 0:
             session.close()
@@ -367,8 +384,8 @@ def ecmwf_get_avaialable_dates(request):
     path_to_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
     if not os.path.exists(path_to_rapid_output):
         return JsonResponse({
-            'error' : 'Location of RAPID output files faulty. '
-                      'Please check settings.'
+            'error': 'Location of RAPID output files faulty. '
+                     'Please check settings.'
         })
 
     # get/check information from AJAX request
@@ -378,7 +395,7 @@ def ecmwf_get_avaialable_dates(request):
     subbasin_name = format_name(get_info['subbasin_name']) \
         if 'subbasin_name' in get_info else None
     if not watershed_name or not subbasin_name:
-        return JsonResponse({'error' : 'ECMWF AJAX request input faulty'})
+        return JsonResponse({'error': 'ECMWF AJAX request input faulty'})
 
     # find/check current output datasets
     path_to_watershed_files = \
@@ -387,17 +404,17 @@ def ecmwf_get_avaialable_dates(request):
 
     if not os.path.exists(path_to_watershed_files):
         return JsonResponse({
-            'error' : 'ECMWF forecast for %s (%s) not found.'
-                      % (watershed_name, subbasin_name)
+            'error': 'ECMWF forecast for %s (%s) not found.'
+                     % (watershed_name, subbasin_name)
         })
 
     output_directories = \
         ecmwf_get_valid_forecast_folder_list(path_to_watershed_files, ".nc")
-    if len(output_directories)>0:
+    if len(output_directories) > 0:
         return JsonResponse({
-                    "success": "Data analysis complete!",
-                    "output_directories": output_directories,
-                })
+            "success": "Data analysis complete!",
+            "output_directories": output_directories,
+        })
     else:
         return JsonResponse({
             'error': 'Recent ECMWF forecasts for %s, %s not found.'
@@ -414,27 +431,27 @@ def ecmwf_get_hydrograph(request):
     path_to_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
     if not os.path.exists(path_to_rapid_output):
         return JsonResponse({
-            'error' : 'Location of RAPID output files faulty. '
-                      'Please check settings.'
+            'error': 'Location of RAPID output files faulty. '
+                     'Please check settings.'
         })
 
     # get/check information from AJAX request
     get_info = request.GET
     watershed_name = format_name(get_info['watershed_name']) \
-                        if 'watershed_name' in get_info else None
+        if 'watershed_name' in get_info else None
     subbasin_name = format_name(get_info['subbasin_name']) \
-                        if 'subbasin_name' in get_info else None
+        if 'subbasin_name' in get_info else None
     river_id = get_info.get('reach_id')
     start_folder = get_info.get('start_folder')
     if not river_id or not watershed_name or not subbasin_name \
             or not start_folder:
-        return JsonResponse({'error' : 'ECMWF AJAX request input faulty.'})
+        return JsonResponse({'error': 'ECMWF AJAX request input faulty.'})
 
     # make sure reach id is integet
     try:
         river_id = int(river_id)
     except (TypeError, ValueError):
-        return JsonResponse({'error' : 'Invalid River ID %s.' % river_id})
+        return JsonResponse({'error': 'Invalid River ID %s.' % river_id})
 
     # find/check current output datasets
     path_to_output_files = \
@@ -444,8 +461,8 @@ def ecmwf_get_hydrograph(request):
         ecmwf_find_most_current_files(path_to_output_files, start_folder)
     if not forecast_nc_list or not start_date:
         return JsonResponse(
-            {'error' : 'ECMWF forecast for %s (%s) not found.'
-                       % (watershed_name, subbasin_name)
+            {'error': 'ECMWF forecast for %s (%s) not found.'
+                      % (watershed_name, subbasin_name)
              }
         )
     try:
@@ -453,15 +470,15 @@ def ecmwf_get_hydrograph(request):
             ecmwf_get_forecast_statistics(forecast_nc_list, river_id)
     except IndexError:
         return JsonResponse({
-            'error' : 'ECMWF River ID %s not found.'
-                       % river_id
+            'error': 'ECMWF River ID %s not found.'
+                     % river_id
         })
 
     # extract the high res ensemble & time
     hres_return_data = None
     if 'high_res' in forecast_statistics:
         hres_time = (forecast_statistics['high_res']
-                     .time.values.astype('int64')/1e6).tolist()
+                     .time.values.astype('int64') / 1e6).tolist()
         hres_return_data = zip(hres_time, forecast_statistics['high_res']
                                .values.tolist())
 
@@ -469,14 +486,14 @@ def ecmwf_get_hydrograph(request):
     mean_ar = forecast_statistics['mean'].values.tolist()
     min_ar = forecast_statistics['min'].values.tolist()
     max_ar = forecast_statistics['max'].values.tolist()
-    std_dev_range_upper = forecast_statistics['std_dev_range_upper']\
-                              .values.tolist()
-    std_dev_range_lower = forecast_statistics['std_dev_range_lower']\
-                              .values.tolist()
+    std_dev_range_upper = forecast_statistics['std_dev_range_upper'].values \
+        .tolist()
+    std_dev_range_lower = forecast_statistics['std_dev_range_lower'].values \
+        .tolist()
 
     # conver time to miliseconds
     low_res_time = (forecast_statistics['mean']
-                    .time.values.astype('int64')/1e6).tolist()
+                    .time.values.astype('int64') / 1e6).tolist()
 
     # return JSON response with data
     return_data = {
@@ -492,7 +509,7 @@ def ecmwf_get_hydrograph(request):
 
 
 @require_GET
-@login_required                     
+@login_required
 def era_interim_get_hydrograph(request):
     """""
     Returns ERA Interim hydrograph
@@ -500,8 +517,8 @@ def era_interim_get_hydrograph(request):
     path_to_era_interim_data = app.get_custom_setting('historical_folder')
     if not os.path.exists(path_to_era_interim_data):
         return JsonResponse({
-            'error' : 'Location of ERA-Interim files faulty. '
-                      'Please check settings.'
+            'error': 'Location of ERA-Interim files faulty. '
+                     'Please check settings.'
         })
 
     # get information from GET request
@@ -513,14 +530,14 @@ def era_interim_get_hydrograph(request):
     reach_id = get_info.get('reach_id')
     if not reach_id or not watershed_name or not subbasin_name:
         return JsonResponse({
-            'error' : 'ERA Interim AJAX request input faulty.'
+            'error': 'ERA Interim AJAX request input faulty.'
         })
 
     # make sure reach id is integet
     try:
         reach_id = int(reach_id)
     except (TypeError, ValueError):
-        return JsonResponse({'error' : 'Invalid Reach ID %s.' % reach_id})
+        return JsonResponse({'error': 'Invalid Reach ID %s.' % reach_id})
 
     # ----------------------------------------------
     # HISTORICAL DATA SECTION
@@ -539,7 +556,7 @@ def era_interim_get_hydrograph(request):
                 reach_index = qout_nc.get_river_index(reach_id)
                 # get information from dataset
                 data_values = qout_nc.get_qout_index(reach_index)
-                time = [t*1000 for t in qout_nc.get_time_array()]
+                time = [t * 1000 for t in qout_nc.get_time_array()]
                 era_interim_return_data['series'] = \
                     zip(time, data_values.tolist())
         except IndexError:
@@ -596,7 +613,6 @@ def era_interim_get_hydrograph(request):
             'ERA Interim return period data for %s (%s) not found.' % \
             (watershed_name, subbasin_name)
 
-
     return JsonResponse({
         'success': "ERA-Interim data analysis complete!",
         'era_interim': era_interim_return_data,
@@ -615,8 +631,8 @@ def generate_warning_points(request):
     if not os.path.exists(path_to_ecmwf_rapid_output) \
             or not os.path.exists(path_to_era_interim_data):
         return JsonResponse({
-            'error' : 'Location of RAPID output files faulty. '
-                      'Please check settings.'
+            'error': 'Location of RAPID output files faulty. '
+                     'Please check settings.'
         })
 
     # get/check information from AJAX request
@@ -628,12 +644,12 @@ def generate_warning_points(request):
     return_period = get_info.get('return_period')
     forecast_folder = get_info.get('forecast_folder')
     if not watershed_name or not subbasin_name or not return_period:
-        return JsonResponse({'error' : 'Warning point request input faulty.'})
+        return JsonResponse({'error': 'Warning point request input faulty.'})
 
     try:
         return_period = int(return_period)
     except (TypeError, ValueError):
-        return JsonResponse({'error' : 'Invalid return period.'})
+        return JsonResponse({'error': 'Invalid return period.'})
 
     path_to_output_files = \
         os.path.join(path_to_ecmwf_rapid_output,
@@ -642,48 +658,51 @@ def generate_warning_points(request):
     # attempt to find forecast folder for watershed
     if not forecast_folder:
         if not os.path.exists(path_to_output_files):
-            return JsonResponse({'error' : 'No files found for watershed.'})
+            return JsonResponse({'error': 'No files found for watershed.'})
 
         directory_list = \
-            sorted([d for d in os.listdir(path_to_output_files) \
+            sorted([d for d in os.listdir(path_to_output_files)
                     if os.path.isdir(os.path.join(path_to_output_files, d))],
-                    reverse=True)
+                   reverse=True)
         if directory_list:
             forecast_folder = directory_list[0]
 
     if not forecast_folder:
         return JsonResponse({
-            'error' : 'No forecasts found with {0} '
-                      'return period warning points.'.format(return_period)
+            'error': 'No forecasts found with {0} '
+                     'return period warning points.'.format(return_period)
         })
 
     # get warning points to load in
     if return_period == 20:
-        warning_points_file = os.path.join(path_to_output_files,forecast_folder,
+        warning_points_file = os.path.join(path_to_output_files,
+                                           forecast_folder,
                                            "return_20_points.txt")
     elif return_period == 10:
-        warning_points_file = os.path.join(path_to_output_files,forecast_folder,
+        warning_points_file = os.path.join(path_to_output_files,
+                                           forecast_folder,
                                            "return_10_points.txt")
     elif return_period == 2:
-        warning_points_file = os.path.join(path_to_output_files,forecast_folder,
+        warning_points_file = os.path.join(path_to_output_files,
+                                           forecast_folder,
                                            "return_2_points.txt")
     else:
-        return JsonResponse({'error' : 'Invalid return period.'})
+        return JsonResponse({'error': 'Invalid return period.'})
 
     if not os.path.exists(warning_points_file):
-        return JsonResponse({'error' : 'Warning points file not found.'})
+        return JsonResponse({'error': 'Warning points file not found.'})
 
     with open(warning_points_file, 'rb') as infile:
         warning_points = json_load(infile)
 
     return JsonResponse({
         'success': "Warning Points Sucessfully Returned!",
-        'warning_points' : warning_points,
+        'warning_points': warning_points,
     })
 
 
 @require_GET
-@login_required                     
+@login_required
 def era_interim_get_csv(request):
     """""
     Returns ERA Interim data as csv
@@ -703,7 +722,7 @@ def era_interim_get_csv(request):
     daily = get_info.get('daily') if 'daily' in get_info else ''
     if not reach_id or not watershed_name or not subbasin_name:
         return JsonResponse({
-            'error' : 'ERA Interim AJAX request input faulty.'
+            'error': 'ERA Interim AJAX request input faulty.'
         })
 
     # make sure reach id is integet
@@ -727,7 +746,7 @@ def era_interim_get_csv(request):
                 # get information from dataset
                 response = HttpResponse(content_type='text/csv')
                 response['Content-Disposition'] = \
-                    'attachment; filename=streamflow_{0}_{1}_{2}.csv'\
+                    'attachment; filename=streamflow_{0}_{1}_{2}.csv' \
                     .format(watershed_name,
                             subbasin_name,
                             reach_id)
@@ -735,7 +754,7 @@ def era_interim_get_csv(request):
                 writer = csv_writer(response)
                 writer.writerow(['datetime', 'streamflow (m3/s)'])
                 if daily.lower() == 'true':
-                    #return daily values
+                    # return daily values
                     daily_time_index_array = \
                         qout_nc.get_daily_time_index_array()
                     data_values = \
@@ -743,12 +762,12 @@ def era_interim_get_csv(request):
                                                      daily_time_index_array)
                     datetime_array = \
                         qout_nc.get_time_array(return_datetime=True)
-                    for index, daily_time_index in\
+                    for index, daily_time_index in \
                             enumerate(daily_time_index_array):
                         writer.writerow([datetime_array[daily_time_index],
                                          data_values[index]])
                 else:
-                    #return raw data
+                    # return raw data
                     data_values = qout_nc.get_qout_index(reach_index)
                     datetime_array = \
                         qout_nc.get_time_array(return_datetime=True)
@@ -768,7 +787,7 @@ def era_interim_get_csv(request):
 
 
 @require_GET
-@login_required                     
+@login_required
 def get_seasonal_streamflow(request):
     """""
     Returns seasonal streamflow for unique river ID
@@ -787,7 +806,7 @@ def get_seasonal_streamflow(request):
     reach_id = get_info.get('reach_id')
     if not reach_id or not watershed_name or not subbasin_name:
         return JsonResponse({
-            'error' : 'ERA Interim AJAX request input faulty.'
+            'error': 'ERA Interim AJAX request input faulty.'
         })
 
     # make sure reach id is integer
@@ -808,14 +827,14 @@ def get_seasonal_streamflow(request):
             rivid_index = np.where(seasonal_nc.variables['rivid'][:]
                                    == reach_id)[0][0]
 
-            season_avg = seasonal_nc.variables['average_flow'][rivid_index,:]
-            season_std = seasonal_nc.variables['std_dev_flow'][rivid_index,:]
+            season_avg = seasonal_nc.variables['average_flow'][rivid_index, :]
+            season_std = seasonal_nc.variables['std_dev_flow'][rivid_index, :]
 
             avg_plus_std = season_avg + season_std
             avg_min_std = season_avg - season_std
 
             season_avg[season_avg < 0] = 0
-            avg_plus_std[avg_plus_std <0] = 0
+            avg_plus_std[avg_plus_std < 0] = 0
             avg_min_std[avg_min_std < 0] = 0
 
             return JsonResponse({
@@ -831,6 +850,7 @@ def get_seasonal_streamflow(request):
 
     raise Http404('Seasonal Average data for %s (%s) not found.' %
                   (watershed_name, subbasin_name))
+
 
 @require_POST
 @user_passes_test(user_permission_test)
@@ -861,14 +881,15 @@ def watershed_add(request):
     # CHECK DATA
     # make sure information exists
     if not watershed_name or not subbasin_name or not data_store_id \
-        or not geoserver_id or not watershed_clean_name or not subbasin_clean_name:
-        return JsonResponse({'error' : 'Request input missing data.'})
+            or not geoserver_id or not watershed_clean_name \
+            or not subbasin_clean_name:
+        return JsonResponse({'error': 'Request input missing data.'})
     # make sure ids are ids
     try:
         int(data_store_id)
         int(geoserver_id)
     except ValueError:
-        return JsonResponse({'error' : 'One or more ids are faulty.'})
+        return JsonResponse({'error': 'One or more ids are faulty.'})
 
     # check ECMWF inputs
     ecmwf_rapid_input_resource_id = ""
@@ -881,8 +902,8 @@ def watershed_add(request):
     if not ecmwf_data_store_watershed_name \
             or not ecmwf_data_store_subbasin_name:
         return JsonResponse({
-            'error' : "Must have an ECMWF watershed and "
-                      "subbasin name to continue."
+            'error': "Must have an ECMWF watershed and "
+                     "subbasin name to continue."
         })
 
     # initialize session
@@ -891,7 +912,7 @@ def watershed_add(request):
     session = session_maker()
 
     # check to see if duplicate exists
-    num_similar_watersheds  = session.query(Watershed) \
+    num_similar_watersheds = session.query(Watershed) \
         .filter(Watershed.watershed_clean_name == watershed_clean_name) \
         .filter(Watershed.subbasin_clean_name == subbasin_clean_name) \
         .count()
@@ -906,7 +927,7 @@ def watershed_add(request):
 
     # get desired geoserver
     try:
-        geoserver  = session.query(GeoServer).get(geoserver_id)
+        geoserver = session.query(GeoServer).get(geoserver_id)
     except ObjectDeletedError:
         session.close()
         return JsonResponse({'error': "The geoserver does not exist."})
@@ -929,26 +950,28 @@ def watershed_add(request):
                           'drainage_line')
         # check shapefles
         try:
-            geoserver_manager\
+            geoserver_manager \
                 .check_shapefile_input_files(drainage_line_shp_file)
         except Exception as ex:
             session.close()
             return JsonResponse({
-                'error' : 'Drainage Line layer upload error: %s.' % ex
+                'error': 'Drainage Line layer upload error: %s.' % ex
             })
 
     # UPLOAD DRAINAGE LINE
     try:
-        geoserver_drainage_line_layer = update_geoserver_layer(None,
-                                                               geoserver_drainage_line_layer_name,
-                                                               drainage_line_shp_file,
-                                                               geoserver_manager,
-                                                               session,
-                                                               layer_required=True)
+        geoserver_drainage_line_layer = \
+            update_geoserver_layer(None,
+                                   geoserver_drainage_line_layer_name,
+                                   drainage_line_shp_file,
+                                   geoserver_manager,
+                                   session,
+                                   layer_required=True)
     except Exception as ex:
         session.close()
-        return JsonResponse({'error' : "Drainage Line layer update error: %s" % ex})
-
+        return JsonResponse({
+            'error': "Drainage Line layer update error: %s" % ex
+        })
 
     # UPDATE BOUNDARY
     try:
@@ -961,7 +984,7 @@ def watershed_add(request):
                                    layer_required=False)
     except Exception as ex:
         session.close()
-        return JsonResponse({'error' : "Boundary layer update error: %s" % ex})
+        return JsonResponse({'error': "Boundary layer update error: %s" % ex})
 
     # UPDATE GAGE
     try:
@@ -974,7 +997,7 @@ def watershed_add(request):
                                    layer_required=False)
     except Exception as ex:
         session.close()
-        return JsonResponse({'error' : "Gage layer update error: %s" % ex})
+        return JsonResponse({'error': "Gage layer update error: %s" % ex})
 
     # UPDATE HISTORICAL FLOOD MAP LAYER GROUP
     try:
@@ -988,20 +1011,26 @@ def watershed_add(request):
                                    is_layer_group=True)
     except Exception as ex:
         session.close()
-        return JsonResponse({'error' : "Historical Flood Map layer update error: %s" % ex})
+        return JsonResponse({
+            'error': "Historical Flood Map layer update error: %s" % ex
+        })
 
     # UPDATE AHPS STATION
     try:
         geoserver_ahps_station_layer = \
-            update_geoserver_layer(None,
-             geoserver_ahps_station_layer_name,
-             None,
-             geoserver_manager,
-             session,
-             layer_required=False)
+            update_geoserver_layer(
+                None,
+                geoserver_ahps_station_layer_name,
+                None,
+                geoserver_manager,
+                session,
+                layer_required=False
+            )
     except Exception as ex:
         session.close()
-        return JsonResponse({'error' : "AHPS Station layer update error: %s" % ex})
+        return JsonResponse({
+            'error': "AHPS Station layer update error: %s" % ex
+        })
 
     # add watershed
     watershed = \
@@ -1012,13 +1041,16 @@ def watershed_add(request):
             subbasin_clean_name=subbasin_clean_name,
             data_store_id=data_store_id,
             ecmwf_rapid_input_resource_id=ecmwf_rapid_input_resource_id,
-            ecmwf_data_store_watershed_name=ecmwf_data_store_watershed_name.strip(),
-            ecmwf_data_store_subbasin_name=ecmwf_data_store_subbasin_name.strip(),
+            ecmwf_data_store_watershed_name=
+            ecmwf_data_store_watershed_name.strip(),
+            ecmwf_data_store_subbasin_name=
+            ecmwf_data_store_subbasin_name.strip(),
             geoserver_id=geoserver_id,
             geoserver_drainage_line_layer=geoserver_drainage_line_layer,
             geoserver_boundary_layer=geoserver_boundary_layer,
             geoserver_gage_layer=geoserver_gage_layer,
-            geoserver_historical_flood_map_layer=geoserver_historical_flood_map_layer,
+            geoserver_historical_flood_map_layer=
+            geoserver_historical_flood_map_layer,
             geoserver_ahps_station_layer=geoserver_ahps_station_layer,
         )
 
@@ -1027,18 +1059,19 @@ def watershed_add(request):
 
     # get watershed_id
     response = {
-                'success': "Watershed Sucessfully Added!",
-                'watershed_id' : watershed.id,
-                'geoserver_drainage_line_layer': geoserver_drainage_line_layer.name \
-                    if geoserver_drainage_line_layer else geoserver_drainage_line_layer_name,
-                }
+        'success': "Watershed Sucessfully Added!",
+        'watershed_id': watershed.id,
+        'geoserver_drainage_line_layer': geoserver_drainage_line_layer.name
+        if geoserver_drainage_line_layer
+        else geoserver_drainage_line_layer_name,
+    }
     session.close()
 
     return JsonResponse(response)
 
 
 @require_POST
-@user_passes_test(user_permission_test)    
+@user_passes_test(user_permission_test)
 def watershed_ecmwf_rapid_file_upload(request):
     """
     Controller AJAX for uploading RAPID input files for a watershed.
@@ -1050,7 +1083,7 @@ def watershed_ecmwf_rapid_file_upload(request):
     try:
         int(watershed_id)
     except ValueError:
-        return JsonResponse({'error' : 'Watershed ID need to be an integer.'})
+        return JsonResponse({'error': 'Watershed ID need to be an integer.'})
     # initialize session
     session_maker = app.get_persistent_store_database('main_db',
                                                       as_sessionmaker=True)
@@ -1109,7 +1142,7 @@ def watershed_ecmwf_rapid_file_upload(request):
                 pass
             session.close()
             return JsonResponse({
-                'error' : 'Problem uploading ECMWF-RAPID dataset to CKAN.'
+                'error': 'Problem uploading ECMWF-RAPID dataset to CKAN.'
             })
 
         # delete local file
@@ -1123,9 +1156,10 @@ def watershed_ecmwf_rapid_file_upload(request):
         session.commit()
     else:
         session.close()
-        return JsonResponse({'error' : 'Watershed datastore ID or upload file invalid.'})
+        return JsonResponse(
+            {'error': 'Watershed datastore ID or upload file invalid.'})
     session.close()
-    return JsonResponse({'success' : 'ECMWF RAPID Input Upload Success!'})
+    return JsonResponse({'success': 'ECMWF RAPID Input Upload Success!'})
 
 
 @require_POST
@@ -1141,7 +1175,7 @@ def watershed_delete(request):
     try:
         int(watershed_id)
     except (TypeError, ValueError):
-        return JsonResponse({'error' : 'Watershed id is faulty.'})
+        return JsonResponse({'error': 'Watershed id is faulty.'})
 
     if watershed_id:
         # initialize session
@@ -1150,7 +1184,7 @@ def watershed_delete(request):
         session = session_maker()
         # get watershed to delete
         try:
-            watershed  = session.query(Watershed).get(watershed_id)
+            watershed = session.query(Watershed).get(watershed_id)
         except ObjectDeletedError:
             return JsonResponse({
                 'error': "The watershed to delete does not exist."
@@ -1184,11 +1218,14 @@ def watershed_update(request):
     geoserver_id = post_info.get('geoserver_id')
     # REQUIRED TO HAVE drainage_line from one of these
     # layer names
-    geoserver_drainage_line_layer_name = post_info.get('geoserver_drainage_line_layer')
+    geoserver_drainage_line_layer_name = post_info.get(
+        'geoserver_drainage_line_layer')
     geoserver_boundary_layer_name = post_info.get('geoserver_boundary_layer')
     geoserver_gage_layer_name = post_info.get('geoserver_gage_layer')
-    geoserver_historical_flood_map_layer_name = post_info.get('geoserver_historical_flood_map_layer')
-    geoserver_ahps_station_layer_name = post_info.get('geoserver_ahps_station_layer')
+    geoserver_historical_flood_map_layer_name = post_info.get(
+        'geoserver_historical_flood_map_layer')
+    geoserver_ahps_station_layer_name = post_info.get(
+        'geoserver_ahps_station_layer')
     # shape files
     drainage_line_shp_file = request.FILES.getlist('drainage_line_shp_file')
     boundary_shp_file = request.FILES.getlist('boundary_shp_file')
@@ -1196,205 +1233,248 @@ def watershed_update(request):
     ahps_station_shp_file = request.FILES.getlist('ahps_station_shp_file')
     # CHECK INPUT
     # check if variables exist
-    if not watershed_id or not watershed_name or not subbasin_name or not data_store_id \
-        or not geoserver_id or not watershed_clean_name or not subbasin_clean_name:
-        return JsonResponse({'error' : 'Request input missing data.'})
+    if not watershed_id or not watershed_name or not subbasin_name \
+            or not data_store_id or not geoserver_id \
+            or not watershed_clean_name or not subbasin_clean_name:
+        return JsonResponse({'error': 'Request input missing data.'})
     # make sure ids are ids
     try:
         int(watershed_id)
         int(data_store_id)
         int(geoserver_id)
     except (TypeError, ValueError):
-        return JsonResponse({'error' : 'One or more ids are faulty.'})
+        return JsonResponse({'error': 'One or more ids are faulty.'})
 
     # initialize session
-    session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+    session_maker = app.get_persistent_store_database('main_db',
+                                                      as_sessionmaker=True)
     session = session_maker()
     # check to see if duplicate exists
-    num_similar_watersheds  = session.query(Watershed) \
+    num_similar_watersheds = session.query(Watershed) \
         .filter(Watershed.watershed_clean_name == watershed_clean_name) \
         .filter(Watershed.subbasin_clean_name == subbasin_clean_name) \
         .filter(Watershed.id != watershed_id) \
         .count()
     if num_similar_watersheds > 0:
         session.close()
-        return JsonResponse({ 'error': "A watershed with the same name exists." })
+        return JsonResponse({'error': "A watershed with the same name exists."})
 
     # get desired watershed
     try:
-        watershed  = session.query(Watershed).get(watershed_id)
+        watershed = session.query(Watershed).get(watershed_id)
     except ObjectDeletedError:
         session.close()
-        return JsonResponse({ 'error': "The watershed to update does not exist." })
+        return JsonResponse(
+            {'error': "The watershed to update does not exist."})
     # get desired geoserver
     try:
-        geoserver  = session.query(GeoServer).get(geoserver_id)
+        geoserver = session.query(GeoServer).get(geoserver_id)
     except ObjectDeletedError:
         session.close()
-        return JsonResponse({ 'error': "The geoserver does not exist." })
-
+        return JsonResponse({'error': "The geoserver does not exist."})
 
     # check ecmwf inputs
-    ecmwf_data_store_watershed_name = format_name(post_info.get('ecmwf_data_store_watershed_name'))
-    ecmwf_data_store_subbasin_name = format_name(post_info.get('ecmwf_data_store_subbasin_name'))
+    ecmwf_data_store_watershed_name = format_name(
+        post_info.get('ecmwf_data_store_watershed_name'))
+    ecmwf_data_store_subbasin_name = format_name(
+        post_info.get('ecmwf_data_store_subbasin_name'))
 
-    if not ecmwf_data_store_watershed_name or not ecmwf_data_store_subbasin_name:
+    if not ecmwf_data_store_watershed_name \
+            or not ecmwf_data_store_subbasin_name:
         session.close()
-        return JsonResponse({'error' : "Must have an ECMWF watershed/subbasin name to continue" })
+        return JsonResponse(
+            {'error': "Must have an ECMWF watershed/subbasin name to continue"})
 
     # GEOSERVER SECTION
     # remove old geoserver files if geoserver changed
     if int(geoserver_id) != watershed.geoserver_id:
-       # remove old geoserver files
-       watershed.delete_geoserver_files()
+        # remove old geoserver files
+        watershed.delete_geoserver_files()
 
     # validate geoserver inputs
     if not drainage_line_shp_file and not geoserver_drainage_line_layer_name:
         session.close()
-        return JsonResponse({'error' : 'Missing geoserver drainage line.'})
+        return JsonResponse({'error': 'Missing geoserver drainage line.'})
 
     try:
         app_instance_id = app.get_custom_setting('app_instance_id')
-        geoserver_manager = GeoServerDatasetManager(engine_url=geoserver.url,
-                                                    username=geoserver.username,
-                                                    password=geoserver.password,
-                                                    app_instance_id=app_instance_id)
+        geoserver_manager = \
+            GeoServerDatasetManager(engine_url=geoserver.url,
+                                    username=geoserver.username,
+                                    password=geoserver.password,
+                                    app_instance_id=app_instance_id)
     except Exception as ex:
         session.close()
-        return JsonResponse({'error' : "GeoServer Error: %s" % ex})
+        return JsonResponse({'error': "GeoServer Error: %s" % ex})
 
     # check geoserver input before upload
     if drainage_line_shp_file:
-        geoserver_drainage_line_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'drainage_line')
+        geoserver_drainage_line_layer_name = "%s-%s-%s" % (
+            watershed_clean_name, subbasin_clean_name, 'drainage_line')
         # check permissions to upload file
         if watershed.geoserver_drainage_line_layer:
             if not watershed.geoserver_drainage_line_layer.uploaded and \
-                watershed.geoserver_drainage_line_layer.name == geoserver_manager.get_layer_name(geoserver_drainage_line_layer_name):
+                    watershed.geoserver_drainage_line_layer.name \
+                    == geoserver_manager.get_layer_name(
+                    geoserver_drainage_line_layer_name):
                 session.close()
-                return JsonResponse({'error' : 'You do not have permissions to overwrite the drainage line layer ...' })
+                return JsonResponse({
+                    'error': 'You do not have permissions to '
+                             'overwrite the drainage line layer ...'
+                })
 
         # check shapefles
         try:
-            geoserver_manager.check_shapefile_input_files(drainage_line_shp_file)
+            geoserver_manager.check_shapefile_input_files(
+                drainage_line_shp_file)
         except Exception as ex:
             session.close()
-            return JsonResponse({'error' : 'Drainage Line Error: %s.' % ex })
+            return JsonResponse({'error': 'Drainage Line Error: %s.' % ex})
 
     if boundary_shp_file:
-        geoserver_boundary_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'boundary')
+        geoserver_boundary_layer_name = "%s-%s-%s" % (
+            watershed_clean_name, subbasin_clean_name, 'boundary')
         # check permissions to upload file
         if watershed.geoserver_boundary_layer:
             if not watershed.geoserver_boundary_layer.uploaded and \
-                watershed.geoserver_boundary_layer.name == geoserver_manager.get_layer_name(geoserver_boundary_layer_name):
+                    watershed.geoserver_boundary_layer.name == \
+                    geoserver_manager.get_layer_name(
+                        geoserver_boundary_layer_name):
                 session.close()
-                return JsonResponse({'error' : 'You do not have permissions to overwrite the boundary layer ...' })
+                return JsonResponse({
+                    'error': 'You do not have permissions to '
+                             'overwrite the boundary layer ...'
+                })
 
         # check shapefiles
         try:
             geoserver_manager.check_shapefile_input_files(boundary_shp_file)
         except Exception as ex:
             session.close()
-            return JsonResponse({'error' : 'Boundary Error: %s.' % ex })
+            return JsonResponse({'error': 'Boundary Error: %s.' % ex})
 
     if gage_shp_file:
-        geoserver_gage_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'gage')
+        geoserver_gage_layer_name = "%s-%s-%s" % (
+            watershed_clean_name, subbasin_clean_name, 'gage')
         # check permissions to upload file
         if watershed.geoserver_gage_layer:
             if not watershed.geoserver_gage_layer.uploaded and \
-                watershed.geoserver_gage_layer.name == geoserver_manager.get_layer_name(geoserver_gage_layer_name):
+                    watershed.geoserver_gage_layer.name == \
+                    geoserver_manager.get_layer_name(
+                        geoserver_gage_layer_name):
                 session.close()
-                return JsonResponse({'error' : 'You do not have permissions to overwrite the gage layer ...' })
+                return JsonResponse({
+                    'error': 'You do not have permissions to '
+                             'overwrite the gage layer ...'
+                })
 
         # check shapefiles
         try:
             geoserver_manager.check_shapefile_input_files(gage_shp_file)
         except Exception as ex:
             session.close()
-            return JsonResponse({'error' : 'Gage Error: %s.' % ex })
+            return JsonResponse({'error': 'Gage Error: %s.' % ex})
 
     if ahps_station_shp_file:
-        geoserver_ahps_station_layer_name = "%s-%s-%s" % (watershed_clean_name, subbasin_clean_name, 'ahps_station')
+        geoserver_ahps_station_layer_name = "%s-%s-%s" % (
+            watershed_clean_name, subbasin_clean_name, 'ahps_station')
         # check permissions to upload file
         if watershed.geoserver_ahps_station_layer:
             if not watershed.geoserver_ahps_station_layer.uploaded and \
-                watershed.geoserver_ahps_station_layer.name == geoserver_manager.get_layer_name(geoserver_ahps_station_layer_name):
+                    watershed.geoserver_ahps_station_layer.name == \
+                    geoserver_manager.get_layer_name(
+                        geoserver_ahps_station_layer_name):
                 session.close()
-                return JsonResponse({'error' : 'You do not have permissions to overwrite the AHPS station layer ...' })
+                return JsonResponse({
+                    'error': 'You do not have permissions to '
+                             'overwrite the AHPS station layer ...'
+                })
 
         # check shapefiles
         try:
-            geoserver_manager.check_shapefile_input_files(ahps_station_shp_file)
+            geoserver_manager\
+                .check_shapefile_input_files(ahps_station_shp_file)
         except Exception as ex:
             session.close()
-            return JsonResponse({'error' : 'AHPS Station Error: %s.' % ex })
+            return JsonResponse({'error': 'AHPS Station Error: %s.' % ex})
 
     # UPDATE DRAINAGE LINE
     try:
-        watershed.geoserver_drainage_line_layer = update_geoserver_layer(watershed.geoserver_drainage_line_layer,
-                                                                         geoserver_drainage_line_layer_name,
-                                                                         drainage_line_shp_file,
-                                                                         geoserver_manager,
-                                                                         session,
-                                                                         layer_required=True)
+        watershed.geoserver_drainage_line_layer = \
+            update_geoserver_layer(
+                watershed.geoserver_drainage_line_layer,
+                geoserver_drainage_line_layer_name,
+                drainage_line_shp_file,
+                geoserver_manager,
+                session,
+                layer_required=True
+            )
     except Exception as ex:
         session.close()
-        return JsonResponse({'error' : "Drainage Line layer update error: %s" % ex})
-
+        return JsonResponse(
+            {'error': "Drainage Line layer update error: %s" % ex})
 
     # UPDATE Boundary
     try:
-        watershed.geoserver_boundary_layer = update_geoserver_layer(watershed.geoserver_boundary_layer,
-                                                                    geoserver_boundary_layer_name,
-                                                                    boundary_shp_file,
-                                                                    geoserver_manager,
-                                                                    session,
-                                                                    layer_required=False)
+        watershed.geoserver_boundary_layer = update_geoserver_layer(
+            watershed.geoserver_boundary_layer,
+            geoserver_boundary_layer_name,
+            boundary_shp_file,
+            geoserver_manager,
+            session,
+            layer_required=False)
     except Exception as ex:
         session.close()
-        return JsonResponse({'error' : "Boundary layer update error: %s" % ex})
+        return JsonResponse({'error': "Boundary layer update error: %s" % ex})
 
     # UPDATE GAGE
     try:
-        watershed.geoserver_gage_layer = update_geoserver_layer(watershed.geoserver_gage_layer,
-                                                                geoserver_gage_layer_name,
-                                                                gage_shp_file,
-                                                                geoserver_manager,
-                                                                session,
-                                                                layer_required=False)
+        watershed.geoserver_gage_layer = update_geoserver_layer(
+            watershed.geoserver_gage_layer,
+            geoserver_gage_layer_name,
+            gage_shp_file,
+            geoserver_manager,
+            session,
+            layer_required=False)
     except Exception as ex:
         session.close()
-        return JsonResponse({'error' : "Gage layer update error: %s" % ex})
+        return JsonResponse({'error': "Gage layer update error: %s" % ex})
 
     # UPDATE HISTORICAL FLOOD MAP LAYER GROUP
     try:
-        watershed.geoserver_historical_flood_map_layer = update_geoserver_layer(watershed.geoserver_historical_flood_map_layer,
-                                                                                geoserver_historical_flood_map_layer_name,
-                                                                                None,
-                                                                                geoserver_manager,
-                                                                                session,
-                                                                                layer_required=False,
-                                                                                is_layer_group=True)
+        watershed.geoserver_historical_flood_map_layer = update_geoserver_layer(
+            watershed.geoserver_historical_flood_map_layer,
+            geoserver_historical_flood_map_layer_name,
+            None,
+            geoserver_manager,
+            session,
+            layer_required=False,
+            is_layer_group=True)
     except Exception as ex:
         session.close()
-        return JsonResponse({'error' : "Historical Flood Map layer update error: %s" % ex})
+        return JsonResponse(
+            {'error': "Historical Flood Map layer update error: %s" % ex})
 
     # UPDATE AHPS STATION
     try:
-        watershed.geoserver_ahps_station_layer = update_geoserver_layer(watershed.geoserver_ahps_station_layer,
-                                                                        geoserver_ahps_station_layer_name,
-                                                                        ahps_station_shp_file,
-                                                                        geoserver_manager,
-                                                                        session,
-                                                                        layer_required=False)
+        watershed.geoserver_ahps_station_layer = update_geoserver_layer(
+            watershed.geoserver_ahps_station_layer,
+            geoserver_ahps_station_layer_name,
+            ahps_station_shp_file,
+            geoserver_manager,
+            session,
+            layer_required=False)
     except Exception as ex:
         session.close()
         return JsonResponse({
-            'error' : "AHPS Station layer update error: %s" % ex
+            'error': "AHPS Station layer update error: %s" % ex
         })
 
     # remove old prediction files if watershed/subbasin name changed
-    if(ecmwf_data_store_watershed_name != watershed.ecmwf_data_store_watershed_name or
-       ecmwf_data_store_subbasin_name != watershed.ecmwf_data_store_subbasin_name):
+    if (ecmwf_data_store_watershed_name !=
+            watershed.ecmwf_data_store_watershed_name or
+            ecmwf_data_store_subbasin_name !=
+            watershed.ecmwf_data_store_subbasin_name):
         watershed.delete_prediction_files()
         # remove RAPID input files on CKAN if exists
         try:
@@ -1402,10 +1482,10 @@ def watershed_update(request):
         except Exception as ex:
             session.close()
             return JsonResponse({
-                'error' : "Invalid CKAN instance %s. Cannot delete RAPID input files on CKAN: %s"
-                          % (watershed.data_store.api_endpoint, ex)
+                'error': "Invalid CKAN instance %s. "
+                         "Cannot delete RAPID input files on CKAN: %s"
+                         % (watershed.data_store.api_endpoint, ex)
             })
-
 
     # remove CKAN files on old CKAN instance
     if watershed.data_store_id != data_store_id:
@@ -1415,8 +1495,9 @@ def watershed_update(request):
         except Exception as ex:
             session.close()
             return JsonResponse({
-                'error' : "Invalid CKAN instance %s. Cannot delete RAPID input files on CKAN: %s"
-                          % (watershed.data_store.api_endpoint, ex)
+                'error': "Invalid CKAN instance %s. "
+                         "Cannot delete RAPID input files on CKAN: %s"
+                         % (watershed.data_store.api_endpoint, ex)
             })
 
     # change watershed attributes
@@ -1431,16 +1512,19 @@ def watershed_update(request):
 
     response = {
         'success': "Watershed sucessfully updated!",
-        'geoserver_drainage_line_layer': watershed.geoserver_drainage_line_layer.name \
-                                         if watershed.geoserver_drainage_line_layer else "",
-        'geoserver_boundary_layer': watershed.geoserver_boundary_layer.name \
-                                     if watershed.geoserver_boundary_layer else "",
-        'geoserver_gage_layer': watershed.geoserver_gage_layer.name \
-                                if watershed.geoserver_gage_layer else "",
-        'geoserver_historical_flood_map_layer': watershed.geoserver_historical_flood_map_layer.name \
-                                if watershed.geoserver_historical_flood_map_layer else "",
-        'geoserver_ahps_station_layer': watershed.geoserver_ahps_station_layer.name \
-                                        if watershed.geoserver_ahps_station_layer else "",
+        'geoserver_drainage_line_layer':
+        watershed.geoserver_drainage_line_layer.name
+            if watershed.geoserver_drainage_line_layer else "",
+        'geoserver_boundary_layer': watershed.geoserver_boundary_layer.name
+            if watershed.geoserver_boundary_layer else "",
+        'geoserver_gage_layer': watershed.geoserver_gage_layer.name
+            if watershed.geoserver_gage_layer else "",
+        'geoserver_historical_flood_map_layer':
+        watershed.geoserver_historical_flood_map_layer.name
+            if watershed.geoserver_historical_flood_map_layer else "",
+        'geoserver_ahps_station_layer':
+        watershed.geoserver_ahps_station_layer.name
+            if watershed.geoserver_ahps_station_layer else "",
     }
 
     # update database
@@ -1462,14 +1546,14 @@ def watershed_group_add(request):
     watershed_group_watershed_ids = \
         post_info.getlist('watershed_group_watershed_ids[]')
     if not watershed_group_name or not watershed_group_watershed_ids:
-        return JsonResponse({ 'error': 'AJAX request input faulty' })
+        return JsonResponse({'error': 'AJAX request input faulty'})
     # initialize session
     session_maker = app.get_persistent_store_database('main_db',
                                                       as_sessionmaker=True)
     session = session_maker()
 
     # check to see if duplicate exists
-    num_similar_watershed_groups  = session.query(WatershedGroup) \
+    num_similar_watershed_groups = session.query(WatershedGroup) \
         .filter(WatershedGroup.name == watershed_group_name) \
         .count()
     if num_similar_watershed_groups > 0:
@@ -1479,9 +1563,9 @@ def watershed_group_add(request):
     group = WatershedGroup(name=watershed_group_name)
 
     # update watersheds
-    watersheds  = session.query(Watershed) \
-            .filter(Watershed.id.in_(watershed_group_watershed_ids)) \
-            .all()
+    watersheds = session.query(Watershed) \
+        .filter(Watershed.id.in_(watershed_group_watershed_ids)) \
+        .all()
     for watershed in watersheds:
         group.watersheds.append(watershed)
     session.add(group)
@@ -1501,21 +1585,21 @@ def watershed_group_delete(request):
     post_info = request.POST
     watershed_group_id = post_info.get('watershed_group_id')
 
-
     if watershed_group_id:
         # initialize session
-        session_maker = app.get_persistent_store_database('main_db', as_sessionmaker=True)
+        session_maker = app.get_persistent_store_database('main_db',
+                                                          as_sessionmaker=True)
         session = session_maker()
         # get watershed group to delete
-        watershed_group  = session.query(WatershedGroup).get(watershed_group_id)
+        watershed_group = session.query(WatershedGroup).get(watershed_group_id)
 
         # delete watershed group from database
         session.delete(watershed_group)
         session.commit()
         session.close()
 
-        return JsonResponse({ 'success': "Watershed group sucessfully deleted!" })
-    return JsonResponse({ 'error': "Cannot delete this watershed group." })
+        return JsonResponse({'success': "Watershed group sucessfully deleted!"})
+    return JsonResponse({'error': "Cannot delete this watershed group."})
 
 
 @require_POST
@@ -1537,7 +1621,7 @@ def watershed_group_update(request):
                                                           as_sessionmaker=True)
         session = session_maker()
         # check to see if duplicate exists
-        num_similar_watershed_groups  = session.query(WatershedGroup) \
+        num_similar_watershed_groups = session.query(WatershedGroup) \
             .filter(WatershedGroup.name == watershed_group_name) \
             .filter(WatershedGroup.id != watershed_group_id) \
             .count()
@@ -1547,12 +1631,12 @@ def watershed_group_update(request):
             })
 
         # get watershed group
-        watershed_group  = session.query(WatershedGroup).get(watershed_group_id)
+        watershed_group = session.query(WatershedGroup).get(watershed_group_id)
         watershed_group.name = watershed_group_name
         # find new watersheds
-        new_watersheds  = session.query(Watershed) \
-                .filter(Watershed.id.in_(watershed_group_watershed_ids)) \
-                .all()
+        new_watersheds = session.query(Watershed) \
+            .filter(Watershed.id.in_(watershed_group_watershed_ids)) \
+            .all()
 
         # remove old watersheds
         for watershed in watershed_group.watersheds:
