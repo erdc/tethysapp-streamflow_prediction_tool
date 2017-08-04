@@ -4,6 +4,7 @@ Setup script for the Streamflow Prediction Tool web application.
 Author: Alan D. Snow, 2015-2017
 License: BSD-3-Clause
 """
+# pylint: disable=attribute-defined-outside-init,no-self-use
 import os
 import sys
 
@@ -36,9 +37,9 @@ DEPENDENCIES = [
 def _path_to_download_script():
     """Returns path to SPT download script"""
     return os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                       'tethysapp',
-                       'streamflow_prediction_tool',
-                       'spt_download_forecasts.py')
+                        'tethysapp',
+                        'streamflow_prediction_tool',
+                        'spt_download_forecasts.py')
 
 
 def install_spt_crontab(tethys_home_dir):
