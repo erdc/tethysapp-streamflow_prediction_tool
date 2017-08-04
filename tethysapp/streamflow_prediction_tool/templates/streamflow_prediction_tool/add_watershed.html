@@ -24,9 +24,9 @@
         <h5>ECMWF Data Storage Input</h5>
         <p class="help-block">The format of the ECMWF dataset name on the data store server 
         is erfp-[watershed name]-[subbasin name]-[forecast timestamp] (Ex. erfp-magdalena-el_banco-20150603t00).</p>
-        {% gizmo text_input ecmwf_data_store_watershed_name_input %}
+        {% gizmo text_input data_store_watershed_name_input %}
         <p class="help-block">This is the watershed name in the ECMWF dataset name and RAPID folder name.</p>
-        {% gizmo text_input ecmwf_data_store_subbasin_name_input %}
+        {% gizmo text_input data_store_subbasin_name_input %}
         <p class="help-block">This is the subbasin name in the ECMWF dataset name and end of RAPID 
         namelist file name - rapid_namelist_[subbasin_name].dat (Ex. rapid_namelist_el_banco).</p>
         <div class="form-group data_store hidden">
