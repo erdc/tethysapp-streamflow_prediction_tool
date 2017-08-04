@@ -179,8 +179,9 @@ def data_store_update(request):
 
         # check if data store info is valid
         try:
-            dataset_engine = CkanDatasetEngine(endpoint=data_store_api_endpoint,
-                                               apikey=data_store_api_key)
+            dataset_engine = \
+                CkanDatasetEngine(endpoint=data_store_api_endpoint,
+                                  apikey=data_store_api_key)
             result = dataset_engine.list_datasets()
             if not result or "success" not in result:
                 return JsonResponse({
@@ -378,7 +379,7 @@ def geoserver_update(request):
 @login_required
 def ecmwf_get_avaialable_dates(request):
     """""
-    Finds a list of directories with valid data and 
+    Finds a list of directories with valid data and
     returns dates in select2 format
     """""
     path_to_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
@@ -547,7 +548,8 @@ def era_interim_get_hydrograph(request):
     path_to_output_files = \
         os.path.join(path_to_era_interim_data,
                      "{0}-{1}".format(watershed_name, subbasin_name))
-    historical_data_files = glob(os.path.join(path_to_output_files, "Qout*.nc"))
+    historical_data_files = glob(os.path.join(path_to_output_files,
+                                              "Qout*.nc"))
     if historical_data_files:
         try:
             # get/check the index of the reach
@@ -626,7 +628,8 @@ def generate_warning_points(request):
     """
     Controller for getting warning points for user on map
     """
-    path_to_ecmwf_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
+    path_to_ecmwf_rapid_output = \
+        app.get_custom_setting('ecmwf_forecast_folder')
     path_to_era_interim_data = app.get_custom_setting('historical_folder')
     if not os.path.exists(path_to_ecmwf_rapid_output) \
             or not os.path.exists(path_to_era_interim_data):
@@ -735,7 +738,8 @@ def era_interim_get_csv(request):
     path_to_output_files = \
         os.path.join(path_to_era_interim_data,
                      "{0}-{1}".format(watershed_name, subbasin_name))
-    historical_data_files = glob(os.path.join(path_to_output_files, "Qout*.nc"))
+    historical_data_files = glob(os.path.join(path_to_output_files,
+                                              "Qout*.nc"))
     if historical_data_files:
         try:
             # get/check the index of the reach
@@ -894,13 +898,13 @@ def watershed_add(request):
     # check ECMWF inputs
     ecmwf_rapid_input_resource_id = ""
 
-    ecmwf_data_store_watershed_name = \
+    data_store_watershed_name = \
         format_name(post_info.get('ecmwf_data_store_watershed_name'))
-    ecmwf_data_store_subbasin_name = \
+    data_store_subbasin_name = \
         format_name(post_info.get('ecmwf_data_store_subbasin_name'))
 
-    if not ecmwf_data_store_watershed_name \
-            or not ecmwf_data_store_subbasin_name:
+    if not data_store_watershed_name \
+            or not data_store_subbasin_name:
         return JsonResponse({
             'error': "Must have an ECMWF watershed and "
                      "subbasin name to continue."
@@ -918,7 +922,9 @@ def watershed_add(request):
         .count()
     if num_similar_watersheds > 0:
         session.close()
-        return JsonResponse({'error': "A watershed with the same name exists."})
+        return JsonResponse({
+            'error': "A watershed with the same name exists."
+        })
 
     # validate geoserver inputs
     if not drainage_line_shp_file and not geoserver_drainage_line_layer_name:
@@ -1001,7 +1007,7 @@ def watershed_add(request):
 
     # UPDATE HISTORICAL FLOOD MAP LAYER GROUP
     try:
-        geoserver_historical_flood_map_layer = \
+        geoserver_hist_flood_map_layer = \
             update_geoserver_layer(None,
                                    geoserver_historical_flood_map_layer_name,
                                    None,
@@ -1033,26 +1039,22 @@ def watershed_add(request):
         })
 
     # add watershed
-    watershed = \
-        Watershed(
-            watershed_name=watershed_name.strip(),
-            subbasin_name=subbasin_name.strip(),
-            watershed_clean_name=watershed_clean_name,
-            subbasin_clean_name=subbasin_clean_name,
-            data_store_id=data_store_id,
-            ecmwf_rapid_input_resource_id=ecmwf_rapid_input_resource_id,
-            ecmwf_data_store_watershed_name=
-            ecmwf_data_store_watershed_name.strip(),
-            ecmwf_data_store_subbasin_name=
-            ecmwf_data_store_subbasin_name.strip(),
-            geoserver_id=geoserver_id,
-            geoserver_drainage_line_layer=geoserver_drainage_line_layer,
-            geoserver_boundary_layer=geoserver_boundary_layer,
-            geoserver_gage_layer=geoserver_gage_layer,
-            geoserver_historical_flood_map_layer=
-            geoserver_historical_flood_map_layer,
-            geoserver_ahps_station_layer=geoserver_ahps_station_layer,
-        )
+    watershed = Watershed(
+        watershed_name=watershed_name.strip(),
+        subbasin_name=subbasin_name.strip(),
+        watershed_clean_name=watershed_clean_name,
+        subbasin_clean_name=subbasin_clean_name,
+        data_store_id=data_store_id,
+        ecmwf_rapid_input_resource_id=ecmwf_rapid_input_resource_id,
+        ecmwf_data_store_watershed_name=data_store_watershed_name.strip(),
+        ecmwf_data_store_subbasin_name=data_store_subbasin_name.strip(),
+        geoserver_id=geoserver_id,
+        geoserver_drainage_line_layer=geoserver_drainage_line_layer,
+        geoserver_boundary_layer=geoserver_boundary_layer,
+        geoserver_gage_layer=geoserver_gage_layer,
+        geoserver_historical_flood_map_layer=geoserver_hist_flood_map_layer,
+        geoserver_ahps_station_layer=geoserver_ahps_station_layer,
+    )
 
     session.add(watershed)
     session.commit()
@@ -1100,7 +1102,8 @@ def watershed_ecmwf_rapid_file_upload(request):
         ecmwf_rapid_input_zip = \
             "%s-%s-rapid.zip" % (watershed.ecmwf_data_store_watershed_name,
                                  watershed.ecmwf_data_store_subbasin_name)
-        local_file_path = os.path.join(tmp_file_location, ecmwf_rapid_input_zip)
+        local_file_path = os.path.join(tmp_file_location,
+                                       ecmwf_rapid_input_zip)
 
         # delete local file
         try:
@@ -1257,7 +1260,9 @@ def watershed_update(request):
         .count()
     if num_similar_watersheds > 0:
         session.close()
-        return JsonResponse({'error': "A watershed with the same name exists."})
+        return JsonResponse({
+            'error': "A watershed with the same name exists."
+        })
 
     # get desired watershed
     try:
@@ -1282,8 +1287,9 @@ def watershed_update(request):
     if not ecmwf_data_store_watershed_name \
             or not ecmwf_data_store_subbasin_name:
         session.close()
-        return JsonResponse(
-            {'error': "Must have an ECMWF watershed/subbasin name to continue"})
+        return JsonResponse({
+            'error': "Must have an ECMWF watershed/subbasin name to continue"
+        })
 
     # GEOSERVER SECTION
     # remove old geoserver files if geoserver changed
@@ -1416,44 +1422,51 @@ def watershed_update(request):
 
     # UPDATE Boundary
     try:
-        watershed.geoserver_boundary_layer = update_geoserver_layer(
-            watershed.geoserver_boundary_layer,
-            geoserver_boundary_layer_name,
-            boundary_shp_file,
-            geoserver_manager,
-            session,
-            layer_required=False)
+        watershed.geoserver_boundary_layer = \
+            update_geoserver_layer(
+                watershed.geoserver_boundary_layer,
+                geoserver_boundary_layer_name,
+                boundary_shp_file,
+                geoserver_manager,
+                session,
+                layer_required=False
+            )
     except Exception as ex:
         session.close()
         return JsonResponse({'error': "Boundary layer update error: %s" % ex})
 
     # UPDATE GAGE
     try:
-        watershed.geoserver_gage_layer = update_geoserver_layer(
-            watershed.geoserver_gage_layer,
-            geoserver_gage_layer_name,
-            gage_shp_file,
-            geoserver_manager,
-            session,
-            layer_required=False)
+        watershed.geoserver_gage_layer = \
+            update_geoserver_layer(
+                watershed.geoserver_gage_layer,
+                geoserver_gage_layer_name,
+                gage_shp_file,
+                geoserver_manager,
+                session,
+                layer_required=False
+            )
     except Exception as ex:
         session.close()
         return JsonResponse({'error': "Gage layer update error: %s" % ex})
 
     # UPDATE HISTORICAL FLOOD MAP LAYER GROUP
     try:
-        watershed.geoserver_historical_flood_map_layer = update_geoserver_layer(
-            watershed.geoserver_historical_flood_map_layer,
-            geoserver_historical_flood_map_layer_name,
-            None,
-            geoserver_manager,
-            session,
-            layer_required=False,
-            is_layer_group=True)
+        watershed.geoserver_historical_flood_map_layer = \
+            update_geoserver_layer(
+                watershed.geoserver_historical_flood_map_layer,
+                geoserver_historical_flood_map_layer_name,
+                None,
+                geoserver_manager,
+                session,
+                layer_required=False,
+                is_layer_group=True
+            )
     except Exception as ex:
         session.close()
-        return JsonResponse(
-            {'error': "Historical Flood Map layer update error: %s" % ex})
+        return JsonResponse({
+            'error': "Historical Flood Map layer update error: %s" % ex
+        })
 
     # UPDATE AHPS STATION
     try:
@@ -1598,7 +1611,9 @@ def watershed_group_delete(request):
         session.commit()
         session.close()
 
-        return JsonResponse({'success': "Watershed group sucessfully deleted!"})
+        return JsonResponse({
+            'success': "Watershed group sucessfully deleted!"
+        })
     return JsonResponse({'error': "Cannot delete this watershed group."})
 
 

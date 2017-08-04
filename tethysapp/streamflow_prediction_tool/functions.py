@@ -62,7 +62,8 @@ def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
         directories = [start_folder]
     for directory in directories:
         try:
-            date = datetime.datetime.strptime(directory.split(".")[0], "%Y%m%d")
+            date = datetime.datetime.strptime(directory.split(".")[0],
+                                              "%Y%m%d")
             time = directory.split(".")[-1]
             path_to_files = os.path.join(path_to_watershed_files, directory)
             if os.path.exists(path_to_files):
@@ -85,11 +86,12 @@ def ecmwf_get_valid_forecast_folder_list(main_watershed_forecast_folder,
                                          file_extension):
     """
     Retreives a list of valid forecast forlders for the watershed
-    """    
+    """
     directories = \
         sorted(
             [d for d in os.listdir(main_watershed_forecast_folder)
-             if os.path.isdir(os.path.join(main_watershed_forecast_folder, d))],
+             if os.path.isdir(
+                os.path.join(main_watershed_forecast_folder, d))],
             reverse=True
         )
     output_directories = []
@@ -110,7 +112,7 @@ def ecmwf_get_valid_forecast_folder_list(main_watershed_forecast_folder,
                 directory_count += 1
             # limit number of directories
             if directory_count > 64:
-                break                
+                break
     return output_directories
 
 
@@ -212,12 +214,12 @@ def handle_uploaded_file(f, file_path, file_name):
             destination.write(chunk)
 
 
-def upload_geoserver_layer(geoserver_manager, resource_name, 
+def upload_geoserver_layer(geoserver_manager, resource_name,
                            shp_file_list, geoserver_layer):
     """
     Upload a geoserver layer and return associated result
     """
-    layer_name, layer_info = geoserver_manager.upload_shapefile(resource_name, 
+    layer_name, layer_info = geoserver_manager.upload_shapefile(resource_name,
                                                                 shp_file_list)
     if layer_name and layer_info:
         geoserver_layer.name = layer_name.strip()
@@ -240,7 +242,7 @@ def update_geoserver_layer_information(geoserver_manager, geoserver_layer):
     layer_info = \
         geoserver_manager.dataset_engine\
                          .get_resource(resource_id=geoserver_layer.name)
-        
+
     if layer_info['success']:
         raw_latlon_bbox = layer_info['result']['latlon_bbox'][:4]
         latlon_bbox = json_dumps([raw_latlon_bbox[0], raw_latlon_bbox[2],
@@ -263,7 +265,7 @@ def update_geoserver_layer_group_information(geoserver_manager,
     layer_info = \
         geoserver_manager.dataset_engine\
                          .get_layer_group(geoserver_layer.name)
-        
+
     if layer_info['success']:
         raw_latlon_bbox = layer_info['result']['bounds'][:4]
         if (abs(float(raw_latlon_bbox[0])-float(raw_latlon_bbox[2])) > 0.001
@@ -287,7 +289,6 @@ def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
     """
     This function performs the geoserver layer update based on ajax request
     """
-    
     geoserver_layer_name = "" if not geoserver_layer_name \
         else geoserver_layer_name.strip()
     # ADD NEW SHAPEFILE TO GEOSERVER
@@ -296,17 +297,17 @@ def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
         if geoserver_layer and geoserver_layer.uploaded:
             geoserver_manager\
                 .purge_remove_geoserver_layer(geoserver_layer.name)
-            
+
         if not geoserver_layer:
             # create new layer in database
             geoserver_layer = GeoServerLayer(name="")
-            
+
         # upload shapefile
-        upload_geoserver_layer(geoserver_manager, 
+        upload_geoserver_layer(geoserver_manager,
                                geoserver_layer_name,
                                shp_file,
                                geoserver_layer)
-                               
+
     # CONNECT TO EXISTING LAYER ON GEOSERVER
     elif geoserver_layer_name:
         if geoserver_layer:
@@ -321,7 +322,7 @@ def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
         else:
             # create new layer in database
             geoserver_layer = GeoServerLayer(name=geoserver_layer_name)
-                
+
     # REMOVE LAYER FROM GEOSERVER AND DATABASE
     elif not geoserver_layer_name and geoserver_layer and not layer_required:
         if geoserver_layer.uploaded:
@@ -329,7 +330,7 @@ def update_geoserver_layer(geoserver_layer, geoserver_layer_name, shp_file,
                 .purge_remove_geoserver_layer(geoserver_layer.name)
         delete_from_database(session, geoserver_layer)
         geoserver_layer = None
-        
+
     # UPDATE LAYER INFORMATION
     if geoserver_layer and not shp_file:
         if is_layer_group:
