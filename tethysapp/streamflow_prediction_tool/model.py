@@ -183,7 +183,7 @@ class Watershed(Base):
             # remove watersheds subbsasins folders/files
             if watershed_folder_name and \
                     local_prediction_files_location and os.path.exists(
-                prediciton_folder):
+                    prediciton_folder):
 
                 # remove all prediction files from watershed/subbasin
                 try:
