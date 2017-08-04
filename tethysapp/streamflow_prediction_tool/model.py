@@ -4,6 +4,7 @@
     Created by Alan D. Snow, 2015-2017.
     License: BSD 3-Clause
 """
+# pylint: disable=W0613
 import os
 from shutil import rmtree
 
@@ -232,7 +233,7 @@ class Watershed(Base):
         """
         This function deletes RAPID input on CKAN
         """
-        if 'ckan' == self.data_store.data_store_type.code_name \
+        if self.data_store.data_store_type.code_name == 'ckan' \
                 and self.ecmwf_rapid_input_resource_id.strip():
             # get dataset managers
             data_manager = CKANDatasetManager(self.data_store.api_endpoint,

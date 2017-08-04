@@ -4,6 +4,7 @@
     Created by Alan D. Snow, 2015
     License: BSD 3-Clause
 """
+# pylint: disable=wrong-import-position
 import os
 from shutil import rmtree
 
@@ -30,7 +31,7 @@ def download_single_watershed_ecmwf_data(watershed,
 
         # get data engine
         data_store = watershed.data_store
-        if 'ckan' == data_store.data_store_type.code_name:
+        if data_store.data_store_type.code_name == 'ckan':
             # get dataset managers
             data_manager = ECMWFRAPIDDatasetManager(data_store.api_endpoint,
                                                     data_store.api_key)

@@ -9,6 +9,9 @@ from .model import Base, DataStore, DataStoreType
 
 
 def init_main_db(engine, first_time):
+    """
+    Initialize database for the App
+    """
     # Create tables
     Base.metadata.create_all(engine)
 
