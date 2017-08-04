@@ -35,7 +35,6 @@ before_install:
 install:
 - cd $TRAVIS_BUILD_DIR
 - pip install -e .[tests]
-- python setup.py cron
 
 script:
 - flake8
