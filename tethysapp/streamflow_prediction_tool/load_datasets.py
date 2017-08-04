@@ -80,25 +80,3 @@ def load_datasets():
         print("ECMWF prediction location invalid. Please set to continue.")
         
     session.close()
-
-
-def load_watershed(watershed):
-    """
-    Loads prediction datasets from data store for one watershed
-    """
-    session_maker = app.get_persistent_store_database('main_db',
-                                                      as_sessionmaker=True)
-    session = session_maker()
-
-    ecmwf_rapid_prediction_directory = \
-        app.get_custom_setting('ecmwf_forecast_folder')
-
-    if ecmwf_rapid_prediction_directory and \
-            os.path.exists(ecmwf_rapid_prediction_directory):
-            
-        download_single_watershed_ecmwf_data(watershed, 
-                                             ecmwf_rapid_prediction_directory)
-    else:
-        print("ECMWF prediction location invalid. Please set to continue.")
-
-    session.close()
