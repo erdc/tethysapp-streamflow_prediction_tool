@@ -23,9 +23,14 @@ APP_PACKAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                APP_PACKAGE)
 # App Packages
 DEPENDENCIES = [
-    'RAPIDpy',
+    'xarray',
+    'netcdf4',
+    'numpy',
+    'pandas',
     'python-crontab',
+    'pytz',
     'sqlalchemy',
+    'tethys_dataset_services',
 ]
 
 

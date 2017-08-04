@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""__init__.py
+"""
 # this is a namespace package
 try:
     import pkg_resources

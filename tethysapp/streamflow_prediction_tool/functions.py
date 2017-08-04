@@ -8,13 +8,15 @@ import datetime
 from glob import glob
 from json import dumps as json_dumps
 import os
-from pytz import utc
 import re
 
+import pandas as pd
+from pytz import utc
+import xarray
+
+# django imports
 from django.contrib import messages
 from django.shortcuts import redirect
-import pandas as pd
-import xarray
 
 # local import
 from .model import GeoServerLayer
@@ -78,6 +80,7 @@ def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
         except Exception as ex:
             print(ex)
             pass
+
     # there are no files found
     return None, None
 
