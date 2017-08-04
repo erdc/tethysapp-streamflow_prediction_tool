@@ -4,19 +4,12 @@
     Created by Alan D. Snow, 2015
     License: BSD 3-Clause
 """
-# pylint: disable=wrong-import-position
 import os
 from shutil import rmtree
 
 from spt_dataset_manager.dataset_manager import ECMWFRAPIDDatasetManager
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tethys_portal.settings")
-
-# local imports
-from tethys_apps.tethysapp.streamflow_prediction_tool.model \
-    import Watershed  # noqa: E402
-from tethys_apps.tethysapp.streamflow_prediction_tool.app \
-    import StreamflowPredictionTool as app  # noqa: E402
 
 
 def download_single_watershed_ecmwf_data(watershed,
@@ -65,6 +58,11 @@ def load_datasets():
     """
     Loads ECMWF prediction datasets from data store for all watersheds
     """
+    from tethys_apps.tethysapp.streamflow_prediction_tool.model \
+        import Watershed
+    from tethys_apps.tethysapp.streamflow_prediction_tool.app \
+        import StreamflowPredictionTool as app
+
     session_maker = app.get_persistent_store_database('main_db',
                                                       as_sessionmaker=True)
     session = session_maker()
