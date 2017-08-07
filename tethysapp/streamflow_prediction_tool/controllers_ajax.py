@@ -303,7 +303,7 @@ def geoserver_delete(request):
     except IntegrityError:
         session.close()
         raise DatabaseError("This geoserver is connected with a watershed! "
-            "Must remove connection to delete.")
+                            "Must remove connection to delete.")
 
     session.close()
     return JsonResponse({'success': "GeoServer sucessfully deleted!"})
@@ -391,7 +391,7 @@ def ecmwf_get_avaialable_dates(request):
     path_to_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
     if not os.path.exists(path_to_rapid_output):
         raise SettingsError('Location of ECMWF forecast files faulty. '
-            'Please check settings.')
+                            'Please check settings.')
 
     # get/check information from AJAX request
     watershed_name, subbasin_name = validate_watershed_info(request.GET)
@@ -428,7 +428,7 @@ def ecmwf_get_hydrograph(request):
     path_to_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
     if not os.path.exists(path_to_rapid_output):
         raise SettingsError('Location of ECMWF forecast files faulty. '
-            'Please check settings.')
+                            'Please check settings.')
 
     # get/check information from AJAX request
     get_info = request.GET
@@ -497,7 +497,7 @@ def era_interim_get_hydrograph(request):
     path_to_era_interim_data = app.get_custom_setting('historical_folder')
     if not os.path.exists(path_to_era_interim_data):
         raise SettingsError('Location of ERA-Interim files faulty. '
-            'Please check settings.')
+                            'Please check settings.')
 
     # get information from GET request
     get_info = request.GET
@@ -623,7 +623,7 @@ def era_interim_get_csv(request):
     path_to_era_interim_data = app.get_custom_setting('historical_folder')
     if not os.path.exists(path_to_era_interim_data):
         raise SettingsError('Location of ERA-Interim files faulty. '
-            'Please check settings.')
+                            'Please check settings.')
 
     # get information from GET request
     get_info = request.GET
@@ -645,9 +645,9 @@ def era_interim_get_csv(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = \
         'attachment; filename=streamflow_{0}_{1}_{2}.csv' \
-            .format(watershed_name,
-                    subbasin_name,
-                    river_id)
+        .format(watershed_name,
+                subbasin_name,
+                river_id)
 
     writer = csv_writer(response)
     writer.writerow(['datetime', 'streamflow (m3/s)'])
@@ -749,7 +749,6 @@ def get_historical_hydrograph(request):
     # ----------------------------------------------
     # HISTORICAL DATA SECTION
     # ----------------------------------------------
-    era_interim_return_data = {}
     # find/check current output datasets
     path_to_output_files = \
         os.path.join(path_to_era_interim_data,
@@ -1199,7 +1198,7 @@ def watershed_ecmwf_rapid_file_upload(request):
     session = session_maker()
     watershed = session.query(Watershed).get(watershed_id)
 
-    if int(watershed.data_store_id)== 1:
+    if int(watershed.data_store_id) == 1:
         session.close()
         raise InvalidData("Not allowed to upload to the local data store ...")
 
