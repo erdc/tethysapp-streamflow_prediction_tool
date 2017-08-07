@@ -1,0 +1,5 @@
+[MESSAGES CONTROL]
+disable = broad-except,len-as-condition,superfluous-parens,too-many-locals,too-many-branches,too-many-nested-blocks,too-many-statements,too-many-lines,too-many-arguments,unnecessary-pass,bad-continuation,invalid-name,too-few-public-methods,too-many-return-statements
+[TYPECHECK]
+ignored-modules = crontab, netCDF4, plotly, xarray
+ignored-classes = plotly.graph_objs

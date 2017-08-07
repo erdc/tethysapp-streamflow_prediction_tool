@@ -1,0 +1,46 @@
+#-------------------------------------------------------------------------------
+# .travis.yml
+# Author: Alan D. Snow, 2017
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+# System specifications for Travis CI
+#-------------------------------------------------------------------------------
+language: c
+os:
+  - linux
+env:
+  - TRAVIS_PYTHON_VERSION="2"
+  - TRAVIS_PYTHON_VERSION="3"
+matrix:
+  fast_finish: true
+  allow_failures:
+    - env: TRAVIS_PYTHON_VERSION="3"
+notifications:
+  email: false
+
+before_install:
+#-----------------------------------------------------------------------------
+# Install Tethys Platform
+#-----------------------------------------------------------------------------
+- wget https://raw.githubusercontent.com/tethysplatform/tethys/release/scripts/install_tethys.sh
+- bash install_tethys.sh -b release --python-version $TRAVIS_PYTHON_VERSION
+- export PATH=$HOME/tethys/miniconda/bin:$PATH
+- conda config --set always_yes yes
+#-----------------------------------------------------------------------------
+# Activate Tethys Conda Environment & Install Dependencies
+#-----------------------------------------------------------------------------
+- source activate tethys
+- conda install xarray netcdf4
+# install spt_dataset_services
+- cd ..
+- git clone https://github.com/erdc-cm/spt_dataset_manager.git
+- cd spt_dataset_manager
+- python setup.py install
+
+install:
+- cd $TRAVIS_BUILD_DIR
+- pip install -e .[tests]
+
+script:
+- flake8
+- pylint tethysapp setup.py
