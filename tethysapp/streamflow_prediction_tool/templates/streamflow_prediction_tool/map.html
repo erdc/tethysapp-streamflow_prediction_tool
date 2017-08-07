@@ -9,6 +9,9 @@
 {% load staticfiles %}
 
 {% load tethys_gizmos %}
+{% block import_gizmos %}
+    {% import_gizmo_dependency plotly_view %}
+{% endblock %}
 
 {% block global_scripts %}
   {{ block.super }}
@@ -155,7 +158,7 @@
                                 <div class="panel-body">
                                     <div id="seasonal_streamflow_data" class="panel-body" style="height: 50%;">
                                         <h6>Seasonal Streamflow Chart</h6>
-                                        <div id="era_message" class="alert alert-info" role="alert">
+                                        <div id="season_message" class="alert alert-info" role="alert">
                                             <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
                                             Click on a river segment or search by river reach ID before displaying data.
                                         </div>
