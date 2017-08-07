@@ -1684,20 +1684,14 @@ def watershed_group_update(request):
         # get watershed group
         watershed_group = session.query(WatershedGroup).get(watershed_group_id)
         watershed_group.name = watershed_group_name
+
         # find new watersheds
         new_watersheds = session.query(Watershed) \
             .filter(Watershed.id.in_(watershed_group_watershed_ids)) \
             .all()
 
-        # remove old watersheds
-        for watershed in watershed_group.watersheds:
-            if watershed not in new_watersheds:
-                watershed_group.watersheds.remove(watershed)
-
-        # add new watersheds
-        for watershed in new_watersheds:
-            if watershed not in watershed_group.watersheds:
-                watershed_group.watersheds.append(watershed)
+        # update watersheds in group
+        watershed_group.watersheds = new_watersheds
 
         session.commit()
         session.close()

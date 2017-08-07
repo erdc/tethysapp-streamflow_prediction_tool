@@ -53,20 +53,22 @@ var ERFP_MANAGE_WATERSHED_GROUPS = (function() {
             //check data store input
             var watershed_group_id = parent_row.find('.watershed-group-id').text();
             var watershed_group_name = checkTableCellInputWithError(parent_row.find('.watershed-group-name'),safe_to_submit);
-            var watershed_group_watershed_ids = checkInputWithError(parent_row.find('.watershed-select'),safe_to_submit, true, true);
+            var watershed_group_watershed_ids = checkInputWithError(parent_row.find('select.watershed-select'),safe_to_submit, true, true);
 
             var data = {
-                    watershed_group_id: watershed_group_id,
-                    watershed_group_name: watershed_group_name,
-                    watershed_group_watershed_ids: watershed_group_watershed_ids
-                    };
+                watershed_group_id: watershed_group_id,
+                watershed_group_name: watershed_group_name,
+                watershed_group_watershed_ids: watershed_group_watershed_ids
+            };
             //update database
             var xhr = submitRowData($(this), data, safe_to_submit);
-            xhr.done(function(data){
-                if ('success' in data) {
-                    addSuccessMessage("Watershed Group Update Complete!");
-                }
-            });
+            if (xhr != null) {
+                xhr.done(function(data){
+                    if ('success' in data) {
+                        addSuccessMessage("Watershed Group Update Complete!");
+                    }
+                });
+            }
         });
 
         //handle the submit delete event
