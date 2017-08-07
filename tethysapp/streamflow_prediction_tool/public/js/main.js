@@ -291,13 +291,11 @@ function ajax_update_database(ajax_url, ajax_data, div_id) {
             appendSuccessMessage(data['success'], div_id);
         } else {
             addWarningMessage("Submission failed");
-            appendErrorMessage(data['error'], div_id);
         }
     }) 
     .fail(function(xhr, status, error) {
         addWarningMessage("Submission failed");
-        appendErrorMessage(error, div_id);
-        console.log(xhr.responseText);
+        appendErrorMessage(xhr.responseText, div_id);
     });
 
     return xhr;
@@ -324,13 +322,11 @@ function ajax_update_database_with_file(ajax_url, ajax_data, div_id) {
             addSuccessMessage(data['success'], div_id);
         } else {
             addWarningMessage("Submission failed");
-            appendErrorMessage(data['error'], div_id);
         }
     })
     .fail(function(xhr, status, error) {
             addWarningMessage("Submission failed");
-            appendErrorMessage(error, div_id);
-            console.log(xhr.responseText);
+            appendErrorMessage(xhr.responseText, div_id);
     });
     return xhr;
 }
@@ -355,13 +351,11 @@ function ajax_update_database_multiple_files(ajax_url, ajax_data, custom_message
             addSuccessMessage(custom_message, div_id);
         } else {
             addWarningMessage("Submission failed");
-            appendErrorMessage(data['error'], div_id);
         }
     })
     .fail(function(xhr, status, error) {
         addWarningMessage("Submission failed");
-        appendErrorMessage(error, div_id);
-        console.log(xhr.responseText);
+        appendErrorMessage(xhr.responseText, div_id);
     });
     return xhr;
 }
@@ -430,7 +424,7 @@ function deleteRowData(submit_button, data, div_id) {
             }
         })
         .fail(function(xhr, status, error) {
-            addErrorMessage(error, div_id);
+            addErrorMessage(xhr.responseText, div_id);
         })
         .always(function(){
             submit_button.html(submit_button_html);

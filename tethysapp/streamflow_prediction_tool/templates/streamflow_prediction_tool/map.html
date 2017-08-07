@@ -119,8 +119,9 @@
                     <!-- Nav tabs -->
                     <ul class="nav nav-tabs" role="tablist">
                         <li role="presentation" class="active"><a id="plot_tab_link" href="#plot_tab" aria-controls="plot_tab" role="tab" data-toggle="tab">Plot</a></li>
-                        <li role="presentation"><a href="#download" aria-controls="download" role="tab" data-toggle="tab">Download</a></li>
                         <li role="presentation"><a id="season_tab_link" href="#season" aria-controls="season" role="tab" data-toggle="tab">Season</a></li>
+                        <li role="presentation"><a id="historical_tab_link" href="#historical" aria-controls="season" role="tab" data-toggle="tab">Historical</a></li>
+                        <li role="presentation"><a href="#download" aria-controls="download" role="tab" data-toggle="tab">Download</a></li>
                     </ul>
 
                     <!-- Tab panes -->
@@ -131,6 +132,42 @@
                                     <label class="long-term-select select-label hidden" for="long-term-select">ECMWF Available Dates</label>
                                     <div id="long-term-select" class="hidden long-term-select"></div>
                                     <div id="long-term-chart" class="panel-body"></div>
+                                </div>
+                            </div>
+                        </div> <!-- /.tab-pane -->
+                        <div role="tabpanel" class="tab-pane" id="season">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div id="seasonal_streamflow_data" class="panel-body" style="height: 50%;">
+                                        <h6>Seasonal Streamflow Chart</h6>
+                                        <div id="season_message" class="alert alert-info" role="alert">
+                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                            Click on a river segment or search by river reach ID before displaying data.
+                                        </div>
+                                    </div>
+                                    <div id="retrieve_seasonal_streamflow_chart" class="btn-group hidden" role="group">
+                                        <a class="btn btn-warning" role="button" id="submit-retreive-seasonal-streamflow-chart">
+                                            <span class="glyphicon glyphicon-play"></span> Retrieve Seasonal Streamflow Chart
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> <!-- /.tab-pane -->
+                        <div role="tabpanel" class="tab-pane" id="historical">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div id="historical_streamflow_data" class="panel-body" style="height: 50%;">
+                                        <h6>Historical Streamflow Chart</h6>
+                                        <div id="historical_message" class="alert alert-info" role="alert">
+                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                            Click on a river segment or search by river reach ID before displaying data.
+                                        </div>
+                                    </div>
+                                    <div id="retrieve_historical_streamflow_chart" class="btn-group hidden" role="group">
+                                        <a class="btn btn-warning" role="button" id="submit-retreive-historical-streamflow-chart">
+                                            <span class="glyphicon glyphicon-play"></span> Retrieve Historical Streamflow Chart
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div> <!-- /.tab-pane -->
@@ -150,24 +187,6 @@
                                                 <span class="glyphicon glyphicon-play"></span> Download Interim Data
                                             </a>
                                         </div>
-                                </div>
-                            </div>
-                        </div> <!-- /.tab-pane -->
-                        <div role="tabpanel" class="tab-pane" id="season">
-                            <div class="panel panel-default">
-                                <div class="panel-body">
-                                    <div id="seasonal_streamflow_data" class="panel-body" style="height: 50%;">
-                                        <h6>Seasonal Streamflow Chart</h6>
-                                        <div id="season_message" class="alert alert-info" role="alert">
-                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                                            Click on a river segment or search by river reach ID before displaying data.
-                                        </div>
-                                    </div>
-                                    <div id="retrieve_seasonal_streamflow_chart" class="btn-group hidden" role="group">
-                                        <a class="btn btn-warning" role="button" id="submit-retreive-seasonal-streamflow-chart">
-                                            <span class="glyphicon glyphicon-play"></span> Retrieve Seasonal Streamflow Chart
-                                        </a>
-                                    </div>
                                 </div>
                             </div>
                         </div> <!-- /.tab-pane -->

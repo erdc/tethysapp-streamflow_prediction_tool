@@ -31,7 +31,7 @@ var ERFP_MAP = (function() {
         m_selected_nws_id,
         m_selected_hydroserver_url,
         m_downloading_ecmwf_hydrograph,
-        m_downloading_era_interim_hydrograph,
+        m_downloading_return_periods,
         m_downloading_long_term_select,
         m_downloading_short_term_select,
         m_downloading_usgs,
@@ -66,7 +66,7 @@ var ERFP_MAP = (function() {
         checkCleanString, dateToUTCDateTimeString, getValidSeries, 
         convertValueMetricToEnglish, unbindInputs, loadWarningPoints,
         updateWarningPoints, determineGeoServerLayerOrGroup, updateWarningSlider,
-        loadSeasonalStreamflowChart;
+        loadSeasonalStreamflowChart, loadHistoricallStreamflowChart;
 
 
     /************************************************************************
@@ -233,7 +233,7 @@ var ERFP_MAP = (function() {
     isNotLoadingPastRequest = function() {
         return !m_downloading_ecmwf_hydrograph && !m_downloading_long_term_select &&
             !m_downloading_usgs && !m_downloading_nws && !m_downloading_hydroserver &&
-            !m_downloading_era_interim_hydrograph;
+            !m_downloading_return_periods;
     };
 
     //FUNCTION: zooms to all layers
@@ -783,6 +783,10 @@ var ERFP_MAP = (function() {
                                           .removeClass('alert-danger')
                                           .text("");
 
+            $("#retrieve_historical_streamflow_chart").removeClass('hidden');
+            $("#historical_streamflow_data").removeClass('alert-info')
+                                          .removeClass('alert-danger')
+                                          .text("");
 
             //change download button url
             $('#submit-download-interim-csv').attr({target: '_blank', 
@@ -901,43 +905,36 @@ var ERFP_MAP = (function() {
                     },
                 });
                 xhr_ecmwf_hydrograph.done(function (data) {
-                    if ("success" in data) {
-                        if ("mean" in data) {
-                            addECMWFSeriesToCharts("ECMWF", data.mean, 
-                                                    Highcharts.getOptions().colors[2]);
-                        }
-                        if ("outer_range" in data) {
-                            addECMWFSeriesToCharts("ECMWF - Outer Range",
-                                                    data.outer_range, 
-                                                    Highcharts.getOptions().colors[2], 
-                                                    'arearange');
-                        }
-                        if ("std_dev_range" in data) {
-                            addECMWFSeriesToCharts("ECMWF - Std. Dev.", 
-                                                   data.std_dev_range, 
-                                                   Highcharts.getOptions().colors[2], 
-                                                   'arearange');
-                        }
-                        if ("high_res" in data) {
-                            addECMWFSeriesToCharts("ECMWF - HRES",
-                                                   data.high_res,
-                                                   Highcharts.getOptions().colors[1]);
-                        }
-                        $('.long-term-select').removeClass('hidden');
-                        var long_term_chart = $("#long-term-chart").highcharts();
-                        long_term_chart.rangeSelector.clickButton(0,0,true);
-                        $('#long-term-chart').removeClass('hidden');
-                        $(window).resize();
-
-                    } else {
-                        m_long_term_chart_data_ajax_load_failed = true;
-                        appendErrorMessage(data["error"], "ecmwf_error", "message-error");
-                        clearChartSelect2('long-term');
+                    if ("mean" in data) {
+                        addECMWFSeriesToCharts("ECMWF", data.mean,
+                                                Highcharts.getOptions().colors[2]);
                     }
+                    if ("outer_range" in data) {
+                        addECMWFSeriesToCharts("ECMWF - Outer Range",
+                                                data.outer_range,
+                                                Highcharts.getOptions().colors[2],
+                                                'arearange');
+                    }
+                    if ("std_dev_range" in data) {
+                        addECMWFSeriesToCharts("ECMWF - Std. Dev.",
+                                               data.std_dev_range,
+                                               Highcharts.getOptions().colors[2],
+                                               'arearange');
+                    }
+                    if ("high_res" in data) {
+                        addECMWFSeriesToCharts("ECMWF - HRES",
+                                               data.high_res,
+                                               Highcharts.getOptions().colors[1]);
+                    }
+                    $('.long-term-select').removeClass('hidden');
+                    var long_term_chart = $("#long-term-chart").highcharts();
+                    long_term_chart.rangeSelector.clickButton(0,0,true);
+                    $('#long-term-chart').removeClass('hidden');
+                    $(window).resize();
                 })
                 .fail(function (request, status, error) {
                         m_long_term_chart_data_ajax_load_failed = true;
-                        appendErrorMessage("Error: " + error, "ecmwf_error", "message-error");
+                        appendErrorMessage(request.responseText, "ecmwf_error", "message-error");
                         clearChartSelect2('long-term');
                 })
                 .always(function () {
@@ -948,10 +945,10 @@ var ERFP_MAP = (function() {
                     }
                 });
 
-                m_downloading_era_interim_hydrograph = true;
+                m_downloading_return_periods = true;
                 jQuery.ajax({
                     type: "GET",
-                    url: "era-interim-get-hydrograph",
+                    url: "get-return-periods",
                     dataType: "json",
                     data: {
                         watershed_name: m_selected_ecmwf_watershed,
@@ -960,80 +957,48 @@ var ERFP_MAP = (function() {
                     },
                 })
                 .done(function (data) {
-                        if ("success" in data) {
-                            var long_term_chart = $("#long-term-chart").highcharts();
-                            //load interim data to chart
-                            xhr_ecmwf_hydrograph.always(function(){
-                                if ("era_interim" in data) {
-                                    if (!("error" in data.era_interim)) {
-                                        var era_interim_series = {
-                                            name: "ERA Interim",
-                                            data: convertTimeSeriesMetricToEnglish(data.era_interim.series),
-                                            dashStyle: 'longdash',
-                                            color: Highcharts.getOptions().colors[10],
-                                        };
-                                        long_term_chart.addSeries(era_interim_series);
-                                    } else {
-                                        appendErrorMessage("Error: " + data.era_interim.error, "era_interim_error", "message-error");
-                                    }
-                                }
-                                //load return peeriod data to chart
-                                if ("return_period" in data) {
-                                    if (!("error" in data.return_period)) {
-        
-                                        var extremes = long_term_chart.yAxis[0].getExtremes();
-                                        var maxY = Math.max(extremes.max, convertValueMetricToEnglish(parseFloat(data.return_period.max)));
-                                        long_term_chart.yAxis[0].addPlotBand({
-                                            from: convertValueMetricToEnglish(parseFloat(data.return_period.twenty)),
-                                            to: convertValueMetricToEnglish(maxY),
-                                            color: 'rgba(128,0,128,0.4)',
-                                            id: '20-yr',
-                                            label: {
-                                                text: '20-yr',
-                                                align: 'right',
-                                            }
-                                        });
-                                        long_term_chart.yAxis[0].addPlotBand({
-                                            from: convertValueMetricToEnglish(parseFloat(data.return_period.ten)),
-                                            to: convertValueMetricToEnglish(parseFloat(data.return_period.twenty)),
-                                            color: 'rgba(255,0,0,0.3)',
-                                            id: '10-yr',
-                                            label: {
-                                                text: '10-yr',
-                                                align: 'right',
-                                            }
-                                        });
-                                        long_term_chart.yAxis[0].addPlotBand({
-                                            from: convertValueMetricToEnglish(parseFloat(data.return_period.two)),
-                                            to: convertValueMetricToEnglish(parseFloat(data.return_period.ten)),
-                                            color: 'rgba(255,255,0,0.3)',
-                                            id: '2-yr',
-                                            label: {
-                                                text: '2-yr',
-                                                align: 'right',
-                                            }
-                                        });
-                                    } else {
-                                        appendErrorMessage("Error: " + data.return_period.error, "era_interim_error", "message-error");
-                                    }  
-                                }
-                                //if ERA Interim series present, show chart
-                                if ("era_interim" in data) {
-                                    if (!("error" in data.era_interim)) {
-                                        $('#long-term-chart').removeClass('hidden');
-                                        $(window).resize();
-                                    }
-                                }
-                            });
-                        } else {
-                            appendErrorMessage("Error: " + data.error, "era_interim_error", "message-error");
-                        }
+                    var long_term_chart = $("#long-term-chart").highcharts();
+                    xhr_ecmwf_hydrograph.always(function() {
+                        //load return peeriod data to chart
+                        var extremes = long_term_chart.yAxis[0].getExtremes();
+                        var maxY = Math.max(extremes.max, convertValueMetricToEnglish(parseFloat(data.return_period.max)));
+                        long_term_chart.yAxis[0].addPlotBand({
+                            from: convertValueMetricToEnglish(parseFloat(data.return_period.twenty)),
+                            to: convertValueMetricToEnglish(maxY),
+                            color: 'rgba(128,0,128,0.4)',
+                            id: '20-yr',
+                            label: {
+                                text: '20-yr',
+                                align: 'right',
+                            }
+                        });
+                        long_term_chart.yAxis[0].addPlotBand({
+                            from: convertValueMetricToEnglish(parseFloat(data.return_period.ten)),
+                            to: convertValueMetricToEnglish(parseFloat(data.return_period.twenty)),
+                            color: 'rgba(255,0,0,0.3)',
+                            id: '10-yr',
+                            label: {
+                                text: '10-yr',
+                                align: 'right',
+                            }
+                        });
+                        long_term_chart.yAxis[0].addPlotBand({
+                            from: convertValueMetricToEnglish(parseFloat(data.return_period.two)),
+                            to: convertValueMetricToEnglish(parseFloat(data.return_period.ten)),
+                            color: 'rgba(255,255,0,0.3)',
+                            id: '2-yr',
+                            label: {
+                                text: '2-yr',
+                                align: 'right',
+                            }
+                        });
+                    });
                 })
                 .fail(function (request, status, error) {
-                    appendErrorMessage("Error: " + error, "era_interim_error", "message-error");
+                    appendErrorMessage(request.responseText, "return_periods_error", "message-error");
                 })
                 .always(function () {
-                    m_downloading_era_interim_hydrograph = false;
+                    m_downloading_return_periods = false;
                     m_map.addInteraction(m_select_interaction);
                     if(isNotLoadingPastRequest()){
                         clearInfoMessages();
@@ -1200,7 +1165,7 @@ var ERFP_MAP = (function() {
                     }
                 })
                 .fail(function(request, status, error) {
-                    appendErrorMessage("Error: " + error, "hydro_server_error", "message-error");
+                    appendErrorMessage(request.responseText, "hydro_server_error", "message-error");
                 })
                 .always(function() {
                     m_downloading_hydroserver = false;
@@ -1252,7 +1217,7 @@ var ERFP_MAP = (function() {
                     },
                 })
                 .done(function (data) {
-                    if ("success" in data && !m_long_term_chart_data_ajax_load_failed) {
+                    if (!m_long_term_chart_data_ajax_load_failed) {
                         //remove select2 if exists
                         clearChartSelect2('long-term');
                         $('.long-term-select').removeClass('hidden');
@@ -1261,7 +1226,7 @@ var ERFP_MAP = (function() {
                             data: data.output_directories,
                             placeholder: "Select a Date"
                         });
-                        if (m_downloading_ecmwf_hydrograph && m_downloading_era_interim_hydrograph) {
+                        if (m_downloading_ecmwf_hydrograph && m_downloading_return_periods) {
                             $('.long-term-select').addClass('hidden');
                         }
                         //add on change event handler
@@ -1269,13 +1234,10 @@ var ERFP_MAP = (function() {
                             m_ecmwf_start_folder = $(this).select2('data').id;
                             getChartData();
                         });
-                    } else if ("error" in data) {
-                        appendErrorMessage("Error: " + data.error, "ecmwf_error", "message-error");
-                        clearChartSelect2('long-term');
                     }
                 })
                 .fail(function (request, status, error) {
-                    appendErrorMessage("Error: " + error, "ecmwf_error", "message-error");
+                    appendErrorMessage(request.responseText, "ecmwf_error", "message-error");
                     clearChartSelect2('long-term');
                 })
                 .always(function () {
@@ -1363,65 +1325,56 @@ var ERFP_MAP = (function() {
             },
         })
         var xhr2 = xhr.done(function (data) {
-            if ("success" in data) {
-                var feature_count = data.warning_points.length;
-                if (feature_count > 0) {
-                    $(group_id).parent().removeClass('hidden');
-                    var first_layer = null;
-                    var feature_dict = {}
-                    watershed_layer_group.getLayers().forEach(function(sublayer, j) {
-                        var peak_date = stringToUTCDate(datetime_string);
-                        peak_date.setUTCDate(peak_date.getUTCDate()+j);
-                        sublayer.set('peak_date', peak_date); 
-                        sublayer.set('peak_date_str', dateToUTCString(peak_date));
-                        feature_dict[dateToUTCString(peak_date)] = []
-                        if (first_layer == null) {
-                            first_layer = sublayer;
-                        }
-                    });
-                    var feature_array = [];
-                    var geometry, symbol, warning_points_layer;
-                    for (var i = 0; i < feature_count; ++i) {
-                        geometry = new ol.geom.Point(ol.proj.transform([data.warning_points[i].lon, 
-                                                                       data.warning_points[i].lat], 
-                                                                      'EPSG:4326', m_map_projection));
+            var feature_count = data.warning_points.length;
+            if (feature_count > 0) {
+                $(group_id).parent().removeClass('hidden');
+                var first_layer = null;
+                var feature_dict = {}
+                watershed_layer_group.getLayers().forEach(function(sublayer, j) {
+                    var peak_date = stringToUTCDate(datetime_string);
+                    peak_date.setUTCDate(peak_date.getUTCDate()+j);
+                    sublayer.set('peak_date', peak_date);
+                    sublayer.set('peak_date_str', dateToUTCString(peak_date));
+                    feature_dict[dateToUTCString(peak_date)] = []
+                    if (first_layer == null) {
+                        first_layer = sublayer;
+                    }
+                });
+                var feature_array = [];
+                var geometry, symbol, warning_points_layer;
+                for (var i = 0; i < feature_count; ++i) {
+                    geometry = new ol.geom.Point(ol.proj.transform([data.warning_points[i].lon,
+                                                                   data.warning_points[i].lat],
+                                                                  'EPSG:4326', m_map_projection));
 
-                        if (typeof data.warning_points[i].peak_date == "undefined") {
-                            feature_array.push(new ol.Feature({
-                                                             geometry: geometry,
-                                                             point_size: data.warning_points[i].size,
-                                                            }));
-                        } else {
-                            feature_dict[data.warning_points[i].peak_date].push(new ol.Feature({
-                                                                                                geometry: geometry,
-                                                                                                point_size: data.warning_points[i].size,
-                                                                                               }));
-                        }
-                    }
-                    if (feature_array.length > 0) {
-                        first_layer.getSource().getSource().addFeatures(feature_array);
-                        first_layer.setVisible(true);         
-                        watershed_layer_group.set("daily_warnings", false);
+                    if (typeof data.warning_points[i].peak_date == "undefined") {
+                        feature_array.push(new ol.Feature({
+                                                         geometry: geometry,
+                                                         point_size: data.warning_points[i].size,
+                                                        }));
                     } else {
-                        watershed_layer_group.getLayers().forEach(function(sublayer, j) {
-                            sublayer.getSource().getSource().addFeatures(feature_dict[sublayer.get('peak_date_str')]);
-                            sublayer.setVisible(true);         
-                        });
-                        watershed_layer_group.set("daily_warnings", true);
+                        feature_dict[data.warning_points[i].peak_date].push(new ol.Feature({
+                                                                                            geometry: geometry,
+                                                                                            point_size: data.warning_points[i].size,
+                                                                                           }));
                     }
-                    m_map.render();
                 }
-    
-            } else {
+                if (feature_array.length > 0) {
+                    first_layer.getSource().getSource().addFeatures(feature_array);
+                    first_layer.setVisible(true);
+                    watershed_layer_group.set("daily_warnings", false);
+                } else {
+                    watershed_layer_group.getLayers().forEach(function(sublayer, j) {
+                        sublayer.getSource().getSource().addFeatures(feature_dict[sublayer.get('peak_date_str')]);
+                        sublayer.setVisible(true);
+                    });
+                    watershed_layer_group.set("daily_warnings", true);
+                }
                 m_map.render();
-                //console.log(data.error);
-                //appendErrorMessage("Error: " + data["error"], "warning_points_error", "message-error");
             }
         })
-        xhr.fail(function (request, status, error) {
+        xhr.always(function() {
             m_map.render();
-            //console.log(error);
-            //appendErrorMessage("Error: " + error, "warning_points_error", "message-error");
         });
         return xhr2;
     };
@@ -1617,10 +1570,33 @@ var ERFP_MAP = (function() {
                 $("#seasonal_streamflow_data").html(data);
         })
         .fail(function (request, status, error) {
-            addErrorMessage("Error: " + error, "seasonal_streamflow_data");
+            addErrorMessage(request.responseText, "seasonal_streamflow_data");
         });
     };
     
+    //FUNCTION: Loads historical streamflow chart
+    loadHistoricallStreamflowChart = function() {
+        $("#retrieve_historical_streamflow_chart").addClass('hidden');
+        $.ajax({
+            url: 'get-historical-hydrograph',
+            method: 'GET',
+            data: {
+                'watershed_name': m_selected_ecmwf_watershed,
+                'subbasin_name': m_selected_ecmwf_subbasin,
+                'reach_id': m_selected_reach_id,
+            },
+        })
+        .done(function(data) {
+                $("#historical_streamflow_data").removeClass('alert-info');
+                $('#historical_tab_link').tab('show'); //switch to plot tab
+                $("#retrieve_historical_streamflow_chart").addClass('hidden');
+                $("#historical_streamflow_data").html(data);
+        })
+        .fail(function (request, status, error) {
+            addErrorMessage(request.responseText, "historical_streamflow_data");
+        });
+    };
+
     /************************************************************************
     *                        DEFINE PUBLIC INTERFACE
     *************************************************************************/
@@ -1656,7 +1632,7 @@ var ERFP_MAP = (function() {
         m_selected_nws_id = null;
         m_selected_hydroserver_url = null;
         m_downloading_ecmwf_hydrograph = false;
-        m_downloading_era_interim_hydrograph = false;
+        m_downloading_return_periods = false;
         m_downloading_long_term_select = false;
         m_downloading_short_term_select = false;
         m_downloading_usgs = false;
@@ -2262,6 +2238,11 @@ var ERFP_MAP = (function() {
         $("#retrieve_seasonal_streamflow_chart").click(function(){
             addInfoMessage("Loading data ...", "seasonal_streamflow_data");
             loadSeasonalStreamflowChart();
+        });
+
+        $("#retrieve_historical_streamflow_chart").click(function(){
+            addInfoMessage("Loading data ...", "historical_streamflow_data");
+            loadHistoricallStreamflowChart();
         });
 
         //init tooltip

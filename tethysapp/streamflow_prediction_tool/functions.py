@@ -16,9 +16,11 @@ import xarray
 
 # django imports
 from django.contrib import messages
+from django.http import Http404
 from django.shortcuts import redirect
 
 # local import
+from .exception_handling import NotFoundError
 from .model import GeoServerLayer
 
 
@@ -126,14 +128,17 @@ def ecmwf_get_forecast_statistics(forecast_nc_list, river_id, return_data=""):
     # combine 52 ensembles
     qout_datasets = []
     ensemble_index_list = []
-    for forecast_nc in forecast_nc_list:
-        ensemble_index_list.append(
-            int(os.path.basename(forecast_nc)[:-3].split("_")[-1])
-        )
-        qout_datasets.append(
-            xarray.open_dataset(forecast_nc, autoclose=True)
-                  .sel(rivid=river_id).Qout
-        )
+    try:
+        for forecast_nc in forecast_nc_list:
+            ensemble_index_list.append(
+                int(os.path.basename(forecast_nc)[:-3].split("_")[-1])
+            )
+            qout_datasets.append(
+                xarray.open_dataset(forecast_nc, autoclose=True)
+                      .sel(rivid=river_id).Qout
+            )
+    except IndexError:
+        raise NotFoundError('ECMWF river ID {} not found.'.format(river_id))
 
     merged_ds = xarray.concat(qout_datasets,
                               pd.Index(ensemble_index_list, name='ensemble'))
@@ -350,3 +355,47 @@ def user_permission_test(user):
     User needs to be superuser or staff
     """
     return user.is_superuser or user.is_staff
+
+
+def validate_watershed_info(request_info, clean_name=True):
+    """
+    This function validates the input watershed and subbasin data for a request
+
+    Returns
+    -------
+    watershed_name, subbasin_name
+    """
+    watershed_name = request_info['watershed_name'].strip() \
+        if 'watershed_name' in request_info else None
+    if watershed_name is None:
+        raise Http404('Missing watershed_name parameter ....')
+
+    subbasin_name = request_info['subbasin_name'].strip() \
+        if 'subbasin_name' in request_info else None
+    if subbasin_name is None:
+        raise Http404('Missing subbasin_name parameter ....')
+
+    if clean_name:
+        return format_name(watershed_name), format_name(subbasin_name)
+    return watershed_name, subbasin_name
+
+
+def validate_rivid_info(request_info):
+    """
+    This function validates the input rivid data for a request
+
+    Returns
+    -------
+    rivid
+    """
+    reach_id = request_info.get('reach_id')
+    if reach_id is None:
+        raise Http404('Missing reach_id parameter ....')
+
+    # make sure reach id is integet
+    try:
+        reach_id = int(reach_id)
+    except (TypeError, ValueError):
+        raise Http404('Invalid value for reach_id {}.'.format(reach_id))
+
+    return reach_id
