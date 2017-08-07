@@ -42,15 +42,18 @@ class UploadError(Exception):
 def exceptions_to_http_status(view_func):
     """
     This decorator is defined in the view module, and it knows to convert
-    InvalidData exceptions to http status 400. Add whatever other exception types
-    and http return values you need. We end with a 'catch-all' conversion of
-    Exception into http 500.
+    InvalidData exceptions to http status 400. Add whatever other
+    exception type and http return values you need.
+    We end with a 'catch-all' conversion of Exception into http 500.
 
     Based on: https://stackoverflow.com/questions/25422176/
         django-raise-badrequest-as-exception
     """
     @wraps(view_func)
     def inner(*args, **kwargs):
+        """
+        Catch exceptions and convert them to django http response objects
+        """
         try:
             return view_func(*args, **kwargs)
         except DatabaseError as ex:
@@ -66,7 +69,5 @@ def exceptions_to_http_status(view_func):
         except UploadError as ex:
             return HttpResponseBadRequest("Upload error: {}".format(ex))
         except Exception as ex:
-            import traceback
-            traceback.print_exc()
             return HttpResponseServerError(str(ex))
     return inner
