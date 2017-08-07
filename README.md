@@ -5,6 +5,8 @@
 
 [![DOI](https://zenodo.org/badge/19918/erdc-cm/tethysapp-streamflow_prediction_tool.svg)](https://zenodo.org/badge/latestdoi/19918/erdc-cm/tethysapp-streamflow_prediction_tool)
 
+[![Build Status](https://travis-ci.org/erdc-cm/tethysapp-streamflow_prediction_tool.svg?branch=master)](https://travis-ci.org/erdc-cm/tethysapp-streamflow_prediction_tool)
+
 ## Publications:
 
 Snow, Alan D., Scott D. Christensen, Nathan R. Swain, E. James Nelson, Daniel P. Ames, Norman L. Jones,
