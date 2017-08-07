@@ -65,7 +65,7 @@ var ERFP_ADD_WATERSHED = (function() {
         } else {
             //delete watershed and show error
             var xhr = ajax_update_database("delete",{watershed_id: watershed_id});
-            appendErrorMessage(result["error"], "error_reset");
+            appendErrorMessage("Error uploading watershed ...", "error_reset");
         }
      };
 
@@ -338,9 +338,10 @@ var ERFP_ADD_WATERSHED = (function() {
                                     });
                                 });
                             }
-                        } else {
-                            appendErrorMessage(return_data['error'], "error_submit");
                         }
+                    })
+                    .fail(function(xhr, status, error) {
+                        appendErrorMessage(xhr.responseText, "error_submit");
                     });
                 } else {
                     var data = {
@@ -371,11 +372,11 @@ var ERFP_ADD_WATERSHED = (function() {
                             jQuery.when(xhr_ecmwf_rapid).done(function(){
                                 finishReset(return_data);
                             });
-                        } else {
-                            appendErrorMessage(return_data['error'], "error_submit");
                         }
                     })
-                }
+                    .fail(function(xhr, status, error) {
+                        appendErrorMessage(xhr.responseText, "error_submit");
+                    });                }
                 m_uploading_data = true;
 
                 jQuery.when(xhr, xhr_boundary, xhr_gage, xhr_ahps_station, xhr_ecmwf_rapid)

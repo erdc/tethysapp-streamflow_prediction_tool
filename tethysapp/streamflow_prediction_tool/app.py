@@ -48,15 +48,20 @@ class StreamflowPredictionTool(TethysAppBase):
                     url='streamflow-prediction-tool/map/ecmwf-get-hydrograph',
                     controller='streamflow_prediction_tool.controllers_ajax'
                                '.ecmwf_get_hydrograph'),
-            url_map(name='get_era_interim_reach_hydrograph_ajax',
+            url_map(name='get_return_periods_ajax',
                     url='streamflow-prediction-tool/map/'
-                        'era-interim-get-hydrograph',
+                        'get-return-periods',
                     controller='streamflow_prediction_tool.controllers_ajax'
-                               '.era_interim_get_hydrograph'),
+                               '.get_return_periods'),
             url_map(name='get_era_interim_csv_ajax',
                     url='streamflow-prediction-tool/map/era-interim-get-csv',
                     controller='streamflow_prediction_tool.controllers_ajax'
                                '.era_interim_get_csv'),
+            url_map(name='get_historical_hydrograph_ajax',
+                    url='streamflow-prediction-tool/map/'
+                        'get-historical-hydrograph',
+                    controller='streamflow_prediction_tool.controllers_ajax'
+                               '.get_historical_hydrograph'),
             url_map(name='get_warning_points_ajax',
                     url='streamflow-prediction-tool/map/get-warning-points',
                     controller='streamflow_prediction_tool.controllers_ajax'
