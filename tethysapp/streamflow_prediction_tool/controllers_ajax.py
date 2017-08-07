@@ -5,12 +5,12 @@
     License: BSD 3-Clause
 """
 from csv import writer as csv_writer
+import datetime
 from glob import glob
 from json import load as json_load
 import os
 
-import netCDF4 as NET
-import numpy as np
+import plotly.graph_objs as go
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import ObjectDeletedError
@@ -19,9 +19,11 @@ import xarray
 # django imports
 from django.contrib.auth.decorators import user_passes_test, login_required
 from django.http import HttpResponse, JsonResponse, Http404
+from django.shortcuts import render
 from django.views.decorators.http import require_GET, require_POST
 
 # tethys imports
+from tethys_sdk.gizmos import PlotlyView
 from tethys_dataset_services.engines import CkanDatasetEngine
 
 # local imports
@@ -776,9 +778,9 @@ def era_interim_get_csv(request):
 
 @require_GET
 @login_required
-def get_seasonal_streamflow(request):
+def get_seasonal_streamflow_chart(request):
     """""
-    Returns seasonal streamflow for unique river ID
+    Returns seasonal streamflow chart for unique river ID
     """""
     path_to_era_interim_data = app.get_custom_setting('historical_folder')
     if not os.path.exists(path_to_era_interim_data):
@@ -811,24 +813,76 @@ def get_seasonal_streamflow(request):
                                             "seasonal_average*.nc"))
     if seasonal_data_files:
         try:
-            seasonal_nc = NET.Dataset(seasonal_data_files[0])
-            rivid_index = np.where(seasonal_nc.variables['rivid'][:]
-                                   == reach_id)[0][0]
+            with xarray.open_dataset(seasonal_data_files[0]) as seasonal_nc:
 
-            season_avg = seasonal_nc.variables['average_flow'][rivid_index, :]
-            season_std = seasonal_nc.variables['std_dev_flow'][rivid_index, :]
+                seasonal_data = seasonal_nc.sel(rivid=reach_id)
+                base_date = datetime.datetime(2017, 1, 1)
+                day_of_year = \
+                    [base_date + datetime.timedelta(days=ii)
+                     for ii in range(seasonal_data.dims['day_of_year'])]
+                season_avg = seasonal_data.average_flow.values
+                season_std = seasonal_data.std_dev_flow.values
 
-            avg_plus_std = season_avg + season_std
-            avg_min_std = season_avg - season_std
+                season_avg[season_avg < 0] = 0
 
-            season_avg[season_avg < 0] = 0
-            avg_plus_std[avg_plus_std < 0] = 0
-            avg_min_std[avg_min_std < 0] = 0
+                avg_plus_std = season_avg + season_std
+                avg_min_std = season_avg - season_std
 
-            return JsonResponse({
-                'season_avg': season_avg.tolist(),
-                'std_range': zip(avg_min_std.tolist(), avg_plus_std.tolist()),
-            })
+                avg_plus_std[avg_plus_std < 0] = 0
+                avg_min_std[avg_min_std < 0] = 0
+
+                avg_scatter = go.Scatter(
+                    name='Average',
+                    x=day_of_year,
+                    y=season_avg,
+                    line=dict(
+                        color='#0066ff'
+                    )
+                )
+
+                std_plus_scatter = go.Scatter(
+                    name='Std. Dev. Upper',
+                    x=day_of_year,
+                    y=avg_plus_std,
+                    fill=None,
+                    mode='lines',
+                    line=dict(
+                        color='#ff6600'
+                    )
+                )
+
+                std_min_scatter = go.Scatter(
+                    name='Std. Dev. Lower',
+                    x=day_of_year,
+                    y=avg_min_std,
+                    fill='tonexty',
+                    mode='lines',
+                    line=dict(
+                        color='#ff6600',
+                    )
+                )
+
+                layout = go.Layout(title="Daily Seasonal Streamflow",
+                                   xaxis={
+                                       'title': 'Day of Year',
+                                       'tickformat': "%b",
+                                   },
+                                   yaxis={
+                                       'title': 'Streamflow (m<sup>3</sup>/s)'
+                                   })
+
+                chart_obj = PlotlyView(
+                    go.Figure(data=[std_plus_scatter,
+                                    std_min_scatter,
+                                    avg_scatter],
+                              layout=layout))
+                context = {
+                    'gizmo_object': chart_obj,
+                }
+
+            return render(request,
+                          'streamflow_prediction_tool/gizmo_ajax.html',
+                          context)
 
         except IndexError:
             raise Http404('Seasonal Average reach with ID: %s not found.'

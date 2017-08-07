@@ -66,11 +66,11 @@ class StreamflowPredictionTool(TethysAppBase):
                         'ecmwf-get-avaialable-dates',
                     controller='streamflow_prediction_tool.controllers_ajax'
                                '.ecmwf_get_avaialable_dates'),
-            url_map(name='get_seasonal_streamflow',
+            url_map(name='get_seasonal_streamflow_chart',
                     url='streamflow-prediction-tool/map/'
-                        'get_seasonal_streamflow',
+                        'get_seasonal_streamflow_chart',
                     controller='streamflow_prediction_tool.controllers_ajax'
-                               '.get_seasonal_streamflow'),
+                               '.get_seasonal_streamflow_chart'),
             url_map(name='add-watershed',
                     url='streamflow-prediction-tool/add-watershed',
                     controller='streamflow_prediction_tool.controllers'
