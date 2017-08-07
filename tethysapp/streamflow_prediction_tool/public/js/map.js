@@ -1602,86 +1602,19 @@ var ERFP_MAP = (function() {
     loadSeasonalStreamflowChart = function() {
         $("#retrieve_seasonal_streamflow_chart").addClass('hidden');
         $.ajax({
-            url: 'get_seasonal_streamflow',
+            url: 'get_seasonal_streamflow_chart',
             method: 'GET',
             data: {
                 'watershed_name': m_selected_ecmwf_watershed,
                 'subbasin_name': m_selected_ecmwf_subbasin,
                 'reach_id': m_selected_reach_id,
-                },
+            },
         })
         .done(function(data) {
-                var y_axis_title = "Flow (m<sup>3</sup>/s)";
-                if (m_units == "english") {
-                    y_axis_title = "Flow (ft<sup>3</sup>/s)";
-                }
-
-                var new_season_average = [];
-                var new_std_range = [];
-                for(var i=0;i<365;i++) {
-                    new_season_average.push([i*24*3600*1000, data.season_avg[i]]);
-                    new_std_range.push([i*24*3600*1000, data.std_range[i][0], data.std_range[i][1]]);
-                }
-
-                var default_chart_settings = {
-    
-                    title: { text: "Daily Seasonal Streamflow"},
-                    chart: {
-                        zoomType: 'x',
-                    },
-                    legend: {
-                        enabled: true,
-                    },
-                    rangeSelector: {
-                        selected: 0
-                    },
-                    plotOptions: {
-                        series: {
-                            marker: {
-                                enabled: false,
-                            }
-                        }
-                    },
-                    tooltip: {
-                        xDateFormat: '%b. %e'
-                    },
-                    xAxis: {
-                        title: {
-                            text: 'Day of Year'
-                        },
-                        type: 'datetime',
-                        dateTimeLabelFormats: { // don't display the dummy year
-                            month: '%e. %b',
-                            year: '%b'
-                        },
-                    },
-                    yAxis: {
-                        title: {
-                            useHTML: true,
-                            text: y_axis_title
-                        },
-                        min: 0,
-                    },
-                    series: [
-                       {
-                           name: 'Average',
-                           color: '#0066ff',
-                           data: convertTimeSeriesMetricToEnglish(new_season_average),
-                       },
-                       {
-                           name: 'Std. Dev. Range',
-                           color: '#ff6600',
-                           data: convertTimeSeriesMetricToEnglish(new_std_range),
-                           type: 'arearange',
-                           fillOpacity: 0.4,
-                       },
-                    ],
-
-                };
                 $("#seasonal_streamflow_data").removeClass('alert-info');
                 $('#season_tab_link').tab('show'); //switch to plot tab
-                $("#seasonal_streamflow_data").highcharts(default_chart_settings);
                 $("#retrieve_seasonal_streamflow_chart").addClass('hidden');
+                $("#seasonal_streamflow_data").html(data);
         })
         .fail(function (request, status, error) {
             addErrorMessage("Error: " + error, "seasonal_streamflow_data");

@@ -12,8 +12,8 @@
 <h3>Data Storage Input</h3>
 {% gizmo select_input data_store_select %}
 <h5>ECMWF Data Storage Input</h5>
-{% gizmo text_input ecmwf_data_store_watershed_name_input %}
-{% gizmo text_input ecmwf_data_store_subbasin_name_input %}
+{% gizmo text_input data_store_watershed_name_input %}
+{% gizmo text_input data_store_subbasin_name_input %}
 <div class="form-group data_store{% if watershed.data_store_id == 1 %} hidden{% endif %}">
     <label class="control-label" for="ecmwf-rapid-files-upload-input">ECMWF RAPID Input Files (Optional)</label>
     <input id="ecmwf-rapid-files-upload-input" name="ecmwf-rapid-files-upload-input" type="file" accept=".zip">
