@@ -30,7 +30,7 @@ before_install:
 # Activate Tethys Conda Environment & Install Dependencies
 #-----------------------------------------------------------------------------
 - source activate tethys
-- conda install xarray netcdf4
+- conda install netcdf4 pandas scipy xarray
 # install spt_dataset_services
 - cd ..
 - git clone https://github.com/erdc-cm/spt_dataset_manager.git
