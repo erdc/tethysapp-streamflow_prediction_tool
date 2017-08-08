@@ -29,6 +29,7 @@ DEPENDENCIES = [
     'pandas',
     'python-crontab',
     'pytz',
+    'scipy',
     'sqlalchemy',
     'tethys_dataset_services',
 ]
