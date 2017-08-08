@@ -16,6 +16,10 @@
     list-style-type: none;
 }
 
+#inner-app-content .intro_message {
+    margin-bottom: 0;
+}
+
 .map {
     height: 100%;
 }
