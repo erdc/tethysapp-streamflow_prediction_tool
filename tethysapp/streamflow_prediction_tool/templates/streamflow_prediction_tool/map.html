@@ -119,9 +119,10 @@
                     <!-- Nav tabs -->
                     <ul class="nav nav-tabs" role="tablist">
                         <li role="presentation" class="active"><a id="forecast_tab_link" href="#forecast_tab" aria-controls="forecast_tab" role="tab" data-toggle="tab">Forecast</a></li>
-                        <li role="presentation"><a id="historical_tab_link" href="#historical" aria-controls="season" role="tab" data-toggle="tab">Historical</a></li>
-                        <li role="presentation"><a id="flow_duration_tab_link" href="#flow_duration" aria-controls="season" role="tab" data-toggle="tab">Flow-Duration</a></li>
-                        <li role="presentation"><a id="season_tab_link" href="#season" aria-controls="season" role="tab" data-toggle="tab">Season</a></li>
+                        <li role="presentation"><a id="historical_tab_link" href="#historical" aria-controls="historical" role="tab" data-toggle="tab">Historical</a></li>
+                        <li role="presentation"><a id="flow_duration_tab_link" href="#flow_duration" aria-controls="flow_duration" role="tab" data-toggle="tab">Flow-Duration</a></li>
+                        <li role="presentation"><a id="daily_tab_link" href="#daily_season" aria-controls="daily_season" role="tab" data-toggle="tab">Daily Season</a></li>
+                        <li role="presentation"><a id="monthly_tab_link" href="#monthly_season" aria-controls="monthly_season" role="tab" data-toggle="tab">Monthly Season</a></li>
                         <li role="presentation"><a href="#download" aria-controls="download" role="tab" data-toggle="tab">Download</a></li>
                     </ul>
 
@@ -160,11 +161,23 @@
                                 </div>
                             </div>
                         </div> <!-- /.tab-pane -->
-                        <div role="tabpanel" class="tab-pane" id="season">
+                        <div role="tabpanel" class="tab-pane" id="daily_season">
                             <div class="panel panel-default">
                                 <div class="panel-body">
-                                    <div id="seasonal_streamflow_data" class="panel-body" style="height: 50%;">
-                                        <div id="season_message" class="alert alert-info" role="alert">
+                                    <div id="daily_streamflow_data" class="panel-body" style="height: 50%;">
+                                        <div id="daily_message" class="alert alert-info" role="alert">
+                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                            Click on a river segment or search by river reach ID before displaying data.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> <!-- /.tab-pane -->
+                        <div role="tabpanel" class="tab-pane" id="monthly_season">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div id="monthly_streamflow_data" class="panel-body" style="height: 50%;">
+                                        <div id="monthly_message" class="alert alert-info" role="alert">
                                             <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
                                             Click on a river segment or search by river reach ID before displaying data.
                                         </div>

@@ -87,5 +87,7 @@ def rivid_exception_handler(file_type, river_id):
         raise NotFoundError('{file_type} river with ID {river_id}.'
                             .format(file_type=file_type, river_id=river_id))
     except Exception:
+        import traceback
+        traceback.print_exc()
         raise InvalidData("Invalid {file_type} file ..."
                           .format(file_type=file_type))

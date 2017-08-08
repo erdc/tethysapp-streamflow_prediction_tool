@@ -39,7 +39,8 @@ var ERFP_MAP = (function() {
         m_downloading_hydroserver,
         m_downloaded_historical_streamflow,
         m_downloaded_flow_duration,
-        m_downloaded_seasonal_streamflow,
+        m_downloaded_daily_streamflow,
+        m_downloaded_monthly_streamflow,
         m_searching_for_reach,
         m_long_term_chart_data_ajax_load_failed,
         m_long_term_select_data_ajax_handle,
@@ -70,7 +71,8 @@ var ERFP_MAP = (function() {
         convertValueMetricToEnglish, unbindInputs, loadWarningPoints,
         updateWarningPoints, determineGeoServerLayerOrGroup,
         updateWarningSlider, isValidRiverSelected, loadFlowDurationChart,
-        loadSeasonalStreamflowChart, loadHistoricallStreamflowChart;
+        loadDailySeasonalStreamflowChart, loadMonthlySeasonalStreamflowChart,
+        loadHistoricallStreamflowChart;
 
 
     /************************************************************************
@@ -788,21 +790,22 @@ var ERFP_MAP = (function() {
     
             $('#era_message').addClass('hidden');
             $('#download_interim').removeClass('hidden');
-            m_downloaded_seasonal_streamflow = false;
-            $("#seasonal_streamflow_data").removeClass('alert-info')
-                                          .removeClass('alert-danger')
-                                          .text("");
 
             m_downloaded_historical_streamflow = false;
-            $("#historical_streamflow_data").removeClass('alert-info')
-                                            .removeClass('alert-danger')
+            $("#historical_streamflow_data").removeClass('alert alert-info alert-danger')
                                             .text("");
 
             m_downloaded_flow_duration = false;
-            $("#flow_duration_data").removeClass('alert-info')
-                                    .removeClass('alert-danger')
+            $("#flow_duration_data").removeClass('alert alert-info alert-danger')
                                     .text("");
 
+            m_downloaded_daily_streamflow = false;
+            $("#daily_streamflow_data").removeClass('alert alert-info alert-danger')
+                                       .text("");
+
+            m_downloaded_monthly_streamflow = false;
+            $("#monthly_streamflow_data").removeClass('alert alert-info alert-danger')
+                                         .text("");
             //change download button url
             $('#submit-download-interim-csv').attr({target: '_blank', 
                                                     href  : 'era-interim-get-csv?' + jQuery.param( params ) });
@@ -1580,7 +1583,7 @@ var ERFP_MAP = (function() {
             },
         })
         .done(function(data) {
-                $("#historical_streamflow_data").removeClass('alert-info');
+                $("#historical_streamflow_data").removeClass('alert alert-info');
                 $('#historical_tab_link').tab('show'); //switch to plot tab
                 $("#historical_streamflow_data").html(data);
         })
@@ -1603,7 +1606,7 @@ var ERFP_MAP = (function() {
             },
         })
         .done(function(data) {
-                $("#flow_duration_data").removeClass('alert-info');
+                $("#flow_duration_data").removeClass('alert alert-info');
                 $('#flow_duration_link').tab('show'); //switch to plot tab
                 $("#flow_duration_data").html(data);
         })
@@ -1613,11 +1616,11 @@ var ERFP_MAP = (function() {
         });
     };
 
-    //FUNCTION: Loads seasonal streamflow chart
-    loadSeasonalStreamflowChart = function() {
-        m_downloaded_seasonal_streamflow = true;
+    //FUNCTION: Loads daily seasonal streamflow chart
+    loadDailySeasonalStreamflowChart = function() {
+        m_downloaded_daily_streamflow = true;
         $.ajax({
-            url: 'get_seasonal_streamflow_chart',
+            url: 'get-daily-seasonal-streamflow-chart',
             method: 'GET',
             data: {
                 'watershed_name': m_selected_ecmwf_watershed,
@@ -1626,13 +1629,36 @@ var ERFP_MAP = (function() {
             },
         })
         .done(function(data) {
-                $("#seasonal_streamflow_data").removeClass('alert-info');
-                $('#season_tab_link').tab('show'); //switch to plot tab
-                $("#seasonal_streamflow_data").html(data);
+                $("#daily_streamflow_data").removeClass('alert alert-info');
+                $('#daily_tab_link').tab('show'); //switch to plot tab
+                $("#daily_streamflow_data").html(data);
         })
         .fail(function (request, status, error) {
-            m_downloaded_seasonal_streamflow = false;
-            addErrorMessage(request.responseText, "seasonal_streamflow_data");
+            m_downloaded_daily_streamflow = false;
+            addErrorMessage(request.responseText, "daily_streamflow_data");
+        });
+    };
+
+    //FUNCTION: Loads monthly seasonal streamflow chart
+    loadMonthlySeasonalStreamflowChart = function() {
+        m_downloaded_monthly_streamflow = true;
+        $.ajax({
+            url: 'get-monthly-seasonal-streamflow-chart',
+            method: 'GET',
+            data: {
+                'watershed_name': m_selected_ecmwf_watershed,
+                'subbasin_name': m_selected_ecmwf_subbasin,
+                'reach_id': m_selected_reach_id,
+            },
+        })
+        .done(function(data) {
+                $("#monthly_streamflow_data").removeClass('alert alert-info');
+                $('#monthly_tab_link').tab('show'); //switch to plot tab
+                $("#monthly_streamflow_data").html(data);
+        })
+        .fail(function (request, status, error) {
+            m_downloaded_monthly_streamflow = false;
+            addErrorMessage(request.responseText, "monthly_streamflow_data");
         });
     };
 
@@ -1676,7 +1702,8 @@ var ERFP_MAP = (function() {
         m_downloading_usgs = false;
         m_downloading_nws = false;
         m_downloading_hydroserver = false;
-        m_downloaded_seasonal_streamflow = false;
+        m_downloaded_daily_streamflow = false;
+        m_downloaded_monthly_streamflow = false;
         m_downloaded_flow_duration = false;
         m_downloaded_historical_streamflow = false;
         m_searching_for_reach = false;
@@ -2267,7 +2294,7 @@ var ERFP_MAP = (function() {
                 m_units = "english";
             }
             if (m_selected_feature != null) {
-                if ($("#seasonal_streamflow_data").find(".highcharts-container").length)
+                if ($("#daily_streamflow_data").find(".highcharts-container").length)
                 {
                     loadSeasonalStreamflowChart();
                 }
@@ -2298,14 +2325,25 @@ var ERFP_MAP = (function() {
             }
         });
 
-        $("#season_tab_link").click(function(){
-            if (!m_downloaded_seasonal_streamflow && isValidRiverSelected()) {
-                addInfoMessage("Loading data ...", "seasonal_streamflow_data");
-                loadSeasonalStreamflowChart();
+        $("#daily_tab_link").click(function(){
+            if (!m_downloaded_daily_streamflow && isValidRiverSelected()) {
+                addInfoMessage("Loading data ...", "daily_streamflow_data");
+                loadDailySeasonalStreamflowChart();
             }
-            else if (m_downloaded_seasonal_streamflow)
+            else if (m_downloaded_daily_streamflow)
             {
-                Plotly.Plots.resize($("#seasonal_streamflow_data .js-plotly-plot")[0]);
+                Plotly.Plots.resize($("#daily_streamflow_data .js-plotly-plot")[0]);
+            }
+        });
+
+        $("#monthly_tab_link").click(function(){
+            if (!m_downloaded_monthly_streamflow && isValidRiverSelected()) {
+                addInfoMessage("Loading data ...", "monthly_streamflow_data");
+                loadMonthlySeasonalStreamflowChart();
+            }
+            else if (m_downloaded_monthly_streamflow)
+            {
+                Plotly.Plots.resize($("#monthly_streamflow_data .js-plotly-plot")[0]);
             }
         });
 
