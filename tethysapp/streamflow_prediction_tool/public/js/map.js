@@ -38,6 +38,7 @@ var ERFP_MAP = (function() {
         m_downloading_nws,
         m_downloading_hydroserver,
         m_downloaded_historical_streamflow,
+        m_downloaded_flow_duration,
         m_downloaded_seasonal_streamflow,
         m_searching_for_reach,
         m_long_term_chart_data_ajax_load_failed,
@@ -68,7 +69,7 @@ var ERFP_MAP = (function() {
         checkCleanString, dateToUTCDateTimeString, getValidSeries, 
         convertValueMetricToEnglish, unbindInputs, loadWarningPoints,
         updateWarningPoints, determineGeoServerLayerOrGroup,
-        updateWarningSlider, isValidRiverSelected,
+        updateWarningSlider, isValidRiverSelected, loadFlowDurationChart,
         loadSeasonalStreamflowChart, loadHistoricallStreamflowChart;
 
 
@@ -794,8 +795,13 @@ var ERFP_MAP = (function() {
 
             m_downloaded_historical_streamflow = false;
             $("#historical_streamflow_data").removeClass('alert-info')
-                                          .removeClass('alert-danger')
-                                          .text("");
+                                            .removeClass('alert-danger')
+                                            .text("");
+
+            m_downloaded_flow_duration = false;
+            $("#flow_duration_data").removeClass('alert-info')
+                                    .removeClass('alert-danger')
+                                    .text("");
 
             //change download button url
             $('#submit-download-interim-csv').attr({target: '_blank', 
@@ -1560,29 +1566,7 @@ var ERFP_MAP = (function() {
         }
         return null;
     };
-    //FUNCTION: Loads seasonal streamflow chart
-    loadSeasonalStreamflowChart = function() {
-        m_downloaded_seasonal_streamflow = true;
-        $.ajax({
-            url: 'get_seasonal_streamflow_chart',
-            method: 'GET',
-            data: {
-                'watershed_name': m_selected_ecmwf_watershed,
-                'subbasin_name': m_selected_ecmwf_subbasin,
-                'reach_id': m_selected_reach_id,
-            },
-        })
-        .done(function(data) {
-                $("#seasonal_streamflow_data").removeClass('alert-info');
-                $('#season_tab_link').tab('show'); //switch to plot tab
-                $("#seasonal_streamflow_data").html(data);
-        })
-        .fail(function (request, status, error) {
-            m_downloaded_seasonal_streamflow = false;
-            addErrorMessage(request.responseText, "seasonal_streamflow_data");
-        });
-    };
-    
+
     //FUNCTION: Loads historical streamflow chart
     loadHistoricallStreamflowChart = function() {
         m_downloaded_historical_streamflow = true;
@@ -1603,6 +1587,52 @@ var ERFP_MAP = (function() {
         .fail(function (request, status, error) {
             m_downloaded_historical_streamflow = false;
             addErrorMessage(request.responseText, "historical_streamflow_data");
+        });
+    };
+
+    //FUNCTION: Loads flow duration curve chart
+    loadFlowDurationChart = function() {
+        m_downloaded_flow_duration = true;
+        $.ajax({
+            url: 'get-flow-duration-curve',
+            method: 'GET',
+            data: {
+                'watershed_name': m_selected_ecmwf_watershed,
+                'subbasin_name': m_selected_ecmwf_subbasin,
+                'reach_id': m_selected_reach_id,
+            },
+        })
+        .done(function(data) {
+                $("#flow_duration_data").removeClass('alert-info');
+                $('#flow_duration_link').tab('show'); //switch to plot tab
+                $("#flow_duration_data").html(data);
+        })
+        .fail(function (request, status, error) {
+            m_downloaded_flow_duration = false;
+            addErrorMessage(request.responseText, "flow_duration_data");
+        });
+    };
+
+    //FUNCTION: Loads seasonal streamflow chart
+    loadSeasonalStreamflowChart = function() {
+        m_downloaded_seasonal_streamflow = true;
+        $.ajax({
+            url: 'get_seasonal_streamflow_chart',
+            method: 'GET',
+            data: {
+                'watershed_name': m_selected_ecmwf_watershed,
+                'subbasin_name': m_selected_ecmwf_subbasin,
+                'reach_id': m_selected_reach_id,
+            },
+        })
+        .done(function(data) {
+                $("#seasonal_streamflow_data").removeClass('alert-info');
+                $('#season_tab_link').tab('show'); //switch to plot tab
+                $("#seasonal_streamflow_data").html(data);
+        })
+        .fail(function (request, status, error) {
+            m_downloaded_seasonal_streamflow = false;
+            addErrorMessage(request.responseText, "seasonal_streamflow_data");
         });
     };
 
@@ -1647,6 +1677,7 @@ var ERFP_MAP = (function() {
         m_downloading_nws = false;
         m_downloading_hydroserver = false;
         m_downloaded_seasonal_streamflow = false;
+        m_downloaded_flow_duration = false;
         m_downloaded_historical_streamflow = false;
         m_searching_for_reach = false;
         m_long_term_chart_data_ajax_load_failed = false;
@@ -2245,17 +2276,24 @@ var ERFP_MAP = (function() {
             
         });
 
-        $("#season_tab_link").click(function(){
-            if (!m_downloaded_seasonal_streamflow && isValidRiverSelected()) {
-                addInfoMessage("Loading data ...", "seasonal_streamflow_data");
-                loadSeasonalStreamflowChart();
-            }
-        });
-
         $("#historical_tab_link").click(function(){
             if (!m_downloaded_historical_streamflow && isValidRiverSelected()) {
                 addInfoMessage("Loading data ...", "historical_streamflow_data");
                 loadHistoricallStreamflowChart();
+            }
+        });
+
+        $("#flow_duration_tab_link").click(function(){
+            if (!m_downloaded_flow_duration && isValidRiverSelected()) {
+                addInfoMessage("Loading data ...", "flow_duration_data");
+                loadFlowDurationChart();
+            }
+        });
+
+        $("#season_tab_link").click(function(){
+            if (!m_downloaded_seasonal_streamflow && isValidRiverSelected()) {
+                addInfoMessage("Loading data ...", "seasonal_streamflow_data");
+                loadSeasonalStreamflowChart();
             }
         });
 
