@@ -747,7 +747,7 @@ def get_historical_hydrograph(request):
     river_id = validate_rivid_info(request.GET)
 
     # ----------------------------------------------
-    # HISTORICAL DATA SECTION
+    # Historical Data Section
     # ----------------------------------------------
     # find/check current output datasets
     path_to_output_files = \
@@ -772,10 +772,10 @@ def get_historical_hydrograph(request):
         raise InvalidData("Invalid return period file ... {0}".format(ex))
 
     # ----------------------------------------------
-    # RETURN PERIODS SECTION
+    # Return Period Section
     # ----------------------------------------------
     return_period_data = json_loads(get_return_periods(request).content)
-    print(return_period_data)
+
     # ----------------------------------------------
     # Chart Section
     # ----------------------------------------------
@@ -788,59 +788,94 @@ def get_historical_hydrograph(request):
 
     layout = go.Layout(
         title="Historical Streamflow",
-        xaxis={
-            'title': 'Date',
-        },
-        yaxis={
-            'title': 'Streamflow (m<sup>3</sup>/s)'
-        },
+        xaxis=dict(
+            title='Date',
+        ),
+        yaxis=dict(
+            title='Streamflow (m<sup>3</sup>/s)'
+        ),
         shapes=[
             # return 20 band
-            {
-                'type': 'rect',
-                'xref': 'x',
-                'yref': 'y',
-                'x0': qout_time[0],
-                'y0': return_period_data["return_period"]["twenty"],
-                'x1': qout_time[-1],
-                'y1': return_period_data["return_period"]["max"],
-                'line': {
-                    'color': 'rgba(128, 0, 128)',
-                    'width': 1,
-                },
-                'fillcolor': 'rgba(128, 0, 128, 0.4)',
-            },
+            dict(
+                type='rect',
+                xref='x',
+                yref='y',
+                x0=qout_time[0],
+                y0=return_period_data["return_period"]["twenty"],
+                x1=qout_time[-1],
+                y1=return_period_data["return_period"]["max"],
+                line=dict(
+                    color='rgba(128, 0, 128)',
+                    width=1,
+                ),
+                fillcolor='rgba(128, 0, 128, 0.3)',
+            ),
             # return 10 band
-            {
-                'type': 'rect',
-                'xref': 'x',
-                'yref': 'y',
-                'x0': qout_time[0],
-                'y0': return_period_data["return_period"]["ten"],
-                'x1': qout_time[-1],
-                'y1': return_period_data["return_period"]["twenty"],
-                'line': {
-                    'color': 'rgba(255, 0, 0)',
-                    'width': 1,
-                },
-                'fillcolor': 'rgba(255, 0, 0, 0.3)',
-            },
+            dict(
+                type='rect',
+                xref='x',
+                yref='y',
+                x0=qout_time[0],
+                y0=return_period_data["return_period"]["ten"],
+                x1=qout_time[-1],
+                y1=return_period_data["return_period"]["twenty"],
+                line=dict(
+                    color='rgba(255, 0, 0)',
+                    width=1,
+                ),
+                fillcolor='rgba(255, 0, 0, 0.3)',
+            ),
             # return 2 band
-            {
-                'type': 'rect',
-                'xref': 'x',
-                'yref': 'y',
-                'x0': qout_time[0],
-                'y0': return_period_data["return_period"]["two"],
-                'x1': qout_time[-1],
-                'y1': return_period_data["return_period"]["ten"],
-                'line': {
-                    'color': 'rgba(255, 255, 0)',
-                    'width': 1,
-                },
-                'fillcolor': 'rgba(255, 255, 0, 0.3)',
-            },
+            dict(
+                type='rect',
+                xref='x',
+                yref='y',
+                x0=qout_time[0],
+                y0=return_period_data["return_period"]["two"],
+                x1=qout_time[-1],
+                y1=return_period_data["return_period"]["ten"],
+                line=dict(
+                    color='rgba(255, 255, 0)',
+                    width=1,
+                ),
+                fillcolor='rgba(255, 255, 0, 0.3)',
+            ),
         ],
+        annotations=[
+            # return 20 band
+            dict(
+                x=qout_time[-1],
+                y=(float(return_period_data["return_period"]["twenty"])
+                   + float(return_period_data["return_period"]["max"]))/2.,
+                xref='x',
+                yref='y',
+                text='20-yr',
+                showarrow=False,
+                xanchor='left',
+            ),
+            # return 10 band
+            dict(
+                x=qout_time[-1],
+                y=(float(return_period_data["return_period"]["ten"])
+                   + float(return_period_data["return_period"]["twenty"]))/2.,
+                xref='x',
+                yref='y',
+                text='10-yr',
+                showarrow=False,
+                xanchor='left',
+            ),
+            # return 2 band
+            dict(
+                x=qout_time[-1],
+                y=(float(return_period_data["return_period"]["two"])
+                   + float(return_period_data["return_period"]["ten"]))/2.,
+                xref='x',
+                yref='y',
+                text='2-yr',
+                showarrow=False,
+                xanchor='left',
+            ),
+        ]
     )
 
     chart_obj = PlotlyView(
