@@ -87,7 +87,8 @@ def data_store_add(request):
         .count()
 
     if num_similar_data_stores > 0:
-        DatabaseError(
+        session.close()
+        raise DatabaseError(
             "A data store with the same name or api endpoint exists.")
 
     # check if data store info is valid
@@ -1780,7 +1781,9 @@ def watershed_group_update(request):
         .filter(WatershedGroup.name == watershed_group_name) \
         .filter(WatershedGroup.id != watershed_group_id) \
         .count()
+
     if num_similar_watershed_groups > 0:
+        session.close()
         raise DatabaseError("A watershed group with the same name exists.")
 
     # get watershed group
