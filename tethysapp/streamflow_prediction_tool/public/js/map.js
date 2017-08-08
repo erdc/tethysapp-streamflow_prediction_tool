@@ -37,6 +37,8 @@ var ERFP_MAP = (function() {
         m_downloading_usgs,
         m_downloading_nws,
         m_downloading_hydroserver,
+        m_downloaded_historical_streamflow,
+        m_downloaded_seasonal_streamflow,
         m_searching_for_reach,
         m_long_term_chart_data_ajax_load_failed,
         m_long_term_select_data_ajax_handle,
@@ -744,14 +746,14 @@ var ERFP_MAP = (function() {
             new_series.linkedTo = ":previous";
             new_series.fillOpacity = 0.3;
         }
-        $('#plot_tab_link').tab('show'); //switch to plot tab
+        $('#forecast_tab_link').tab('show'); //switch to plot tab
         long_term_chart.addSeries(new_series);
     };
 
     //FUNCTION: adds data to the chart
     addSeriesToCharts = function(series){
         var long_term_chart = $("#long-term-chart").highcharts();
-        $('#plot_tab_link').tab('show'); //switch to plot tab
+        $('#forecast_tab_link').tab('show'); //switch to plot tab
         long_term_chart.addSeries(series);
         $("#long-term-chart").removeClass("hidden");
     };
@@ -778,12 +780,12 @@ var ERFP_MAP = (function() {
     
             $('#era_message').addClass('hidden');
             $('#download_interim').removeClass('hidden');
-            $("#retrieve_seasonal_streamflow_chart").removeClass('hidden');
+            m_downloaded_seasonal_streamflow = false;
             $("#seasonal_streamflow_data").removeClass('alert-info')
                                           .removeClass('alert-danger')
                                           .text("");
 
-            $("#retrieve_historical_streamflow_chart").removeClass('hidden');
+            m_downloaded_historical_streamflow = false;
             $("#historical_streamflow_data").removeClass('alert-info')
                                           .removeClass('alert-danger')
                                           .text("");
@@ -885,7 +887,7 @@ var ERFP_MAP = (function() {
                 };
             }
 
-            $('#plot_tab_link').tab('show'); //switch to plot tab
+            $('#forecast_tab_link').tab('show'); //switch to plot tab
             $("#long-term-chart").highcharts('StockChart', default_chart_settings);
 
             //get ecmwf data
@@ -1553,7 +1555,7 @@ var ERFP_MAP = (function() {
     };
     //FUNCTION: Loads seasonal streamflow chart
     loadSeasonalStreamflowChart = function() {
-        $("#retrieve_seasonal_streamflow_chart").addClass('hidden');
+        m_downloaded_seasonal_streamflow = true;
         $.ajax({
             url: 'get_seasonal_streamflow_chart',
             method: 'GET',
@@ -1566,17 +1568,17 @@ var ERFP_MAP = (function() {
         .done(function(data) {
                 $("#seasonal_streamflow_data").removeClass('alert-info');
                 $('#season_tab_link').tab('show'); //switch to plot tab
-                $("#retrieve_seasonal_streamflow_chart").addClass('hidden');
                 $("#seasonal_streamflow_data").html(data);
         })
         .fail(function (request, status, error) {
+            m_downloaded_seasonal_streamflow = false;
             addErrorMessage(request.responseText, "seasonal_streamflow_data");
         });
     };
     
     //FUNCTION: Loads historical streamflow chart
     loadHistoricallStreamflowChart = function() {
-        $("#retrieve_historical_streamflow_chart").addClass('hidden');
+        m_downloaded_historical_streamflow = true;
         $.ajax({
             url: 'get-historical-hydrograph',
             method: 'GET',
@@ -1589,10 +1591,10 @@ var ERFP_MAP = (function() {
         .done(function(data) {
                 $("#historical_streamflow_data").removeClass('alert-info');
                 $('#historical_tab_link').tab('show'); //switch to plot tab
-                $("#retrieve_historical_streamflow_chart").addClass('hidden');
                 $("#historical_streamflow_data").html(data);
         })
         .fail(function (request, status, error) {
+            m_downloaded_historical_streamflow = false;
             addErrorMessage(request.responseText, "historical_streamflow_data");
         });
     };
@@ -1638,6 +1640,8 @@ var ERFP_MAP = (function() {
         m_downloading_usgs = false;
         m_downloading_nws = false;
         m_downloading_hydroserver = false;
+        m_downloaded_seasonal_streamflow = false;
+        m_downloaded_historical_streamflow = false;
         m_searching_for_reach = false;
         m_long_term_chart_data_ajax_load_failed = false;
         m_short_term_chart_data_ajax_load_failed = false;
@@ -2235,14 +2239,18 @@ var ERFP_MAP = (function() {
             
         });
 
-        $("#retrieve_seasonal_streamflow_chart").click(function(){
-            addInfoMessage("Loading data ...", "seasonal_streamflow_data");
-            loadSeasonalStreamflowChart();
+        $("#season_tab_link").click(function(){
+            if (!m_downloaded_seasonal_streamflow) {
+                addInfoMessage("Loading data ...", "seasonal_streamflow_data");
+                loadSeasonalStreamflowChart();
+            }
         });
 
-        $("#retrieve_historical_streamflow_chart").click(function(){
-            addInfoMessage("Loading data ...", "historical_streamflow_data");
-            loadHistoricallStreamflowChart();
+        $("#historical_tab_link").click(function(){
+            if (!m_downloaded_historical_streamflow) {
+                addInfoMessage("Loading data ...", "historical_streamflow_data");
+                loadHistoricallStreamflowChart();
+            }
         });
 
         //init tooltip
