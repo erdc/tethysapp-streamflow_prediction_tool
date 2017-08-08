@@ -4,6 +4,7 @@
     Author: Alan D. Snow, 2017
     License: BSD 3-Clause
 """
+from contextlib import contextmanager
 from functools import wraps
 
 from django.http import HttpResponseBadRequest, HttpResponseServerError
@@ -69,5 +70,22 @@ def exceptions_to_http_status(view_func):
         except UploadError as ex:
             return HttpResponseBadRequest("Upload error: {}".format(ex))
         except Exception as ex:
+            import traceback
+            traceback.print_exc()
             return HttpResponseServerError(str(ex))
     return inner
+
+
+@contextmanager
+def rivid_exception_handler(file_type, river_id):
+    """
+    Raises proper exceptions for rivids queries
+    """
+    try:
+        yield
+    except (IndexError, KeyError):
+        raise NotFoundError('{file_type} river with ID {river_id}.'
+                            .format(file_type=file_type, river_id=river_id))
+    except Exception:
+        raise InvalidData("Invalid {file_type} file ..."
+                          .format(file_type=file_type))

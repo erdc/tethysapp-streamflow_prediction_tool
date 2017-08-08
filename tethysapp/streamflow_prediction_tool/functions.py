@@ -20,7 +20,9 @@ from django.http import Http404
 from django.shortcuts import redirect
 
 # local import
-from .exception_handling import NotFoundError
+from .app import StreamflowPredictionTool as app
+from .exception_handling import (NotFoundError, SettingsError,
+                                 rivid_exception_handler)
 from .model import GeoServerLayer
 
 
@@ -121,14 +123,14 @@ def ecmwf_get_valid_forecast_folder_list(main_watershed_forecast_folder,
     return output_directories
 
 
-def ecmwf_get_forecast_statistics(forecast_nc_list, river_id, return_data=""):
+def ecmwf_get_forecast_statistics(forecast_nc_list, river_id, return_data):
     """
     Returns the statistics for the 52 member forecast
     """
     # combine 52 ensembles
     qout_datasets = []
     ensemble_index_list = []
-    try:
+    with rivid_exception_handler("ECMWF Forecast", river_id):
         for forecast_nc in forecast_nc_list:
             ensemble_index_list.append(
                 int(os.path.basename(forecast_nc)[:-3].split("_")[-1])
@@ -137,11 +139,12 @@ def ecmwf_get_forecast_statistics(forecast_nc_list, river_id, return_data=""):
                 xarray.open_dataset(forecast_nc, autoclose=True)
                       .sel(rivid=river_id).Qout
             )
-    except IndexError:
-        raise NotFoundError('ECMWF river ID {} not found.'.format(river_id))
 
     merged_ds = xarray.concat(qout_datasets,
                               pd.Index(ensemble_index_list, name='ensemble'))
+
+    if return_data is None:
+        return_data = ""
 
     return_dict = {}
     if return_data == 'high_res' or not return_data:
@@ -399,3 +402,33 @@ def validate_rivid_info(request_info):
         raise Http404('Invalid value for reach_id {}.'.format(reach_id))
 
     return reach_id
+
+
+def validate_historical_data(request_info):
+    """
+    This function validates the request for historical data
+
+    Returns
+    -------
+    historic_data_file, rivid
+    """
+    path_to_era_interim_data = app.get_custom_setting('historical_folder')
+    if not os.path.exists(path_to_era_interim_data):
+        raise SettingsError('Location of ERA-Interim files faulty. '
+                            'Please check settings.')
+
+    # get information from request
+    watershed_name, subbasin_name = validate_watershed_info(request_info)
+    river_id = validate_rivid_info(request_info)
+
+    # find/check current output datasets
+    path_to_output_files = \
+        os.path.join(path_to_era_interim_data,
+                     "{0}-{1}".format(watershed_name, subbasin_name))
+    historical_data_files = glob(os.path.join(path_to_output_files,
+                                              "Qout*.nc"))
+    if not historical_data_files:
+        raise NotFoundError('ERA Interim data for %s (%s).'
+                            % (watershed_name, subbasin_name))
+
+    return historical_data_files[0], river_id, watershed_name, subbasin_name

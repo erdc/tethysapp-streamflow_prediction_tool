@@ -217,7 +217,7 @@ class StreamflowPredictionTool(TethysAppBase):
             url_map(name='return_periods',
                     url='streamflow-prediction-tool/api/GetReturnPeriods',
                     controller='streamflow_prediction_tool.api'
-                               '.get_return_periods'),
+                               '.get_return_periods_api'),
             url_map(name='return_periods',
                     url='streamflow-prediction-tool/api/GetAvailableDates',
                     controller='streamflow_prediction_tool.api'
