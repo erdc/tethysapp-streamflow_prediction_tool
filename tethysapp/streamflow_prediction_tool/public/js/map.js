@@ -1629,7 +1629,6 @@ var ERFP_MAP = (function() {
     // Initialization: jQuery function that gets called when 
     // the DOM tree finishes loading
     $(function() {
-        $('#map_top_navigation').find('.form-group').addClass('inline-block');
         //initialize map global variables
         m_map_projection = 'EPSG:3857';
         m_map_extent = ol.extent.createEmpty();
