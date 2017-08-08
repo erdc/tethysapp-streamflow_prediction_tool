@@ -886,17 +886,16 @@ def get_seasonal_streamflow_chart(request):
         )
     )
 
-    layout = go.Layout(title="Daily Seasonal Streamflow<br>"
-                             "<sub>{0} ({1}): {2}</sub>".format(watershed_name,
-                                                                subbasin_name,
-                                                                river_id),
-                       xaxis=dict(
-                           title='Day of Year',
-                           tickformat="%b",
-                       ),
-                       yaxis=dict(
-                           title='Streamflow (m<sup>3</sup>/s)'
-                       ))
+    layout = go.Layout(
+        title="Daily Seasonal Streamflow<br>"
+              "<sub>{0} ({1}): {2}</sub>"
+              .format(watershed_name, subbasin_name, river_id),
+        xaxis=dict(
+            title='Day of Year',
+            tickformat="%b"),
+        yaxis=dict(
+            title='Streamflow (m<sup>3</sup>/s)')
+    )
 
     chart_obj = PlotlyView(
         go.Figure(data=[std_plus_scatter,
@@ -934,7 +933,8 @@ def get_flow_duration_curve(request):
     sorted_daily_avg = np.sort(qout_data.values)[::-1]
 
     # ranks data from smallest to largest
-    ranks = len(sorted_daily_avg) - sp.rankdata(sorted_daily_avg, method='average')
+    ranks = len(sorted_daily_avg) - sp.rankdata(sorted_daily_avg,
+                                                method='average')
 
     # calculate probability of each rank
     prob = [100*(ranks[i] / (len(sorted_daily_avg) + 1))
@@ -948,13 +948,11 @@ def get_flow_duration_curve(request):
     layout = go.Layout(title="Flow-Duration Curve<br><sub>{0} ({1}): {2}</sub>"
                              .format(watershed_name, subbasin_name, river_id),
                        xaxis=dict(
-                           title='Exceedance Probability (%)',
-                       ),
+                           title='Exceedance Probability (%)',),
                        yaxis=dict(
                            title='Streamflow (m<sup>3</sup>/s)',
                            type='log',
-                           autorange=True,
-                       ),
+                           autorange=True),
                        showlegend=False)
 
     chart_obj = PlotlyView(
