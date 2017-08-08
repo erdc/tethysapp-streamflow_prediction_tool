@@ -790,7 +790,6 @@ def get_historical_hydrograph(request):
         y=qout_values,
     )
 
-
     layout = go.Layout(
         title="Historical Streamflow",
         xaxis=dict(
@@ -988,13 +987,13 @@ def get_seasonal_streamflow_chart(request):
     )
 
     layout = go.Layout(title="Daily Seasonal Streamflow",
-                       xaxis={
-                           'title': 'Day of Year',
-                           'tickformat': "%b",
-                       },
-                       yaxis={
-                           'title': 'Streamflow (m<sup>3</sup>/s)'
-                       })
+                       xaxis=dict(
+                           title='Day of Year',
+                           tickformat="%b",
+                       ),
+                       yaxis=dict(
+                           title='Streamflow (m<sup>3</sup>/s)'
+                       ))
 
     chart_obj = PlotlyView(
         go.Figure(data=[std_plus_scatter,
