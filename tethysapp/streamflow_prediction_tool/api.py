@@ -7,6 +7,9 @@
 import datetime as dt
 import json
 
+import pandas as pd
+import xarray
+
 from django.http import JsonResponse, Http404
 from django.shortcuts import render_to_response
 from rest_framework.authentication import TokenAuthentication
@@ -14,10 +17,12 @@ from rest_framework.decorators import api_view, authentication_classes
 
 from .app import StreamflowPredictionTool as app
 from .controllers_ajax import (ecmwf_get_hydrograph,
-                               era_interim_get_hydrograph,
                                ecmwf_get_avaialable_dates,
-                               generate_warning_points)
-
+                               generate_warning_points,
+                               get_return_periods)
+from .exception_handling import (exceptions_to_http_status,
+                                 rivid_exception_handler)
+from .functions import validate_historical_data
 from .model import Watershed
 
 
@@ -40,6 +45,9 @@ def get_waterml(request):
         'std_dev_range_lower': 'Standard Deviation Lower Range',
         'std_dev_range_upper': 'Standard Deviation Upper Range',
     }
+
+    if stat not in formatted_stat:
+        raise Http404('Invalid value for stat_type ...')
 
     try:
         data = ecmwf_get_hydrograph(request)
@@ -96,73 +104,61 @@ def get_waterml(request):
 
 @api_view(['GET'])
 @authentication_classes((TokenAuthentication,))
+@exceptions_to_http_status
 def get_historic_data(request):
     """
     Controller that will show the historic data in WaterML 1.1 format
     """
-    watershed_name = request.GET['watershed_name']
-    subbasin_name = request.GET['subbasin_name']
-    reach_id = request.GET['reach_id']
+    historical_data_file, river_id, watershed_name, subbasin_name =\
+        validate_historical_data(request.GET)
 
-    try:
-        data = era_interim_get_hydrograph(request)
-        data_dict = json.loads(data.content)
-        historic_data = data_dict['era_interim']
+    with rivid_exception_handler("ERA Interim", river_id):
+        with xarray.open_dataset(historical_data_file) as qout_nc:
+            # get information from dataset
+            qout_data = qout_nc.sel(rivid=river_id).Qout.values
+            time_data = pd.to_datetime(qout_data.time.values)
 
-        time_series = []
-        startdate = dt.datetime\
-            .fromtimestamp(historic_data['series'][0][0] / 1e3)\
-            .strftime('%Y-%m-%d %H:%M:%S')
+    time_series = []
+    for date, value in zip(time_data, qout_data):
+        time_series.append({
+            'date': date.strftime('%Y-%m-%dT%H:%M:%S'),
+            'val': value
+        })
 
-        for pair in historic_data['series']:
-            date = dt.datetime.fromtimestamp(pair[0]/1e3)
-            formatted_date = date.strftime('%Y-%m-%dT%H:%M:%S')
-            time_series.append({'date': formatted_date, 'val': pair[1]})
+    startdate = time_data[0].strftime('%Y-%m-%d %H:%M:%S')
+    context = {
+        'config': watershed_name,
+        'comid': river_id,
+        'stat': 'Historic Data',
+        'startdate': startdate,
+        'site_name': watershed_name + ' ' + subbasin_name,
+        'units': {
+            'name': 'Flow', 'short': 'm^3/s',
+            'long': 'Cubic meters per Second'
+        },
+        'time_series': time_series,
+        'source': 'ECMWF ERA Interim data',
+        'host': 'https://%s' % request.get_host(),
+    }
 
-        context = {
-            'config': watershed_name,
-            'comid': reach_id,
-            'stat': 'Historic Data',
-            'startdate': startdate,
-            'site_name': watershed_name + ' ' + subbasin_name,
-            'units': {
-                'name': 'Flow', 'short': 'm^3/s',
-                'long': 'Cubic meters per Second'
-            },
-            'time_series': time_series,
-            'source': 'ECMWF ERA Interim data',
-            'host': 'https://%s' % request.get_host(),
-        }
+    xml_response = \
+        render_to_response('streamflow_prediction_tool/waterml.xml',
+                           context)
+    xml_response['Content-Type'] = 'application/xml'
 
-        xml_response = \
-            render_to_response('streamflow_prediction_tool/waterml.xml',
-                               context)
-        xml_response['Content-Type'] = 'application/xml'
-
-        return xml_response
-    except Exception:
-        raise Http404('An error occurred. Please verify parameters.')
+    return xml_response
 
 
 @api_view(['GET'])
 @authentication_classes((TokenAuthentication,))
-def get_return_periods(request):
+def get_return_periods_api(request):
     """
     Controller that will show the return period data in json format
     """
-
     try:
-        data = era_interim_get_hydrograph(request)
+        data = get_return_periods(request)
         data_dict = json.loads(data.content)
-        return_periods = data_dict['return_period']
-
-        if 'error' not in return_periods.keys():
-            return JsonResponse(return_periods, safe=False)
-
-        json_data = dict()
-        json_data['error'] = 'An error occurred. Please verify parameters.'
-        return JsonResponse(json_data, safe=False)
-
+        return JsonResponse(data_dict['return_period'], safe=False)
     except Exception:
         raise Http404('An error occurred. Please verify parameters.')
 
@@ -177,20 +173,12 @@ def get_available_dates(request):
     try:
         data = ecmwf_get_avaialable_dates(request)
         data_dict = json.loads(data.content)
-
-        if "error" not in data_dict.keys():
-            available_dates_raw = data_dict['output_directories']
-            available_dates = []
-            for pair in available_dates_raw:
-                available_dates.append(pair["id"])
-            available_dates = sorted(available_dates)
-            return JsonResponse(available_dates, safe=False)
-
-        error_list = [{
-            'error': 'An error occurred. Please verify parameters.'
-        }]
-        return JsonResponse(error_list, safe=False)
-
+        available_dates_raw = data_dict['output_directories']
+        available_dates = []
+        for pair in available_dates_raw:
+            available_dates.append(pair["id"])
+        available_dates = sorted(available_dates)
+        return JsonResponse(available_dates, safe=False)
     except Exception:
         raise Http404('An error occurred. Please verify parameters.')
 

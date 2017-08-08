@@ -35,7 +35,8 @@ from spt_dataset_manager.dataset_manager import (GeoServerDatasetManager,
 
 from .exception_handling import (DatabaseError, GeoServerError, InvalidData,
                                  NotFoundError, SettingsError, UploadError,
-                                 exceptions_to_http_status)
+                                 exceptions_to_http_status,
+                                 rivid_exception_handler)
 
 from .app import StreamflowPredictionTool as app
 from .functions import (delete_from_database,
@@ -46,8 +47,9 @@ from .functions import (delete_from_database,
                         handle_uploaded_file,
                         update_geoserver_layer,
                         user_permission_test,
-                        validate_watershed_info,
-                        validate_rivid_info)
+                        validate_historical_data,
+                        validate_rivid_info,
+                        validate_watershed_info)
 
 from .model import DataStore, GeoServer, Watershed, WatershedGroup
 
@@ -440,6 +442,8 @@ def ecmwf_get_hydrograph(request):
     if not start_folder:
         raise InvalidData('Invalid value for start_folder.')
 
+    stat_type = get_info.get('stat_type')
+
     # find/check current output datasets
     path_to_output_files = \
         os.path.join(path_to_rapid_output,
@@ -452,7 +456,7 @@ def ecmwf_get_hydrograph(request):
 
     # retrieve statistics
     forecast_statistics = \
-        ecmwf_get_forecast_statistics(forecast_nc_list, river_id)
+        ecmwf_get_forecast_statistics(forecast_nc_list, river_id, stat_type)
 
     # extract the high res ensemble & time
     hres_return_data = None
@@ -486,56 +490,6 @@ def ecmwf_get_hydrograph(request):
     if hres_return_data:
         return_data['high_res'] = hres_return_data
     return JsonResponse(return_data)
-
-
-@require_GET
-@login_required
-@exceptions_to_http_status
-def era_interim_get_hydrograph(request):
-    """""
-    Returns ERA Interim hydrograph
-    """""
-    path_to_era_interim_data = app.get_custom_setting('historical_folder')
-    if not os.path.exists(path_to_era_interim_data):
-        raise SettingsError('Location of ERA-Interim files faulty. '
-                            'Please check settings.')
-
-    # get information from GET request
-    get_info = request.GET
-    watershed_name, subbasin_name = validate_watershed_info(get_info)
-    river_id = validate_rivid_info(get_info)
-
-    # ----------------------------------------------
-    # HISTORICAL DATA SECTION
-    # ----------------------------------------------
-    era_interim_return_data = {}
-
-    # find/check current output datasets
-    path_to_output_files = \
-        os.path.join(path_to_era_interim_data,
-                     "{0}-{1}".format(watershed_name, subbasin_name))
-    historical_data_files = glob(os.path.join(path_to_output_files,
-                                              "Qout*.nc"))
-    if not historical_data_files:
-        raise NotFoundError('ERA Interim data for %s (%s).'
-                            % (watershed_name, subbasin_name))
-    try:
-        with xarray.open_dataset(historical_data_files[0]) as qout_nc:
-            # get information from dataset
-            qout_data = qout_nc.sel(rivid=river_id).Qout
-            time = qout_data.time.values.astype('int64') / 1e6
-            era_interim_return_data['series'] = \
-                zip(time, qout_data.values.tolist())
-    except IndexError:
-        raise NotFoundError('ERA Interim river with ID %s.'
-                            % river_id)
-    except Exception:
-        raise InvalidData("Invalid ERA-Interim file ...")
-
-    return JsonResponse({
-        'success': "ERA-Interim data analysis complete!",
-        'era_interim': era_interim_return_data,
-    })
 
 
 @require_GET
@@ -621,26 +575,10 @@ def era_interim_get_csv(request):
     """""
     Returns ERA Interim data as csv
     """""
-    path_to_era_interim_data = app.get_custom_setting('historical_folder')
-    if not os.path.exists(path_to_era_interim_data):
-        raise SettingsError('Location of ERA-Interim files faulty. '
-                            'Please check settings.')
-
     # get information from GET request
-    get_info = request.GET
-    watershed_name, subbasin_name = validate_watershed_info(get_info)
-    river_id = validate_rivid_info(get_info)
-    daily = get_info.get('daily') if 'daily' in get_info else ''
-
-    # find/check current output datasets
-    path_to_output_files = \
-        os.path.join(path_to_era_interim_data,
-                     "{0}-{1}".format(watershed_name, subbasin_name))
-    historical_data_files = glob(os.path.join(path_to_output_files,
-                                              "Qout*.nc"))
-    if not historical_data_files:
-        raise NotFoundError('ERA Interim data for %s (%s).'
-                            % (watershed_name, subbasin_name))
+    daily = request.GET.get('daily') if 'daily' in request.GET else ''
+    historical_data_file, river_id, watershed_name, subbasin_name =\
+        validate_historical_data(request.GET)
 
     # prepare to write response
     response = HttpResponse(content_type='text/csv')
@@ -654,8 +592,8 @@ def era_interim_get_csv(request):
     writer.writerow(['datetime', 'streamflow (m3/s)'])
 
     # write data to csv stream
-    try:
-        with xarray.open_dataset(historical_data_files[0]) as qout_nc:
+    with rivid_exception_handler('ERA Interim', river_id):
+        with xarray.open_dataset(historical_data_file) as qout_nc:
             qout_data = qout_nc.sel(rivid=river_id).Qout\
                                .to_dataframe().Qout
             if daily.lower() == 'true':
@@ -664,12 +602,6 @@ def era_interim_get_csv(request):
 
             for row_data in qout_data.iteritems():
                 writer.writerow(row_data)
-
-    except IndexError:
-        raise NotFoundError('ERA Interim river with ID %s.'
-                            % river_id)
-    except Exception:
-        raise InvalidData("Invalid ERA-Interim file ...")
 
     return response
 
@@ -706,7 +638,7 @@ def get_return_periods(request):
 
     return_period_file = return_period_files[0]
     # get information from dataset
-    try:
+    with rivid_exception_handler('return period', river_id):
         with xarray.open_dataset(return_period_file) \
                 as return_period_nc:
             rpd = return_period_nc.sel(rivid=river_id)
@@ -718,12 +650,6 @@ def get_return_periods(request):
             return_period_return_data["two"] = \
                 str(rpd.return_period_2.values)
             pass
-
-    except IndexError:
-        raise NotFoundError('Return period for river with ID %s.'
-                            % river_id)
-    except Exception as ex:
-        raise InvalidData("Invalid return period file ... {0}".format(ex))
 
     return JsonResponse({
         'success': "ERA-Interim data analysis complete!",
@@ -738,39 +664,15 @@ def get_historical_hydrograph(request):
     """""
     Returns ERA Interim hydrograph
     """""
-    path_to_era_interim_data = app.get_custom_setting('historical_folder')
-    if not os.path.exists(path_to_era_interim_data):
-        raise SettingsError('Location of ERA-Interim files faulty. '
-                            'Please check settings ...')
+    historical_data_file, river_id =\
+        validate_historical_data(request.GET)[:2]
 
-    # get information from GET request
-    watershed_name, subbasin_name = validate_watershed_info(request.GET)
-    river_id = validate_rivid_info(request.GET)
-
-    # ----------------------------------------------
-    # Historical Data Section
-    # ----------------------------------------------
-    # find/check current output datasets
-    path_to_output_files = \
-        os.path.join(path_to_era_interim_data,
-                     "{0}-{1}".format(watershed_name, subbasin_name))
-    historical_data_files = glob(os.path.join(path_to_output_files,
-                                              "Qout*.nc"))
-    if not historical_data_files:
-        raise NotFoundError('ERA Interim data for %s (%s).' %
-                            (watershed_name, subbasin_name))
-
-    try:
-        with xarray.open_dataset(historical_data_files[0]) as qout_nc:
+    with rivid_exception_handler('ERA Interim', river_id):
+        with xarray.open_dataset(historical_data_file) as qout_nc:
             # get information from dataset
             qout_data = qout_nc.sel(rivid=river_id).Qout
             qout_values = qout_data.values
             qout_time = qout_data.time.values
-    except IndexError:
-        raise NotFoundError('Return period for river with ID %s.'
-                            % river_id)
-    except Exception as ex:
-        raise InvalidData("Invalid return period file ... {0}".format(ex))
 
     # ----------------------------------------------
     # Return Period Section
@@ -930,7 +832,7 @@ def get_seasonal_streamflow_chart(request):
         raise NotFoundError('Seasonal Average data for %s (%s).'
                             % (watershed_name, subbasin_name))
 
-    try:
+    with rivid_exception_handler('Seasonal Average', river_id):
         with xarray.open_dataset(seasonal_data_files[0]) as seasonal_nc:
 
             seasonal_data = seasonal_nc.sel(rivid=river_id)
@@ -948,12 +850,6 @@ def get_seasonal_streamflow_chart(request):
 
             avg_plus_std[avg_plus_std < 0] = 0
             avg_min_std[avg_min_std < 0] = 0
-
-    except IndexError:
-        raise NotFoundError('Seasonal average river with ID %s.'
-                            % river_id)
-    except Exception as ex:
-        raise InvalidData("Invalid Seasonal Average file ... {0}".format(ex))
 
     # generate chart
     avg_scatter = go.Scatter(
