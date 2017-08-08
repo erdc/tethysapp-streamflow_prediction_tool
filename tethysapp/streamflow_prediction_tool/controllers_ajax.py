@@ -1007,6 +1007,7 @@ def get_monthly_seasonal_streamflow_chart(request):
                   'streamflow_prediction_tool/gizmo_ajax.html',
                   context)
 
+
 @require_GET
 @login_required
 @exceptions_to_http_status
