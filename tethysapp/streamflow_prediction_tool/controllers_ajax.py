@@ -11,8 +11,10 @@ from json import load as json_load
 from json import loads as json_loads
 import os
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
+import scipy.stats as sp
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import ObjectDeletedError
@@ -664,8 +666,8 @@ def get_historical_hydrograph(request):
     """""
     Returns ERA Interim hydrograph
     """""
-    historical_data_file, river_id =\
-        validate_historical_data(request.GET)[:2]
+    historical_data_file, river_id, watershed_name, subbasin_name =\
+        validate_historical_data(request.GET)
 
     with rivid_exception_handler('ERA Interim', river_id):
         with xarray.open_dataset(historical_data_file) as qout_nc:
@@ -694,7 +696,8 @@ def get_historical_hydrograph(request):
     )
 
     layout = go.Layout(
-        title="Historical Streamflow",
+        title="Historical Streamflow<br><sub>{0} ({1}): {2}</sub>".format(
+            watershed_name, subbasin_name, river_id),
         xaxis=dict(
             title='Date',
         ),
@@ -883,7 +886,10 @@ def get_seasonal_streamflow_chart(request):
         )
     )
 
-    layout = go.Layout(title="Daily Seasonal Streamflow",
+    layout = go.Layout(title="Daily Seasonal Streamflow<br>"
+                             "<sub>{0} ({1}): {2}</sub>".format(watershed_name,
+                                                                subbasin_name,
+                                                                river_id),
                        xaxis=dict(
                            title='Day of Year',
                            tickformat="%b",
@@ -896,6 +902,63 @@ def get_seasonal_streamflow_chart(request):
         go.Figure(data=[std_plus_scatter,
                         std_min_scatter,
                         avg_scatter],
+                  layout=layout)
+    )
+
+    context = {
+        'gizmo_object': chart_obj,
+    }
+
+    return render(request,
+                  'streamflow_prediction_tool/gizmo_ajax.html',
+                  context)
+
+
+@require_GET
+@login_required
+@exceptions_to_http_status
+def get_flow_duration_curve(request):
+    """
+    Generate flow duration curve for hydrologic time series data
+
+    Based on: http://earthpy.org/flow.html
+    """
+    historical_data_file, river_id, watershed_name, subbasin_name = \
+        validate_historical_data(request.GET)
+
+    with rivid_exception_handler('ERA Interim', river_id):
+        with xarray.open_dataset(historical_data_file) as qout_nc:
+            # get information from dataset
+            qout_data = qout_nc.sel(rivid=river_id).Qout.to_dataframe().Qout
+
+    sorted_daily_avg = np.sort(qout_data.values)[::-1]
+
+    # ranks data from smallest to largest
+    ranks = len(sorted_daily_avg) - sp.rankdata(sorted_daily_avg, method='average')
+
+    # calculate probability of each rank
+    prob = [100*(ranks[i] / (len(sorted_daily_avg) + 1))
+            for i in range(len(sorted_daily_avg))]
+
+    flow_duration_sc = go.Scatter(
+        x=prob,
+        y=sorted_daily_avg,
+    )
+
+    layout = go.Layout(title="Flow-Duration Curve<br><sub>{0} ({1}): {2}</sub>"
+                             .format(watershed_name, subbasin_name, river_id),
+                       xaxis=dict(
+                           title='Exceedance Probability (%)',
+                       ),
+                       yaxis=dict(
+                           title='Streamflow (m<sup>3</sup>/s)',
+                           type='log',
+                           autorange=True,
+                       ),
+                       showlegend=False)
+
+    chart_obj = PlotlyView(
+        go.Figure(data=[flow_duration_sc],
                   layout=layout)
     )
 

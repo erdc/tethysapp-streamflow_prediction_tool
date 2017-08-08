@@ -62,6 +62,11 @@ class StreamflowPredictionTool(TethysAppBase):
                         'get-historical-hydrograph',
                     controller='streamflow_prediction_tool.controllers_ajax'
                                '.get_historical_hydrograph'),
+            url_map(name='get_flow_duration_curve_ajax',
+                    url='streamflow-prediction-tool/map/'
+                        'get-flow-duration-curve',
+                    controller='streamflow_prediction_tool.controllers_ajax'
+                               '.get_flow_duration_curve'),
             url_map(name='get_warning_points_ajax',
                     url='streamflow-prediction-tool/map/get-warning-points',
                     controller='streamflow_prediction_tool.controllers_ajax'
