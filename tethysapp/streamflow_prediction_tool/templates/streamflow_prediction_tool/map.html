@@ -250,14 +250,8 @@
 {% endblock %}
 
 {% block app_navigation_items %}
+    <h5>Table of Contents</h5>
     {% if watershed_layers_info_array %}
-        <li class="title collapse-control">
-            <a class="closeall" data-toggle="collapse" data-target="#map-navigation">
-              Watersheds
-            </a>
-        </li>
-        <div id="map-navigation" class="collapse in">
-        <ul>
         {% for watershed_layers_info in watershed_layers_info_array %}
             <li>
             <div id="{{watershed_layers_info.watershed}}-control">
@@ -383,16 +377,8 @@
             </div><!-- div: {{watershed_layers_info.watershed}}-{{watershed_layers_info.subbasin}}-control -->
             </li>
         {% endfor %}
-        </ul></div> <!-- div: map-navigation -->
 
     {% elif watershed_group_info_array %}
-        <li class="title collapse-control">
-            <a class="closeall" data-toggle="collapse" data-target="#map-navigation">
-              Watershed Groups
-            </a>
-        </li>
-        <div id="map-navigation" class="collapse in">
-        <ul>
         {% for watershed_group_info in watershed_group_info_array %}
             <li>
             <div id="watershed_group-{{watershed_group_info.group_id}}-control">
@@ -497,7 +483,6 @@
             </div><!-- div: watershed_group-{{watershed_group_info.group_id}}-control -->
             </li>
         {% endfor %}
-        </ul></div> <!-- div: map-navigation -->
 
     {% else %}
         <li class="title"> No Watersheds or Watershed Groups Found ...</li>
