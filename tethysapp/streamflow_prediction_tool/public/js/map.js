@@ -2281,12 +2281,20 @@ var ERFP_MAP = (function() {
                 addInfoMessage("Loading data ...", "historical_streamflow_data");
                 loadHistoricallStreamflowChart();
             }
+            else if (m_downloaded_historical_streamflow)
+            {
+                Plotly.Plots.resize($("#historical_streamflow_data .js-plotly-plot")[0]);
+            }
         });
 
         $("#flow_duration_tab_link").click(function(){
             if (!m_downloaded_flow_duration && isValidRiverSelected()) {
                 addInfoMessage("Loading data ...", "flow_duration_data");
                 loadFlowDurationChart();
+            }
+            else if (m_downloaded_flow_duration)
+            {
+                Plotly.Plots.resize($("#flow_duration_data .js-plotly-plot")[0]);
             }
         });
 
@@ -2295,10 +2303,22 @@ var ERFP_MAP = (function() {
                 addInfoMessage("Loading data ...", "seasonal_streamflow_data");
                 loadSeasonalStreamflowChart();
             }
+            else if (m_downloaded_seasonal_streamflow)
+            {
+                Plotly.Plots.resize($("#seasonal_streamflow_data .js-plotly-plot")[0]);
+            }
         });
+
+        //make sure active Plotly plots resize on window resize
+        window.onresize = function() {
+            $('#chart_modal .modal-body .tab-pane.active .js-plotly-plot').each(function(){
+                Plotly.Plots.resize($(this)[0]);
+            });
+        };
 
         //init tooltip
         $('.boot_tooltip').tooltip();
+
 
     });
 
