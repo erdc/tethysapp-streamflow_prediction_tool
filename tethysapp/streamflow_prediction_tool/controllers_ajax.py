@@ -775,6 +775,10 @@ def get_historical_hydrograph(request):
     # Return Period Section
     # ----------------------------------------------
     return_period_data = json_loads(get_return_periods(request).content)
+    return_max = float(return_period_data["return_period"]["max"])
+    return_20 = float(return_period_data["return_period"]["twenty"])
+    return_10 = float(return_period_data["return_period"]["ten"])
+    return_2 = float(return_period_data["return_period"]["two"])
 
     # ----------------------------------------------
     # Chart Section
@@ -785,6 +789,7 @@ def get_historical_hydrograph(request):
         x=qout_time,
         y=qout_values,
     )
+
 
     layout = go.Layout(
         title="Historical Streamflow",
@@ -801,9 +806,9 @@ def get_historical_hydrograph(request):
                 xref='x',
                 yref='y',
                 x0=qout_time[0],
-                y0=return_period_data["return_period"]["twenty"],
+                y0=return_20,
                 x1=qout_time[-1],
-                y1=return_period_data["return_period"]["max"],
+                y1=return_max,
                 line=dict(
                     color='rgba(128, 0, 128)',
                     width=1,
@@ -816,9 +821,9 @@ def get_historical_hydrograph(request):
                 xref='x',
                 yref='y',
                 x0=qout_time[0],
-                y0=return_period_data["return_period"]["ten"],
+                y0=return_10,
                 x1=qout_time[-1],
-                y1=return_period_data["return_period"]["twenty"],
+                y1=return_20,
                 line=dict(
                     color='rgba(255, 0, 0)',
                     width=1,
@@ -831,9 +836,9 @@ def get_historical_hydrograph(request):
                 xref='x',
                 yref='y',
                 x0=qout_time[0],
-                y0=return_period_data["return_period"]["two"],
+                y0=return_2,
                 x1=qout_time[-1],
-                y1=return_period_data["return_period"]["ten"],
+                y1=return_10,
                 line=dict(
                     color='rgba(255, 255, 0)',
                     width=1,
@@ -842,36 +847,43 @@ def get_historical_hydrograph(request):
             ),
         ],
         annotations=[
+            # return max
+            dict(
+                x=qout_time[-1],
+                y=return_max,
+                xref='x',
+                yref='y',
+                text='Max. ({:.1f})'.format(return_max),
+                showarrow=False,
+                xanchor='left',
+            ),
             # return 20 band
             dict(
                 x=qout_time[-1],
-                y=(float(return_period_data["return_period"]["twenty"])
-                   + float(return_period_data["return_period"]["max"]))/2.,
+                y=return_20,
                 xref='x',
                 yref='y',
-                text='20-yr',
+                text='20-yr ({:.1f})'.format(return_20),
                 showarrow=False,
                 xanchor='left',
             ),
             # return 10 band
             dict(
                 x=qout_time[-1],
-                y=(float(return_period_data["return_period"]["ten"])
-                   + float(return_period_data["return_period"]["twenty"]))/2.,
+                y=return_10,
                 xref='x',
                 yref='y',
-                text='10-yr',
+                text='10-yr ({:.1f})'.format(return_10),
                 showarrow=False,
                 xanchor='left',
             ),
             # return 2 band
             dict(
                 x=qout_time[-1],
-                y=(float(return_period_data["return_period"]["two"])
-                   + float(return_period_data["return_period"]["ten"]))/2.,
+                y=return_2,
                 xref='x',
                 yref='y',
-                text='2-yr',
+                text='2-yr ({:.1f})'.format(return_2),
                 showarrow=False,
                 xanchor='left',
             ),
