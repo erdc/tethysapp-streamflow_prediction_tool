@@ -965,30 +965,30 @@ var ERFP_MAP = (function() {
                         long_term_chart.yAxis[0].addPlotBand({
                             from: convertValueMetricToEnglish(parseFloat(data.return_period.twenty)),
                             to: convertValueMetricToEnglish(maxY),
-                            color: 'rgba(128,0,128,0.4)',
+                            color: 'rgba(128, 0, 128, 0.4)',
                             id: '20-yr',
                             label: {
-                                text: '20-yr',
+                                text: '20-yr (' + convertValueMetricToEnglish(parseFloat(data.return_period.twenty)).toFixed(1) + ')',
                                 align: 'right',
                             }
                         });
                         long_term_chart.yAxis[0].addPlotBand({
                             from: convertValueMetricToEnglish(parseFloat(data.return_period.ten)),
                             to: convertValueMetricToEnglish(parseFloat(data.return_period.twenty)),
-                            color: 'rgba(255,0,0,0.3)',
+                            color: 'rgba(255, 0, 0, 0.3)',
                             id: '10-yr',
                             label: {
-                                text: '10-yr',
+                                text: '10-yr (' + convertValueMetricToEnglish(parseFloat(data.return_period.ten)).toFixed(1) + ')',
                                 align: 'right',
                             }
                         });
                         long_term_chart.yAxis[0].addPlotBand({
                             from: convertValueMetricToEnglish(parseFloat(data.return_period.two)),
                             to: convertValueMetricToEnglish(parseFloat(data.return_period.ten)),
-                            color: 'rgba(255,255,0,0.3)',
+                            color: 'rgba(255, 255, 0, 0.3)',
                             id: '2-yr',
                             label: {
-                                text: '2-yr',
+                                text: '2-yr (' + convertValueMetricToEnglish(parseFloat(data.return_period.two)).toFixed(1) + ')',
                                 align: 'right',
                             }
                         });
