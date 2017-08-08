@@ -67,7 +67,8 @@ var ERFP_MAP = (function() {
         addECMWFSeriesToCharts, addSeriesToCharts, isThereDataToLoad, 
         checkCleanString, dateToUTCDateTimeString, getValidSeries, 
         convertValueMetricToEnglish, unbindInputs, loadWarningPoints,
-        updateWarningPoints, determineGeoServerLayerOrGroup, updateWarningSlider,
+        updateWarningPoints, determineGeoServerLayerOrGroup,
+        updateWarningSlider, isValidRiverSelected,
         loadSeasonalStreamflowChart, loadHistoricallStreamflowChart;
 
 
@@ -120,14 +121,20 @@ var ERFP_MAP = (function() {
         $(layerid + ' input.opacity').off();
     }
 
+    //FUNCTION: check to see if a valid reach selected
+    isValidRiverSelected = function(){
+        return (m_selected_ecmwf_watershed != null
+                && m_selected_ecmwf_subbasin != null
+                && m_selected_reach_id != null);
+    };
+
     //FUNCTION: check to see if there is data to redraw on chart
     isThereDataToLoad = function(){
-        return ((m_selected_ecmwf_watershed != null && m_selected_ecmwf_subbasin != null)
+        return (isValidRiverSelected()
                || (!isNaN(m_selected_usgs_id) && m_selected_usgs_id != null)
                || (!isNaN(m_selected_nws_id) && m_selected_nws_id != null)
                || m_selected_hydroserver_url != null);
     };
-    
 
     //FUNCTION: convert units from metric to english
     convertValueMetricToEnglish = function(data_value) {
@@ -2240,14 +2247,14 @@ var ERFP_MAP = (function() {
         });
 
         $("#season_tab_link").click(function(){
-            if (!m_downloaded_seasonal_streamflow) {
+            if (!m_downloaded_seasonal_streamflow && isValidRiverSelected()) {
                 addInfoMessage("Loading data ...", "seasonal_streamflow_data");
                 loadSeasonalStreamflowChart();
             }
         });
 
         $("#historical_tab_link").click(function(){
-            if (!m_downloaded_historical_streamflow) {
+            if (!m_downloaded_historical_streamflow && isValidRiverSelected()) {
                 addInfoMessage("Loading data ...", "historical_streamflow_data");
                 loadHistoricallStreamflowChart();
             }
