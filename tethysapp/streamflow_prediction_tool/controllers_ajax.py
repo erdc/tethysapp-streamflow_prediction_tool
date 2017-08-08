@@ -812,9 +812,9 @@ def get_historical_hydrograph(request):
 @require_GET
 @login_required
 @exceptions_to_http_status
-def get_seasonal_streamflow_chart(request):
+def get_daily_seasonal_streamflow_chart(request):
     """""
-    Returns seasonal streamflow chart for unique river ID
+    Returns daily seasonal streamflow chart for unique river ID
     """""
     path_to_era_interim_data = app.get_custom_setting('historical_folder')
     if not os.path.exists(path_to_era_interim_data):
@@ -871,7 +871,7 @@ def get_seasonal_streamflow_chart(request):
         fill=None,
         mode='lines',
         line=dict(
-            color='#ff6600'
+            color='#98fb98'
         )
     )
 
@@ -882,7 +882,7 @@ def get_seasonal_streamflow_chart(request):
         fill='tonexty',
         mode='lines',
         line=dict(
-            color='#ff6600',
+            color='#98fb98',
         )
     )
 
@@ -912,6 +912,100 @@ def get_seasonal_streamflow_chart(request):
                   'streamflow_prediction_tool/gizmo_ajax.html',
                   context)
 
+
+@require_GET
+@login_required
+@exceptions_to_http_status
+def get_monthly_seasonal_streamflow_chart(request):
+    """""
+    Returns monthly seasonal streamflow chart for unique river ID
+    """""
+    historical_data_file, river_id, watershed_name, subbasin_name =\
+        validate_historical_data(request.GET)
+
+    with rivid_exception_handler('ERA Interim', river_id):
+        with xarray.open_dataset(historical_data_file) as qout_nc:
+            # get information from dataset
+            qout_data = qout_nc.sel(rivid=river_id).Qout.to_dataframe().Qout
+            monthly_qout_data = qout_data.groupby(qout_data.index.month)
+
+            min_series = monthly_qout_data.min().values
+            max_series = monthly_qout_data.max().values
+            avg_series = monthly_qout_data.mean().values
+            std_series = monthly_qout_data.std().values
+            std_plus_series = avg_series + std_series
+
+    months_arr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul',
+                  'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    # generate chart
+    max_scatter = go.Scatter(
+        name='Max.',
+        x=months_arr,
+        y=max_series,
+        fill='tonexty',
+        mode='lines',
+        line=dict(
+            color='rgb(204, 204, 204)'
+        )
+    )
+
+    std_plus_scatter = go.Scatter(
+        name='Std. Dev. Upper',
+        x=months_arr,
+        y=std_plus_series,
+        fill='tonexty',
+        mode='lines',
+        line=dict(
+            color='#98fb98'
+        )
+    )
+
+    avg_scatter = go.Scatter(
+        name='Average',
+        x=months_arr,
+        y=avg_series,
+        line=dict(
+            color='#0066ff'
+        )
+    )
+
+    min_scatter = go.Scatter(
+        name='Min.',
+        x=months_arr,
+        y=min_series,
+        fill=None,
+        mode='lines',
+        line=dict(
+            color='#ff6600'
+        )
+    )
+
+    layout = go.Layout(
+        title="Monthly Seasonal Streamflow<br>"
+              "<sub>{0} ({1}): {2}</sub>"
+              .format(watershed_name, subbasin_name, river_id),
+        xaxis=dict(
+            title='Month',
+            tickformat="%b"),
+        yaxis=dict(
+            title='Streamflow (m<sup>3</sup>/s)')
+    )
+
+    chart_obj = PlotlyView(
+        go.Figure(data=[min_scatter,
+                        std_plus_scatter,
+                        max_scatter,
+                        avg_scatter],
+                  layout=layout)
+    )
+
+    context = {
+        'gizmo_object': chart_obj,
+    }
+
+    return render(request,
+                  'streamflow_prediction_tool/gizmo_ajax.html',
+                  context)
 
 @require_GET
 @login_required
