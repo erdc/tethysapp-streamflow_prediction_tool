@@ -10,19 +10,14 @@ from json import dumps as json_dumps
 import os
 import re
 
-import pandas as pd
 from pytz import utc
-import xarray
 
 # django imports
 from django.contrib import messages
-from django.http import Http404
+
 from django.shortcuts import redirect
 
 # local import
-from .app import StreamflowPredictionTool as app
-from .exception_handling import (NotFoundError, SettingsError,
-                                 rivid_exception_handler)
 from .model import GeoServerLayer
 
 
@@ -51,11 +46,11 @@ def delete_from_database(session, object_to_delete):
     object_to_delete = None
 
 
-def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
+def ecmwf_find_most_current_files(path_to_watershed_files, forecast_folder):
     """""
     Finds the current output from downscaled ECMWF forecasts
     """""
-    if start_folder == "most_recent":
+    if forecast_folder == "most_recent":
         if not os.path.exists(path_to_watershed_files):
             return None, None
         directories = \
@@ -65,7 +60,7 @@ def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
                 reverse=True
             )
     else:
-        directories = [start_folder]
+        directories = [forecast_folder]
     for directory in directories:
         try:
             date = datetime.datetime.strptime(directory.split(".")[0],
@@ -89,7 +84,7 @@ def ecmwf_find_most_current_files(path_to_watershed_files, start_folder):
     return None, None
 
 
-def ecmwf_get_valid_forecast_folder_list(main_watershed_forecast_folder,
+def get_ecmwf_valid_forecast_folder_list(main_watershed_forecast_folder,
                                          file_extension):
     """
     Retreives a list of valid forecast forlders for the watershed
@@ -121,58 +116,6 @@ def ecmwf_get_valid_forecast_folder_list(main_watershed_forecast_folder,
             if directory_count > 64:
                 break
     return output_directories
-
-
-def ecmwf_get_forecast_statistics(forecast_nc_list, river_id, return_data):
-    """
-    Returns the statistics for the 52 member forecast
-    """
-    # combine 52 ensembles
-    qout_datasets = []
-    ensemble_index_list = []
-    with rivid_exception_handler("ECMWF Forecast", river_id):
-        for forecast_nc in forecast_nc_list:
-            ensemble_index_list.append(
-                int(os.path.basename(forecast_nc)[:-3].split("_")[-1])
-            )
-            qout_datasets.append(
-                xarray.open_dataset(forecast_nc, autoclose=True)
-                      .sel(rivid=river_id).Qout
-            )
-
-    merged_ds = xarray.concat(qout_datasets,
-                              pd.Index(ensemble_index_list, name='ensemble'))
-
-    if return_data is None:
-        return_data = ""
-
-    return_dict = {}
-    if return_data == 'high_res' or not return_data:
-        # extract the high res ensemble & time
-        try:
-            return_dict['high_res'] = merged_ds.sel(ensemble=52).dropna('time')
-        except IndexError:
-            pass
-
-    if return_data != 'high_res' or not return_data:
-        # analyze data to get statistic bands
-        merged_ds = merged_ds.dropna('time')
-
-        if return_data == 'mean' or 'std' in return_data or not return_data:
-            return_dict['mean'] = merged_ds.mean(dim='ensemble')
-            std_ar = merged_ds.std(dim='ensemble')
-            if return_data == 'std_dev_range_upper' or not return_data:
-                return_dict['std_dev_range_upper'] = \
-                    return_dict['mean'] + std_ar
-            if return_data == 'std_dev_range_lower' or not return_data:
-                return_dict['std_dev_range_lower'] = \
-                    return_dict['mean'] - std_ar
-        if return_data == "outer_range_lower" or not return_data:
-            return_dict['min'] = merged_ds.min(dim='ensemble')
-        if return_data == "outer_range_upper" or not return_data:
-            return_dict['max'] = merged_ds.max(dim='ensemble')
-
-    return return_dict
 
 
 def format_name(string):
@@ -358,77 +301,3 @@ def user_permission_test(user):
     User needs to be superuser or staff
     """
     return user.is_superuser or user.is_staff
-
-
-def validate_watershed_info(request_info, clean_name=True):
-    """
-    This function validates the input watershed and subbasin data for a request
-
-    Returns
-    -------
-    watershed_name, subbasin_name
-    """
-    watershed_name = request_info['watershed_name'].strip() \
-        if 'watershed_name' in request_info else None
-    if watershed_name is None:
-        raise Http404('Missing watershed_name parameter ....')
-
-    subbasin_name = request_info['subbasin_name'].strip() \
-        if 'subbasin_name' in request_info else None
-    if subbasin_name is None:
-        raise Http404('Missing subbasin_name parameter ....')
-
-    if clean_name:
-        return format_name(watershed_name), format_name(subbasin_name)
-    return watershed_name, subbasin_name
-
-
-def validate_rivid_info(request_info):
-    """
-    This function validates the input rivid data for a request
-
-    Returns
-    -------
-    rivid
-    """
-    reach_id = request_info.get('reach_id')
-    if reach_id is None:
-        raise Http404('Missing reach_id parameter ....')
-
-    # make sure reach id is integet
-    try:
-        reach_id = int(reach_id)
-    except (TypeError, ValueError):
-        raise Http404('Invalid value for reach_id {}.'.format(reach_id))
-
-    return reach_id
-
-
-def validate_historical_data(request_info):
-    """
-    This function validates the request for historical data
-
-    Returns
-    -------
-    historic_data_file, rivid
-    """
-    path_to_era_interim_data = app.get_custom_setting('historical_folder')
-    if not os.path.exists(path_to_era_interim_data):
-        raise SettingsError('Location of ERA-Interim files faulty. '
-                            'Please check settings.')
-
-    # get information from request
-    watershed_name, subbasin_name = validate_watershed_info(request_info)
-    river_id = validate_rivid_info(request_info)
-
-    # find/check current output datasets
-    path_to_output_files = \
-        os.path.join(path_to_era_interim_data,
-                     "{0}-{1}".format(watershed_name, subbasin_name))
-    historical_data_files = glob(os.path.join(path_to_output_files,
-                                              "Qout*.nc"))
-    if not historical_data_files:
-        raise NotFoundError('ERA Interim data for %s (%s).'
-                            % (watershed_name, subbasin_name))
-
-    return historical_data_files[0], river_id, watershed_name, subbasin_name
