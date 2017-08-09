@@ -44,10 +44,11 @@ class StreamflowPredictionTool(TethysAppBase):
                     url='streamflow-prediction-tool/map',
                     controller='streamflow_prediction_tool.controllers'
                                '.app_map'),
-            url_map(name='get_ecmwf_reach_statistical_hydrograph_ajax',
-                    url='streamflow-prediction-tool/map/ecmwf-get-hydrograph',
+            url_map(name='get_ecmwf_hydrograph_plot_ajax',
+                    url='streamflow-prediction-tool/map/'
+                        'get-ecmwf-hydrograph-plot',
                     controller='streamflow_prediction_tool.controllers_ajax'
-                               '.ecmwf_get_hydrograph'),
+                               '.get_ecmwf_hydrograph_plot'),
             url_map(name='get_return_periods_ajax',
                     url='streamflow-prediction-tool/map/'
                         'get-return-periods',

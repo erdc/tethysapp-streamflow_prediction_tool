@@ -152,3 +152,99 @@ def get_return_period_dict(request):
             return_period_data["two"] = str(rpd.return_period_2.values)
 
     return return_period_data
+
+
+def get_return_period_ploty_info(request, datetime_start, datetime_end):
+    """
+    Get shapes and annotations for plotly plot
+    """
+    # Return Period Section
+    return_period_data = get_return_period_dict(request)
+    return_max = float(return_period_data["max"])
+    return_20 = float(return_period_data["twenty"])
+    return_10 = float(return_period_data["ten"])
+    return_2 = float(return_period_data["two"])
+
+    # plotly info section
+    shapes = [
+         # return 20 band
+         dict(
+             type='rect',
+             xref='x',
+             yref='y',
+             x0=datetime_start,
+             y0=return_20,
+             x1=datetime_end,
+             y1=return_max,
+             line=dict(width=0),
+             fillcolor='rgba(128, 0, 128, 0.3)',
+         ),
+         # return 10 band
+         dict(
+             type='rect',
+             xref='x',
+             yref='y',
+             x0=datetime_start,
+             y0=return_10,
+             x1=datetime_end,
+             y1=return_20,
+             line=dict(width=0),
+             fillcolor='rgba(255, 0, 0, 0.3)',
+         ),
+         # return 2 band
+         dict(
+             type='rect',
+             xref='x',
+             yref='y',
+             x0=datetime_start,
+             y0=return_2,
+             x1=datetime_end,
+             y1=return_10,
+             line=dict(width=0),
+             fillcolor='rgba(255, 255, 0, 0.3)',
+         ),
+    ]
+    annotations = [
+        # return max
+        dict(
+            x=datetime_end,
+            y=return_max,
+            xref='x',
+            yref='y',
+            text='Max. ({:.1f})'.format(return_max),
+            showarrow=False,
+            xanchor='left',
+        ),
+        # return 20 band
+        dict(
+            x=datetime_end,
+            y=return_20,
+            xref='x',
+            yref='y',
+            text='20-yr ({:.1f})'.format(return_20),
+            showarrow=False,
+            xanchor='left',
+        ),
+        # return 10 band
+        dict(
+            x=datetime_end,
+            y=return_10,
+            xref='x',
+            yref='y',
+            text='10-yr ({:.1f})'.format(return_10),
+            showarrow=False,
+            xanchor='left',
+        ),
+        # return 2 band
+        dict(
+            x=datetime_end,
+            y=return_2,
+            xref='x',
+            yref='y',
+            text='2-yr ({:.1f})'.format(return_2),
+            showarrow=False,
+            xanchor='left',
+        ),
+    ]
+
+    return shapes, annotations
