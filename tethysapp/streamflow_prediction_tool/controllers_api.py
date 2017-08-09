@@ -33,8 +33,8 @@ def get_ecmwf_forecast(request):
     formatted_stat = {
         'high_res': 'High Resolution',
         'mean': 'Mean',
-        'outer_range_lower': 'Outer Lower Range',
-        'outer_range_upper': 'Outer Upper Range',
+        'min': 'Min',
+        'max': 'Max',
         'std_dev_range_lower': 'Standard Deviation Lower Range',
         'std_dev_range_upper': 'Standard Deviation Upper Range',
     }
