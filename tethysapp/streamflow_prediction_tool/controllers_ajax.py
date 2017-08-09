@@ -6,9 +6,7 @@
 """
 from csv import writer as csv_writer
 import datetime
-from glob import glob
 from json import load as json_load
-from json import loads as json_loads
 import os
 
 import numpy as np
@@ -41,17 +39,16 @@ from .exception_handling import (DatabaseError, GeoServerError, InvalidData,
                                  rivid_exception_handler)
 
 from .app import StreamflowPredictionTool as app
+from .controllers_functions import (get_ecmwf_avaialable_dates,
+                                    get_ecmwf_forecast_statistics,
+                                    get_return_period_dict)
+from .controllers_validators import (validate_historical_data,
+                                     validate_watershed_info)
 from .functions import (delete_from_database,
-                        ecmwf_find_most_current_files,
-                        ecmwf_get_valid_forecast_folder_list,
-                        ecmwf_get_forecast_statistics,
                         format_name,
                         handle_uploaded_file,
                         update_geoserver_layer,
-                        user_permission_test,
-                        validate_historical_data,
-                        validate_rivid_info,
-                        validate_watershed_info)
+                        user_permission_test)
 
 from .model import DataStore, GeoServer, Watershed, WatershedGroup
 
@@ -64,15 +61,14 @@ def data_store_add(request):
     Controller for adding a data store.
     """
     # get/check information from AJAX request
-    post_info = request.POST
-    data_store_name = post_info.get('data_store_name')
-    data_store_owner_org = post_info.get('data_store_owner_org')
-    data_store_type_id = post_info.get('data_store_type_id')
-    data_store_endpoint = post_info.get('data_store_endpoint')
-    data_store_api_key = post_info.get('data_store_api_key')
+    data_store_name = request.POST.get('data_store_name')
+    data_store_owner_org = request.POST.get('data_store_owner_org')
+    data_store_type_id = request.POST.get('data_store_type_id')
+    data_store_endpoint = request.POST.get('data_store_endpoint')
+    data_store_api_key = request.POST.get('data_store_api_key')
 
-    if not data_store_name or not data_store_type_id or \
-            not data_store_endpoint or not data_store_api_key:
+    if not (data_store_name or data_store_type_id or data_store_endpoint
+            or data_store_api_key):
         raise InvalidData("Request missing data.")
 
     # initialize session
@@ -130,8 +126,7 @@ def data_store_delete(request):
     Controller for deleting a data store.
     """
     # get/check information from AJAX request
-    post_info = request.POST
-    data_store_id = post_info.get('data_store_id')
+    data_store_id = request.POST.get('data_store_id')
 
     if int(data_store_id) == 1:
         raise DatabaseError("Cannot change this data store.")
@@ -165,12 +160,11 @@ def data_store_update(request):
     Controller for updating a data store.
     """
     # get/check information from AJAX request
-    post_info = request.POST
-    data_store_id = post_info.get('data_store_id')
-    data_store_name = post_info.get('data_store_name')
-    data_store_owner_org = post_info.get('data_store_owner_org')
-    data_store_api_endpoint = post_info.get('data_store_api_endpoint')
-    data_store_api_key = post_info.get('data_store_api_key')
+    data_store_id = request.POST.get('data_store_id')
+    data_store_name = request.POST.get('data_store_name')
+    data_store_owner_org = request.POST.get('data_store_owner_org')
+    data_store_api_endpoint = request.POST.get('data_store_api_endpoint')
+    data_store_api_key = request.POST.get('data_store_api_key')
 
     if int(data_store_id) == 1:
         raise DatabaseError("Cannot change this data store.")
@@ -225,11 +219,10 @@ def geoserver_add(request):
     Controller for adding a geoserver.
     """
     # get/check information from AJAX request
-    post_info = request.POST
-    geoserver_name = post_info.get('geoserver_name')
-    geoserver_url = post_info.get('geoserver_url')
-    geoserver_username = post_info.get('geoserver_username')
-    geoserver_password = post_info.get('geoserver_password')
+    geoserver_name = request.POST.get('geoserver_name')
+    geoserver_url = request.POST.get('geoserver_url')
+    geoserver_username = request.POST.get('geoserver_username')
+    geoserver_password = request.POST.get('geoserver_password')
 
     # check data
     if not geoserver_name or not geoserver_url or not \
@@ -288,8 +281,7 @@ def geoserver_delete(request):
     Controller for deleting a geoserver.
     """
     # get/check information from AJAX request
-    post_info = request.POST
-    geoserver_id = post_info.get('geoserver_id')
+    geoserver_id = request.POST.get('geoserver_id')
 
     # initialize session
     session_maker = app.get_persistent_store_database('main_db',
@@ -322,12 +314,11 @@ def geoserver_update(request):
     Controller for updating a geoserver.
     """
     # get/check information from AJAX request
-    post_info = request.POST
-    geoserver_id = post_info.get('geoserver_id')
-    geoserver_name = post_info.get('geoserver_name')
-    geoserver_url = post_info.get('geoserver_url')
-    geoserver_username = post_info.get('geoserver_username')
-    geoserver_password = post_info.get('geoserver_password')
+    geoserver_id = request.POST.get('geoserver_id')
+    geoserver_name = request.POST.get('geoserver_name')
+    geoserver_url = request.POST.get('geoserver_url')
+    geoserver_username = request.POST.get('geoserver_username')
+    geoserver_password = request.POST.get('geoserver_password')
     # check data
     if not geoserver_id or not geoserver_name or not geoserver_url or not \
             geoserver_username or not geoserver_password:
@@ -389,33 +380,11 @@ def geoserver_update(request):
 @login_required
 @exceptions_to_http_status
 def ecmwf_get_avaialable_dates(request):
-    """""
+    """
     Finds a list of directories with valid data and
     returns dates in select2 format
-    """""
-    path_to_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
-    if not os.path.exists(path_to_rapid_output):
-        raise SettingsError('Location of ECMWF forecast files faulty. '
-                            'Please check settings.')
-
-    # get/check information from AJAX request
-    watershed_name, subbasin_name = validate_watershed_info(request.GET)
-
-    # find/check current output datasets
-    path_to_watershed_files = \
-        os.path.join(path_to_rapid_output,
-                     "{0}-{1}".format(watershed_name, subbasin_name))
-
-    if not os.path.exists(path_to_watershed_files):
-        raise NotFoundError('ECMWF forecast for %s (%s).'
-                            % (watershed_name, subbasin_name))
-
-    output_directories = \
-        ecmwf_get_valid_forecast_folder_list(path_to_watershed_files, ".nc")
-
-    if len(output_directories) <= 0:
-        raise NotFoundError('Recent ECMWF forecasts for %s, %s.'
-                            % (watershed_name, subbasin_name))
+    """
+    output_directories = get_ecmwf_avaialable_dates(request)
 
     return JsonResponse({
         "success": "Data analysis complete!",
@@ -427,38 +396,13 @@ def ecmwf_get_avaialable_dates(request):
 @login_required
 @exceptions_to_http_status
 def ecmwf_get_hydrograph(request):
-    """""
-    Plots 52 ECMWF ensembles analysis with min., max., avg. ,std. dev.
-    """""
-    path_to_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
-    if not os.path.exists(path_to_rapid_output):
-        raise SettingsError('Location of ECMWF forecast files faulty. '
-                            'Please check settings.')
-
-    # get/check information from AJAX request
-    get_info = request.GET
-    watershed_name, subbasin_name = validate_watershed_info(get_info)
-    river_id = validate_rivid_info(get_info)
-
-    start_folder = get_info.get('start_folder')
-    if not start_folder:
-        raise InvalidData('Invalid value for start_folder.')
-
-    stat_type = get_info.get('stat_type')
-
-    # find/check current output datasets
-    path_to_output_files = \
-        os.path.join(path_to_rapid_output,
-                     "{0}-{1}".format(watershed_name, subbasin_name))
-    forecast_nc_list, start_date = \
-        ecmwf_find_most_current_files(path_to_output_files, start_folder)
-    if not forecast_nc_list or not start_date:
-        raise NotFoundError('ECMWF forecast for %s (%s).'
-                            % (watershed_name, subbasin_name))
-
+    """
+    Retrieves 52 ECMWF ensembles analysis with min., max., avg., std. dev.
+    to be used in a hydrograph plot.
+    """
     # retrieve statistics
     forecast_statistics = \
-        ecmwf_get_forecast_statistics(forecast_nc_list, river_id, stat_type)
+        get_ecmwf_forecast_statistics(request)
 
     # extract the high res ensemble & time
     hres_return_data = None
@@ -468,14 +412,14 @@ def ecmwf_get_hydrograph(request):
         hres_return_data = zip(hres_time, forecast_statistics['high_res']
                                .values.tolist())
 
-    # analyze data to get statistic bands
+    # convert data arrays to python list
     mean_ar = forecast_statistics['mean'].values.tolist()
     min_ar = forecast_statistics['min'].values.tolist()
     max_ar = forecast_statistics['max'].values.tolist()
-    std_dev_range_upper = forecast_statistics['std_dev_range_upper'].values \
-        .tolist()
-    std_dev_range_lower = forecast_statistics['std_dev_range_lower'].values \
-        .tolist()
+    std_dev_range_upper = \
+        forecast_statistics['std_dev_range_upper'].values.tolist()
+    std_dev_range_lower = \
+        forecast_statistics['std_dev_range_lower'].values.tolist()
 
     # conver time to miliseconds
     low_res_time = (forecast_statistics['mean']
@@ -491,6 +435,7 @@ def ecmwf_get_hydrograph(request):
     }
     if hres_return_data:
         return_data['high_res'] = hres_return_data
+
     return JsonResponse(return_data)
 
 
@@ -615,47 +560,11 @@ def get_return_periods(request):
     """""
     Returns return period data for river ID
     """""
-    path_to_era_interim_data = app.get_custom_setting('historical_folder')
-    if not os.path.exists(path_to_era_interim_data):
-        raise SettingsError('Location of historical files faulty. '
-                            'Please check settings.')
-
-    # get information from GET request
-    watershed_name, subbasin_name = validate_watershed_info(request.GET)
-    river_id = validate_rivid_info(request.GET)
-
-    # find/check current output datasets
-    path_to_output_files = \
-        os.path.join(path_to_era_interim_data,
-                     "{0}-{1}".format(watershed_name, subbasin_name))
-    # ----------------------------------------------
-    # RETURN PERIOD SECTION
-    # ----------------------------------------------
-    return_period_return_data = {}
-    return_period_files = glob(os.path.join(path_to_output_files,
-                                            "return_period*.nc"))
-    if not return_period_files:
-        raise NotFoundError('Return period data for %s (%s).' %
-                            (watershed_name, subbasin_name))
-
-    return_period_file = return_period_files[0]
-    # get information from dataset
-    with rivid_exception_handler('return period', river_id):
-        with xarray.open_dataset(return_period_file) \
-                as return_period_nc:
-            rpd = return_period_nc.sel(rivid=river_id)
-            return_period_return_data["max"] = str(rpd.max_flow.values)
-            return_period_return_data["twenty"] = \
-                str(rpd.return_period_20.values)
-            return_period_return_data["ten"] = \
-                str(rpd.return_period_10.values)
-            return_period_return_data["two"] = \
-                str(rpd.return_period_2.values)
-            pass
+    return_period_data = get_return_period_dict(request)
 
     return JsonResponse({
         'success': "ERA-Interim data analysis complete!",
-        'return_period': return_period_return_data
+        'return_period': return_period_data
     })
 
 
@@ -679,7 +588,7 @@ def get_historical_hydrograph(request):
     # ----------------------------------------------
     # Return Period Section
     # ----------------------------------------------
-    return_period_data = json_loads(get_return_periods(request).content)
+    return_period_data = get_return_period_dict(request)
     return_max = float(return_period_data["return_period"]["max"])
     return_20 = float(return_period_data["return_period"]["twenty"])
     return_10 = float(return_period_data["return_period"]["ten"])
@@ -813,31 +722,16 @@ def get_historical_hydrograph(request):
 @login_required
 @exceptions_to_http_status
 def get_daily_seasonal_streamflow_chart(request):
-    """""
+    """
     Returns daily seasonal streamflow chart for unique river ID
-    """""
-    path_to_era_interim_data = app.get_custom_setting('historical_folder')
-    if not os.path.exists(path_to_era_interim_data):
-        raise SettingsError('Location of ERA-Interim files faulty. '
-                            'Please check settings.')
-
-    # get information from GET request
-    watershed_name, subbasin_name = validate_watershed_info(request.GET)
-    river_id = validate_rivid_info(request.GET)
-
-    # find/check current output datasets
-    path_to_output_files = \
-        os.path.join(path_to_era_interim_data,
-                     "{0}-{1}".format(watershed_name, subbasin_name))
-    seasonal_data_files = glob(os.path.join(path_to_output_files,
-                                            "seasonal_average*.nc"))
-    if not seasonal_data_files:
-        raise NotFoundError('Seasonal Average data for %s (%s).'
-                            % (watershed_name, subbasin_name))
+    """
+    seasonal_data_file, river_id, watershed_name, subbasin_name =\
+        validate_historical_data(request.GET,
+                                 "seasonal_average*.nc",
+                                 "Seasonal Average")
 
     with rivid_exception_handler('Seasonal Average', river_id):
-        with xarray.open_dataset(seasonal_data_files[0]) as seasonal_nc:
-
+        with xarray.open_dataset(seasonal_data_file) as seasonal_nc:
             seasonal_data = seasonal_nc.sel(rivid=river_id)
             base_date = datetime.datetime(2017, 1, 1)
             day_of_year = \

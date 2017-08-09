@@ -9,7 +9,7 @@ access the web app interface. This type of service facilitates integration of th
 the automation of forecast retrievals using programing languages like Python, or R. The available methods and a
 description of how to use them are shown below.
 
-GetWaterML for Forecasts Statistics
+GetForecast for Forecasts Statistics
 ===================================
 
 +----------------+--------------------------------------------------+---------------+
@@ -21,7 +21,7 @@ GetWaterML for Forecasts Statistics
 +----------------+--------------------------------------------------+---------------+
 | reach_id       | The identifier for the stream reach.             | 5             |
 +----------------+--------------------------------------------------+---------------+
-| start_folder   | The date of the forecast (YYYYMMDD.HHHH) [*]_.   | 20170110.1200 |
+| forecast_folder| The date of the forecast (YYYYMMDD.HHHH) [*]_.   | 20170110.1200 |
 +----------------+--------------------------------------------------+---------------+
 |                | The selected forecast statistic. (high_res, mean,|               |
 |                |                                                  |               |
@@ -29,13 +29,15 @@ GetWaterML for Forecasts Statistics
 |                |                                                  |               |
 |                | outer_range_upper, outer_range_lower).           |               |
 +----------------+--------------------------------------------------+---------------+
-.. [*] start_folder=most_recent will retrieve the most recent date available.
+.. [*] forecast_folder=most_recent will retrieve the most recent date available.
 
 Example
 -------
 
 >>> import requests
->>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWaterML/?watershed_name=Nepal&subbasin_name=Central&reach_id=5&start_folder=most_recent&stat_type=mean', headers={'Authorization': 'Token asdfqwer1234'})
+>>> request_params = dict(watershed_name='Nepal', subbasin_name='Central', reach_id=5, forecast_folder='most_recent', stat_type='mean')
+>>> request_headers = dict(Authorization='Token asdfqwer1234')
+>>> res = requests.get('[HOST Portal]/apps/streamflow-prediction-tool/api/GetForecast/', params=request_params, headers=request_headers)
 
 GetHistoricData (1980 - Present)
 ================================
@@ -53,10 +55,12 @@ GetHistoricData (1980 - Present)
 Example
 -------
 >>> import requests
->>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetHistoricData/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
+>>> request_params = dict(watershed_name='Nepal', subbasin_name='Central', reach_id=5)
+>>> request_headers = dict(Authorization='Token asdfqwer1234')
+>>> res = requests.get('[HOST Portal]/apps/streamflow-prediction-tool/api/GetHistoricData/', params=request_params, headers=request_headers)
 
-GetReturnPeriods (2, 10, 20, and 35 year return)
-================================================
+GetReturnPeriods (2, 10, and 20 year return with historical max)
+================================================================
 
 +----------------+--------------------------------------------------+---------------+
 | Parameter      | Description                                      | Example       |
@@ -71,7 +75,9 @@ GetReturnPeriods (2, 10, 20, and 35 year return)
 Example
 -------
 >>> import requests
->>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetReturnPeriods/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
+>>> request_params = dict(watershed_name='Nepal', subbasin_name='Central', return_period=2)
+>>> request_headers = dict(Authorization='Token asdfqwer1234')
+>>> res = requests.get('[HOST Portal]/apps/streamflow-prediction-tool/api/GetReturnPeriods/', params=request_params, headers=request_headers)
 
 GetAvailableDates
 =================
@@ -89,7 +95,9 @@ GetAvailableDates
 Example
 -------
 >>> import requests
->>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetAvailableDates/?watershed_name=Nepal&subbasin_name=Central&reach_id=5', headers={'Authorization': 'Token asdfqwer1234'})
+>>> request_params = dict(watershed_name='Nepal', subbasin_name='Central', reach_id=5)
+>>> request_headers = dict(Authorization='Token asdfqwer1234')
+>>> res = requests.get('[HOST Portal]/apps/streamflow-prediction-tool/api/GetAvailableDates/', params=request_params, headers=request_headers)
 
 GetWatersheds
 =============
@@ -99,26 +107,28 @@ This method takes no parameters and returns a list of the available watersheds.
 Example
 -------
 >>> import requests
->>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWatersheds/', headers={'Authorization': 'Token asdfqwer1234'})
+>>> request_headers = dict(Authorization='Token asdfqwer1234')
+>>> res = requests.get('[HOST Portal]/apps/streamflow-prediction-tool/api/GetWatersheds/', headers=request_headers)
 
 GetWarningPoints
 ================
 
-+----------------+--------------------------------------------------+---------------+
-| Parameter      | Description                                      | Example       |
-+================+==================================================+===============+
-| watershed_name | The name of watershed or main area of interest.  | Nepal         |
-+----------------+--------------------------------------------------+---------------+
-| subbasin_name  | The name of the sub basin or sub area.           | Central       |
-+----------------+--------------------------------------------------+---------------+
-| reach_id       | The identifier for the stream reach.             | 5             |
-+----------------+--------------------------------------------------+---------------+
-| return_period  | The return period that the warning is based on   | (2,10, or 20) |
-+----------------+--------------------------------------------------+---------------+
-| start_folder   | The date of the forecast (YYYYMMDD.HHHH) [*]_.   | 20170110.1200 |
-+----------------+--------------------------------------------------+---------------+
++----------------+------------------------------------------------------------+---------------+
+| Parameter      | Description                                                | Example       |
++================+============================================================+===============+
+| watershed_name | The name of watershed or main area of interest.            | Nepal         |
++----------------+------------------------------------------------------------+---------------+
+| subbasin_name  | The name of the sub basin or sub area.                     | Central       |
++----------------+------------------------------------------------------------+---------------+
+| return_period  | The return period that the warning is based on.            | (2,10, or 20) |
++----------------+------------------------------------------------------------+---------------+
+| forecast_folder| The date of the forecast (YYYYMMDD.HHHH). (Optional [*]_)  | 20170110.1200 |
++----------------+------------------------------------------------------------+---------------+
+.. [*] If you don't include forecast_folder, it will retrieve the most recent date available.
 
 Example
 -------
 >>> import requests
->>> res = requests.get('https://[HOST_Portal]/apps/streamflow-prediction-tool/api/GetWarningPoints/?watershed_name=nepal&subbasin_name=central&return_period=20&forecast_folder=20170802.0', headers={'Authorization': 'Token asdfqwer1234'})
+>>> request_params = dict(watershed_name='Nepal', subbasin_name='Central', return_period=20, forecast_folder='20170802.0')
+>>> request_headers = dict(Authorization='Token asdfqwer1234')
+>>> res = requests.get('[HOST Portal]/apps/streamflow-prediction-tool/api/GetWarningPoints/', params=request_params, headers=request_headers)

@@ -19,7 +19,7 @@ from tethys_sdk.gizmos import (Button, MessageBox, SelectInput,
 from .app import StreamflowPredictionTool as app
 from .model import (DataStore, DataStoreType, GeoServer,
                     Watershed, WatershedGroup)
-from .functions import (ecmwf_get_valid_forecast_folder_list,
+from .functions import (get_ecmwf_valid_forecast_folder_list,
                         format_watershed_title,
                         redirect_with_message,
                         user_permission_test)
@@ -301,7 +301,7 @@ def app_map(request):
                     os.path.exists(path_to_watershed_files):
                 available_forecast_dates = \
                     available_forecast_dates + \
-                    ecmwf_get_valid_forecast_folder_list(
+                    get_ecmwf_valid_forecast_folder_list(
                         path_to_watershed_files, ".txt")
 
         watershed_layers_info_array = get_watershed_layers_info(watersheds)[0]
@@ -374,7 +374,7 @@ def app_map(request):
                         os.path.exists(path_to_watershed_files):
                     available_forecast_dates = \
                         available_forecast_dates + \
-                        ecmwf_get_valid_forecast_folder_list(
+                        get_ecmwf_valid_forecast_folder_list(
                             path_to_watershed_files, ".txt")
 
     # set up the inputs
@@ -382,11 +382,11 @@ def app_map(request):
                                    name='watershed_select',
                                    options=watershed_list, )
     warning_point_date_select = None
-    warning_point_start_folder = None
+    warning_point_forecast_folder = None
     if available_forecast_dates:
         available_forecast_dates = sorted(available_forecast_dates,
                                           key=lambda k: k['id'], reverse=True)
-        warning_point_start_folder = available_forecast_dates[0]['id']
+        warning_point_forecast_folder = available_forecast_dates[0]['id']
         forecast_date_select_input = []
         for available_forecast_date in available_forecast_dates:
             next_row_info = (available_forecast_date['text'],
@@ -413,7 +413,7 @@ def app_map(request):
         'watershed_group_info_array_json':
             json.dumps(watershed_group_info_array),
         'watershed_group_info_array': watershed_group_info_array,
-        'warning_point_start_folder': warning_point_start_folder,
+        'warning_point_forecast_folder': warning_point_forecast_folder,
         'base_layer_info': json.dumps({'name': 'esri'}),
         'watershed_select': watershed_select,
         'warning_point_date_select': warning_point_date_select,

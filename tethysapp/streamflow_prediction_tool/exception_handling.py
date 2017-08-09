@@ -69,10 +69,11 @@ def exceptions_to_http_status(view_func):
             return HttpResponseBadRequest("Settings error: {}".format(ex))
         except UploadError as ex:
             return HttpResponseBadRequest("Upload error: {}".format(ex))
-        except Exception as ex:
+        except Exception:
             import traceback
             traceback.print_exc()
-            return HttpResponseServerError(str(ex))
+            return HttpResponseServerError("Internal Server Error. Please "
+                                           "check your input parameters.")
     return inner
 
 

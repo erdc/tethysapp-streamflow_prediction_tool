@@ -46,7 +46,7 @@ var ERFP_MAP = (function() {
         m_long_term_select_data_ajax_handle,
         m_short_term_chart_data_ajax_load_failed,
         m_short_term_select_data_ajax_handle,
-        m_ecmwf_start_folder,
+        m_ecmwf_forecast_folder,
         m_units,
         m_return_20_features_source,
         m_return_10_features_source,
@@ -919,7 +919,7 @@ var ERFP_MAP = (function() {
                         watershed_name: m_selected_ecmwf_watershed,
                         subbasin_name: m_selected_ecmwf_subbasin,
                         reach_id: m_selected_reach_id,
-                        start_folder: m_ecmwf_start_folder,
+                        forecast_folder: m_ecmwf_forecast_folder,
                     },
                 });
                 xhr_ecmwf_hydrograph.done(function (data) {
@@ -1038,14 +1038,14 @@ var ERFP_MAP = (function() {
             //ECMWF Dates
             var ecmwf_date_forecast_begin = new Date(8640000000000000);
             var ecmwf_date_forecast_end = new Date(-8640000000000000);
-            var get_ecmwf = m_ecmwf_start_folder != null && typeof m_ecmwf_start_folder != "undefined" &&
-                m_ecmwf_start_folder != "most_recent";
+            var get_ecmwf = m_ecmwf_forecast_folder != null && typeof m_ecmwf_forecast_folder != "undefined" &&
+                m_ecmwf_forecast_folder != "most_recent";
             //get ECMWF forcast dates if available
             if(get_ecmwf) {
-                var ecmwf_forecast_start_year = parseInt(m_ecmwf_start_folder.substring(0,4));
-                var ecmwf_forecast_start_month = parseInt(m_ecmwf_start_folder.substring(4,6));
-                var ecmwf_forecast_start_day = parseInt(m_ecmwf_start_folder.substring(6,8));
-                var ecmwf_forecast_start_hour = parseInt(m_ecmwf_start_folder.split(".")[1].substring(0,2));
+                var ecmwf_forecast_start_year = parseInt(m_ecmwf_forecast_folder.substring(0,4));
+                var ecmwf_forecast_start_month = parseInt(m_ecmwf_forecast_folder.substring(4,6));
+                var ecmwf_forecast_start_day = parseInt(m_ecmwf_forecast_folder.substring(6,8));
+                var ecmwf_forecast_start_hour = parseInt(m_ecmwf_forecast_folder.split(".")[1].substring(0,2));
                 ecmwf_date_forecast_begin = new Date(Date.UTC(ecmwf_forecast_start_year, ecmwf_forecast_start_month-1,
                                                      ecmwf_forecast_start_day, ecmwf_forecast_start_hour));
                 ecmwf_date_forecast_end = new Date();
@@ -1216,7 +1216,7 @@ var ERFP_MAP = (function() {
             resetChartSelectMessage();
 
             //Get chart data
-            m_ecmwf_start_folder = "most_recent";
+            m_ecmwf_forecast_folder = "most_recent";
             getChartData();
 
             //Get available ECMWF Dates
@@ -1249,7 +1249,7 @@ var ERFP_MAP = (function() {
                         }
                         //add on change event handler
                         $('#long-term-select').on('change.select2', function () {
-                            m_ecmwf_start_folder = $(this).select2('data').id;
+                            m_ecmwf_forecast_folder = $(this).select2('data').id;
                             getChartData();
                         });
                     }
@@ -1710,7 +1710,7 @@ var ERFP_MAP = (function() {
         m_long_term_chart_data_ajax_load_failed = false;
         m_short_term_chart_data_ajax_load_failed = false;
         m_long_term_select_data_ajax_handle = null;
-        m_ecmwf_start_folder = "most_recent";
+        m_ecmwf_forecast_folder = "most_recent";
         //Init from toggle
         m_units = "metric";
         if(!$('#units-toggle').bootstrapSwitch('state')) {
@@ -1788,7 +1788,7 @@ var ERFP_MAP = (function() {
 
         //load base layer
         var base_layer_info = JSON.parse($("#map").attr('base-layer-info'));
-        var warning_point_start_folder = $("#map").attr('warning-point-start-folder');
+        var warning_point_forecast_folder = $("#map").attr('warning-point-start-folder');
         m_basemap_layer = getBaseLayer(base_layer_info.name);
         
         //load drainage line layers
@@ -2173,12 +2173,12 @@ var ERFP_MAP = (function() {
                             if (!loaded) {
                                 bindInputs(group_id, watershed_layer);
                             }
-                            warning_xhr_list.push(loadWarningPoints(sublayer, group_id, warning_point_start_folder));
+                            warning_xhr_list.push(loadWarningPoints(sublayer, group_id, warning_point_forecast_folder));
                         }
                         else if (!loaded) {
                             loaded = true;
                             bindInputs(group_id, watershed_layer);
-                            warning_xhr_list.push(loadWarningPoints(watershed_layer, group_id, warning_point_start_folder));
+                            warning_xhr_list.push(loadWarningPoints(watershed_layer, group_id, warning_point_forecast_folder));
                         }
                     });
                 } else {
@@ -2206,7 +2206,7 @@ var ERFP_MAP = (function() {
 
         //update slider
         jQuery.when.apply(jQuery, warning_xhr_list).always(function() {
-            updateWarningSlider(warning_point_start_folder);
+            updateWarningSlider(warning_point_forecast_folder);
         });
 
         //bind flood maps

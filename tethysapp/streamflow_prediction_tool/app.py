@@ -217,28 +217,28 @@ class StreamflowPredictionTool(TethysAppBase):
                     controller='streamflow_prediction_tool.controllers'
                                '.publications'),
             url_map(name='waterml',
-                    url='streamflow-prediction-tool/api/GetWaterML',
-                    controller='streamflow_prediction_tool.api'
-                               '.get_waterml'),
+                    url='streamflow-prediction-tool/api/GetForecast',
+                    controller='streamflow_prediction_tool.controllers_api'
+                               '.get_ecmwf_forecast'),
             url_map(name='era_interim',
                     url='streamflow-prediction-tool/api/GetHistoricData',
-                    controller='streamflow_prediction_tool.api'
+                    controller='streamflow_prediction_tool.controllers_api'
                                '.get_historic_data'),
             url_map(name='return_periods',
                     url='streamflow-prediction-tool/api/GetReturnPeriods',
-                    controller='streamflow_prediction_tool.api'
+                    controller='streamflow_prediction_tool.controllers_api'
                                '.get_return_periods_api'),
             url_map(name='return_periods',
                     url='streamflow-prediction-tool/api/GetAvailableDates',
-                    controller='streamflow_prediction_tool.api'
+                    controller='streamflow_prediction_tool.controllers_api'
                                '.get_available_dates'),
             url_map(name='watershed_list',
                     url='streamflow-prediction-tool/api/GetWatersheds',
-                    controller='streamflow_prediction_tool.api'
+                    controller='streamflow_prediction_tool.controllers_api'
                                '.get_watershed_list'),
             url_map(name='warning_points',
                     url='streamflow-prediction-tool/api/GetWarningPoints',
-                    controller='streamflow_prediction_tool.api'
+                    controller='streamflow_prediction_tool.controllers_api'
                                '.get_warning_points'),
         )
 
