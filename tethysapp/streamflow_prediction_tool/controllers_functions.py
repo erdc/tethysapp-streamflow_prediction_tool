@@ -123,9 +123,9 @@ def get_ecmwf_forecast_statistics(request):
             if stat_type == 'std_dev_range_lower' or not stat_type:
                 return_dict['std_dev_range_lower'] = \
                     return_dict['mean'] - std_ar
-        if stat_type == "outer_range_lower" or not stat_type:
+        if stat_type == "min" or not stat_type:
             return_dict['min'] = merged_ds.min(dim='ensemble')
-        if stat_type == "outer_range_upper" or not stat_type:
+        if stat_type == "max" or not stat_type:
             return_dict['max'] = merged_ds.max(dim='ensemble')
 
     return return_dict

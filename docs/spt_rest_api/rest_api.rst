@@ -27,7 +27,7 @@ GetForecast for Forecasts Statistics
 |                |                                                  |               |
 | stat_type      | std_dev_range_upper, std_dev_range_lower,        | mean          |
 |                |                                                  |               |
-|                | outer_range_upper, outer_range_lower).           |               |
+|                | max, min).                                       |               |
 +----------------+--------------------------------------------------+---------------+
 .. [*] forecast_folder=most_recent will retrieve the most recent date available.
 
