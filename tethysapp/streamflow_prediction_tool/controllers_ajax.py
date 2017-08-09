@@ -41,8 +41,10 @@ from .exception_handling import (DatabaseError, GeoServerError, InvalidData,
 from .app import StreamflowPredictionTool as app
 from .controllers_functions import (get_ecmwf_avaialable_dates,
                                     get_ecmwf_forecast_statistics,
-                                    get_return_period_dict)
+                                    get_return_period_dict,
+                                    get_return_period_ploty_info)
 from .controllers_validators import (validate_historical_data,
+                                     validate_rivid_info,
                                      validate_watershed_info)
 from .functions import (delete_from_database,
                         format_name,
@@ -395,48 +397,133 @@ def ecmwf_get_avaialable_dates(request):
 @require_GET
 @login_required
 @exceptions_to_http_status
-def ecmwf_get_hydrograph(request):
+def get_ecmwf_hydrograph_plot(request):
     """
     Retrieves 52 ECMWF ensembles analysis with min., max., avg., std. dev.
-    to be used in a hydrograph plot.
+    as a plotly hydrograph plot.
     """
+    # get information from request
+    watershed_name, subbasin_name = validate_watershed_info(request.GET)
+    river_id = validate_rivid_info(request.GET)
+
     # retrieve statistics
     forecast_statistics = \
         get_ecmwf_forecast_statistics(request)
 
-    # extract the high res ensemble & time
-    hres_return_data = None
+    # ----------------------------------------------
+    # Chart Section
+    # ----------------------------------------------
+    avg_df = forecast_statistics['mean'].to_dataframe().Qout
+    datetime_start = avg_df.index[0]
+    datetime_end = avg_df.index[-1]
+
+    avg_series = go.Scatter(
+        name='Mean',
+        x=avg_df.index,
+        y=avg_df.values,
+        line=dict(
+            color='blue',
+        )
+    )
+
+    max_df = forecast_statistics['max'].to_dataframe().Qout
+    max_series = go.Scatter(
+        name='Max',
+        x=max_df.index,
+        y=max_df.values,
+        fill='tonexty',
+        mode='lines',
+        line=dict(
+            color='rgb(152, 251, 152)',
+        )
+    )
+
+    min_df = forecast_statistics['min'].to_dataframe().Qout
+    min_series = go.Scatter(
+        name='Min',
+        x=min_df.index,
+        y=min_df.values,
+        fill=None,
+        mode='lines',
+        line=dict(
+            color='rgb(152, 251, 152)',
+        )
+    )
+
+    std_dev_lower_df = \
+        forecast_statistics['std_dev_range_lower'].to_dataframe().Qout
+    # ensure values limited by the min
+    std_dev_lower_df[std_dev_lower_df < min_df] = min_df
+    std_dev_lower_series = go.Scatter(
+        name='Std. Dev. Lower',
+        x=std_dev_lower_df.index,
+        y=std_dev_lower_df.values,
+        fill='tonexty',
+        fillcolor='rgba(152, 251, 152)',
+        mode='lines',
+        line=dict(
+            color='rgb(34, 139, 34)',
+        )
+    )
+
+    std_dev_upper_df = \
+        forecast_statistics['std_dev_range_upper'].to_dataframe().Qout
+    std_dev_upper_series = go.Scatter(
+        name='Std. Dev. Upper',
+        x=std_dev_upper_df.index,
+        y=std_dev_upper_df.values,
+        fill='tonexty',
+        mode='lines',
+        line=dict(
+            color='rgb(34, 139, 34)',
+        )
+    )
+
+    plot_series = [min_series,
+                   std_dev_lower_series,
+                   std_dev_upper_series,
+                   max_series,
+                   avg_series]
+
     if 'high_res' in forecast_statistics:
-        hres_time = (forecast_statistics['high_res']
-                     .time.values.astype('int64') / 1e6).tolist()
-        hres_return_data = zip(hres_time, forecast_statistics['high_res']
-                               .values.tolist())
+        high_res_df = forecast_statistics['high_res'].to_dataframe().Qout
+        plot_series.append(go.Scatter(
+            name='HRES',
+            x=high_res_df.index,
+            y=high_res_df.values,
+            line=dict(
+                color='black',
+            )
+        ))
 
-    # convert data arrays to python list
-    mean_ar = forecast_statistics['mean'].values.tolist()
-    min_ar = forecast_statistics['min'].values.tolist()
-    max_ar = forecast_statistics['max'].values.tolist()
-    std_dev_range_upper = \
-        forecast_statistics['std_dev_range_upper'].values.tolist()
-    std_dev_range_lower = \
-        forecast_statistics['std_dev_range_lower'].values.tolist()
+    return_shapes, return_annotations = \
+        get_return_period_ploty_info(request, datetime_start, datetime_end)
 
-    # conver time to miliseconds
-    low_res_time = (forecast_statistics['mean']
-                    .time.values.astype('int64') / 1e6).tolist()
+    layout = go.Layout(
+        title="Forecast<br><sub>{0} ({1}): {2}</sub>".format(
+            watershed_name, subbasin_name, river_id),
+        xaxis=dict(
+            title='Date',
+        ),
+        yaxis=dict(
+            title='Streamflow (m<sup>3</sup>/s)'
+        ),
+        shapes=return_shapes,
+        annotations=return_annotations
+    )
 
-    # return JSON response with data
-    return_data = {
-        "mean": zip(low_res_time, mean_ar),
-        "outer_range": zip(low_res_time, min_ar, max_ar),
-        "std_dev_range": zip(low_res_time, std_dev_range_lower,
-                             std_dev_range_upper),
-        "success": "ECMWF Data analysis complete!"
+    chart_obj = PlotlyView(
+        go.Figure(data=plot_series,
+                  layout=layout)
+    )
+
+    context = {
+        'gizmo_object': chart_obj,
     }
-    if hres_return_data:
-        return_data['high_res'] = hres_return_data
 
-    return JsonResponse(return_data)
+    return render(request,
+                  'streamflow_prediction_tool/gizmo_ajax.html',
+                  context)
 
 
 @require_GET
@@ -586,15 +673,6 @@ def get_historical_hydrograph(request):
             qout_time = qout_data.time.values
 
     # ----------------------------------------------
-    # Return Period Section
-    # ----------------------------------------------
-    return_period_data = get_return_period_dict(request)
-    return_max = float(return_period_data["return_period"]["max"])
-    return_20 = float(return_period_data["return_period"]["twenty"])
-    return_10 = float(return_period_data["return_period"]["ten"])
-    return_2 = float(return_period_data["return_period"]["two"])
-
-    # ----------------------------------------------
     # Chart Section
     # ----------------------------------------------
     qout_time = pd.to_datetime(qout_time)
@@ -603,6 +681,9 @@ def get_historical_hydrograph(request):
         x=qout_time,
         y=qout_values,
     )
+
+    return_shapes, return_annotations = \
+        get_return_period_ploty_info(request, qout_time[0], qout_time[-1])
 
     layout = go.Layout(
         title="Historical Streamflow<br><sub>{0} ({1}): {2}</sub>".format(
@@ -613,95 +694,8 @@ def get_historical_hydrograph(request):
         yaxis=dict(
             title='Streamflow (m<sup>3</sup>/s)'
         ),
-        shapes=[
-            # return 20 band
-            dict(
-                type='rect',
-                xref='x',
-                yref='y',
-                x0=qout_time[0],
-                y0=return_20,
-                x1=qout_time[-1],
-                y1=return_max,
-                line=dict(
-                    color='rgba(128, 0, 128)',
-                    width=1,
-                ),
-                fillcolor='rgba(128, 0, 128, 0.3)',
-            ),
-            # return 10 band
-            dict(
-                type='rect',
-                xref='x',
-                yref='y',
-                x0=qout_time[0],
-                y0=return_10,
-                x1=qout_time[-1],
-                y1=return_20,
-                line=dict(
-                    color='rgba(255, 0, 0)',
-                    width=1,
-                ),
-                fillcolor='rgba(255, 0, 0, 0.3)',
-            ),
-            # return 2 band
-            dict(
-                type='rect',
-                xref='x',
-                yref='y',
-                x0=qout_time[0],
-                y0=return_2,
-                x1=qout_time[-1],
-                y1=return_10,
-                line=dict(
-                    color='rgba(255, 255, 0)',
-                    width=1,
-                ),
-                fillcolor='rgba(255, 255, 0, 0.3)',
-            ),
-        ],
-        annotations=[
-            # return max
-            dict(
-                x=qout_time[-1],
-                y=return_max,
-                xref='x',
-                yref='y',
-                text='Max. ({:.1f})'.format(return_max),
-                showarrow=False,
-                xanchor='left',
-            ),
-            # return 20 band
-            dict(
-                x=qout_time[-1],
-                y=return_20,
-                xref='x',
-                yref='y',
-                text='20-yr ({:.1f})'.format(return_20),
-                showarrow=False,
-                xanchor='left',
-            ),
-            # return 10 band
-            dict(
-                x=qout_time[-1],
-                y=return_10,
-                xref='x',
-                yref='y',
-                text='10-yr ({:.1f})'.format(return_10),
-                showarrow=False,
-                xanchor='left',
-            ),
-            # return 2 band
-            dict(
-                x=qout_time[-1],
-                y=return_2,
-                xref='x',
-                yref='y',
-                text='2-yr ({:.1f})'.format(return_2),
-                showarrow=False,
-                xanchor='left',
-            ),
-        ]
+        shapes=return_shapes,
+        annotations=return_annotations
     )
 
     chart_obj = PlotlyView(

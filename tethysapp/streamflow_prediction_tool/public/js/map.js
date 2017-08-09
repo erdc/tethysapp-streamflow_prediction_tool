@@ -31,9 +31,7 @@ var ERFP_MAP = (function() {
         m_selected_nws_id,
         m_selected_hydroserver_url,
         m_downloading_ecmwf_hydrograph,
-        m_downloading_return_periods,
         m_downloading_long_term_select,
-        m_downloading_short_term_select,
         m_downloading_usgs,
         m_downloading_nws,
         m_downloading_hydroserver,
@@ -244,8 +242,7 @@ var ERFP_MAP = (function() {
     //FUNCTION: check if loading past request
     isNotLoadingPastRequest = function() {
         return !m_downloading_ecmwf_hydrograph && !m_downloading_long_term_select &&
-            !m_downloading_usgs && !m_downloading_nws && !m_downloading_hydroserver &&
-            !m_downloading_return_periods;
+            !m_downloading_usgs && !m_downloading_nws && !m_downloading_hydroserver;
     };
 
     //FUNCTION: zooms to all layers
@@ -741,33 +738,10 @@ var ERFP_MAP = (function() {
         return dateToUTCString(date) + "T00:00:00";
     };
 
-    //FUNCTION: adds a series to both the chart
-    addECMWFSeriesToCharts = function(series_name, series_data, series_color, series_type){
-        var long_term_chart = $("#long-term-chart").highcharts();
-        var new_series = {
-                            name: series_name,
-                            data: convertTimeSeriesMetricToEnglish(series_data),
-                            color: series_color,
-                            selected: true
-                         };
-        if(typeof series_type != 'undefined' && new_series != null) {
-            new_series.type = series_type;
-            new_series.lineWidth = 0;
-            new_series.linkedTo = ":previous";
-            new_series.fillOpacity = 0.3;
-        }
-        $('#forecast_tab_link').tab('show'); //switch to plot tab
-        long_term_chart.addSeries(new_series);
-    };
-
     //FUNCTION: adds data to the chart
     addSeriesToCharts = function(series){
-        var long_term_chart = $("#long-term-chart").highcharts();
         $('#forecast_tab_link').tab('show'); //switch to plot tab
-        long_term_chart.addSeries(series);
-        $("#long-term-chart").removeClass("hidden");
     };
-
 
     //FUNCTION: gets all data for chart
     getChartData = function() {
@@ -816,105 +790,14 @@ var ERFP_MAP = (function() {
             //turn off select interaction
             m_map.removeInteraction(m_select_interaction);
             addInfoMessage("Retrieving Data ...");
-            var y_axis_title = "Flow (m<sup>3</sup>/s)";
-            if (m_units == "english") {
-                y_axis_title = "Flow (ft<sup>3</sup>/s)";
-            }
-            var default_chart_settings = {
-
-                title: { text: "Forecast"},
-                chart: {
-                    zoomType: 'x',
-                    events: {
-                        redraw: function () {
-                            var chart = this;
-                            var legend = chart.legend;
-        
-                            for (var i = 0, len = legend.allItems.length; i < len; i++) {
-                                (function(i) {
-                                    var item = legend.allItems[i].legendItem;
-                                    if (item.textStr == "ECMWF - HRES") {
-                                        item.element.innerHTML = '<tspan id="boot_tooltip_chart'+i+'">' + item.textStr + '<tspan>';
-                                        var item_parent = $('#boot_tooltip_chart'+i).parent();
-                                        item_parent.data('toggle', 'tooltip');
-                                        item_parent.data('placement', 'top');
-                                        item_parent.attr('title', 'The HRES member provides a highly detailed description of future weather over 10 days. Overall, it is seen as the best forecast. However, other forecast members may be more accurate in any given prediction cycle.');
-                                        item_parent.addClass('boot_tooltip_chart');
-                                        item_parent.tooltip({container: 'body'});
-                                    }
-                                    else if (item.textStr == "ECMWF") {
-                                        item.element.innerHTML = '<tspan id="boot_tooltip_chart'+i+'">' + item.textStr + '<tspan>';
-                                        var item_parent = $('#boot_tooltip_chart'+i).parent();
-                                        item_parent.data('toggle', 'tooltip');
-                                        item_parent.data('placement', 'top');
-                                        item_parent.attr('title', 'The "light green" band represents the extremes, the "dark green" band represents the probable streamflow bounds, and the "dark green line" represents the average over the 52 members.');
-                                        item_parent.addClass('boot_tooltip_chart');
-                                        item_parent.tooltip({container: 'body'});
-                                    }
-                                    else if (item.textStr == "ERA Interim") {
-                                        item.element.innerHTML = '<tspan id="boot_tooltip_chart'+i+'">' + item.textStr + '<tspan>';
-                                        var item_parent = $('#boot_tooltip_chart'+i).parent();
-                                        item_parent.data('toggle', 'tooltip');
-                                        item_parent.data('placement', 'top');
-                                        item_parent.attr('title', 'This data is modeled historical streamflow based on the ERA Interim global runoff dataset.');
-                                        item_parent.addClass('boot_tooltip_chart');
-                                        item_parent.tooltip({container: 'body'});
-                                    }
-                                })(i);
-                            }
-                        }
-                    }
-                },
-                legend: {
-                    enabled: true,
-                },
-                rangeSelector: {
-                    selected: 0
-                },
-                plotOptions: {
-                    series: {
-                        marker: {
-                            enabled: false
-                        }
-                    }
-                },
-                xAxis: {
-                    type: 'datetime',
-                    ordinal: false,
-                    title: {
-                        text: 'Date (UTC)'
-                    },
-                    minRange: 1 * 24 * 3600000 // one day
-                },
-                yAxis: {
-                    title: {
-                        useHTML: true,
-                        text: y_axis_title
-                    },
-                    min: 0,
-                    opposite: false
-                },
-            };
-            //handle subtitles - ECMWF first priority
-            if(m_selected_ecmwf_watershed != null && m_selected_ecmwf_subbasin != null) {
-                default_chart_settings.subtitle = {
-                    text: toTitleCase(m_selected_ecmwf_watershed) + " (" +
-                          toTitleCase(m_selected_ecmwf_subbasin) + "): " + m_selected_reach_id
-                };
-            }
-
             $('#forecast_tab_link').tab('show'); //switch to plot tab
-            $("#long-term-chart").highcharts('StockChart', default_chart_settings);
-
             //get ecmwf data
-            if (m_selected_ecmwf_watershed != null &&
-                m_selected_ecmwf_subbasin != null) {
-
+            if (isValidRiverSelected()) {
+                $('#long-term-chart').addClass('hidden');
                 m_downloading_ecmwf_hydrograph = true;
                 var xhr_ecmwf_hydrograph = jQuery.ajax({
                     type: "GET",
-                    url: "ecmwf-get-hydrograph",
-                    dataType: "json",
+                    url: "get-ecmwf-hydrograph-plot",
                     data: {
                         watershed_name: m_selected_ecmwf_watershed,
                         subbasin_name: m_selected_ecmwf_subbasin,
@@ -923,32 +806,10 @@ var ERFP_MAP = (function() {
                     },
                 });
                 xhr_ecmwf_hydrograph.done(function (data) {
-                    if ("mean" in data) {
-                        addECMWFSeriesToCharts("ECMWF", data.mean,
-                                                Highcharts.getOptions().colors[2]);
-                    }
-                    if ("outer_range" in data) {
-                        addECMWFSeriesToCharts("ECMWF - Outer Range",
-                                                data.outer_range,
-                                                Highcharts.getOptions().colors[2],
-                                                'arearange');
-                    }
-                    if ("std_dev_range" in data) {
-                        addECMWFSeriesToCharts("ECMWF - Std. Dev.",
-                                               data.std_dev_range,
-                                               Highcharts.getOptions().colors[2],
-                                               'arearange');
-                    }
-                    if ("high_res" in data) {
-                        addECMWFSeriesToCharts("ECMWF - HRES",
-                                               data.high_res,
-                                               Highcharts.getOptions().colors[1]);
-                    }
                     $('.long-term-select').removeClass('hidden');
-                    var long_term_chart = $("#long-term-chart").highcharts();
-                    long_term_chart.rangeSelector.clickButton(0,0,true);
                     $('#long-term-chart').removeClass('hidden');
-                    $(window).resize();
+                    $('#long-term-chart').html(data);
+                    Plotly.Plots.resize($("#long-term-chart .js-plotly-plot")[0]);
                 })
                 .fail(function (request, status, error) {
                         m_long_term_chart_data_ajax_load_failed = true;
@@ -962,67 +823,6 @@ var ERFP_MAP = (function() {
                         clearInfoMessages();
                     }
                 });
-
-                m_downloading_return_periods = true;
-                jQuery.ajax({
-                    type: "GET",
-                    url: "get-return-periods",
-                    dataType: "json",
-                    data: {
-                        watershed_name: m_selected_ecmwf_watershed,
-                        subbasin_name: m_selected_ecmwf_subbasin,
-                        reach_id: m_selected_reach_id,
-                    },
-                })
-                .done(function (data) {
-                    var long_term_chart = $("#long-term-chart").highcharts();
-                    xhr_ecmwf_hydrograph.always(function() {
-                        //load return peeriod data to chart
-                        var extremes = long_term_chart.yAxis[0].getExtremes();
-                        var maxY = Math.max(extremes.max, convertValueMetricToEnglish(parseFloat(data.return_period.max)));
-                        long_term_chart.yAxis[0].addPlotBand({
-                            from: convertValueMetricToEnglish(parseFloat(data.return_period.twenty)),
-                            to: convertValueMetricToEnglish(maxY),
-                            color: 'rgba(128, 0, 128, 0.4)',
-                            id: '20-yr',
-                            label: {
-                                text: '20-yr (' + convertValueMetricToEnglish(parseFloat(data.return_period.twenty)).toFixed(1) + ')',
-                                align: 'right',
-                            }
-                        });
-                        long_term_chart.yAxis[0].addPlotBand({
-                            from: convertValueMetricToEnglish(parseFloat(data.return_period.ten)),
-                            to: convertValueMetricToEnglish(parseFloat(data.return_period.twenty)),
-                            color: 'rgba(255, 0, 0, 0.3)',
-                            id: '10-yr',
-                            label: {
-                                text: '10-yr (' + convertValueMetricToEnglish(parseFloat(data.return_period.ten)).toFixed(1) + ')',
-                                align: 'right',
-                            }
-                        });
-                        long_term_chart.yAxis[0].addPlotBand({
-                            from: convertValueMetricToEnglish(parseFloat(data.return_period.two)),
-                            to: convertValueMetricToEnglish(parseFloat(data.return_period.ten)),
-                            color: 'rgba(255, 255, 0, 0.3)',
-                            id: '2-yr',
-                            label: {
-                                text: '2-yr (' + convertValueMetricToEnglish(parseFloat(data.return_period.two)).toFixed(1) + ')',
-                                align: 'right',
-                            }
-                        });
-                    });
-                })
-                .fail(function (request, status, error) {
-                    appendErrorMessage(request.responseText, "return_periods_error", "message-error");
-                })
-                .always(function () {
-                    m_downloading_return_periods = false;
-                    m_map.addInteraction(m_select_interaction);
-                    if(isNotLoadingPastRequest()){
-                        clearInfoMessages();
-                    }
-                });
-
             }
 
             //get current dates
@@ -1091,7 +891,6 @@ var ERFP_MAP = (function() {
                                     appendErrorMessage("Recent USGS data not found.", "usgs_error", "message-error");
                                 }
                             }
-                            $('#long-term-chart').removeClass('hidden');
                             $(window).resize();
                         }
                     })
@@ -1140,7 +939,6 @@ var ERFP_MAP = (function() {
                         };
                     
                         addSeriesToCharts(ahps_series);
-                        $('#long-term-chart').removeClass('hidden');
                         $(window).resize();
                     }
                 })
@@ -1178,7 +976,6 @@ var ERFP_MAP = (function() {
                                         color: Highcharts.getOptions().colors[5],
                                     };
                         addSeriesToCharts(hydro_server_series);
-                        $('#long-term-chart').removeClass('hidden');
                         $(window).resize();
                     }
                 })
@@ -1200,7 +997,7 @@ var ERFP_MAP = (function() {
     //FUNCTION: displays hydrograph at stream segment
     displayHydrograph = function() {
         $('#chart_modal').modal('show');
-        $('#long-term-chart').addClass('hidden');
+        $('#long-term-chart').html('');
 
         //check if old ajax call still running
         if(!isNotLoadingPastRequest()) {
@@ -1244,7 +1041,7 @@ var ERFP_MAP = (function() {
                             data: data.output_directories,
                             placeholder: "Select a Date"
                         });
-                        if (m_downloading_ecmwf_hydrograph && m_downloading_return_periods) {
+                        if (m_downloading_ecmwf_hydrograph) {
                             $('.long-term-select').addClass('hidden');
                         }
                         //add on change event handler
@@ -1696,9 +1493,7 @@ var ERFP_MAP = (function() {
         m_selected_nws_id = null;
         m_selected_hydroserver_url = null;
         m_downloading_ecmwf_hydrograph = false;
-        m_downloading_return_periods = false;
         m_downloading_long_term_select = false;
-        m_downloading_short_term_select = false;
         m_downloading_usgs = false;
         m_downloading_nws = false;
         m_downloading_hydroserver = false;
@@ -2301,6 +2096,10 @@ var ERFP_MAP = (function() {
                 loadHydrographFromFeature(m_selected_feature);
             }
             
+        });
+
+        $("#forecast_tab_link").click(function(){
+            Plotly.Plots.resize($("#long-term-chart .js-plotly-plot")[0]);
         });
 
         $("#historical_tab_link").click(function(){
