@@ -442,6 +442,7 @@ def get_ecmwf_hydrograph_plot(request):
         mode='lines',
         line=dict(
             color='rgb(152, 251, 152)',
+            width=0,
         )
     )
 
@@ -461,10 +462,10 @@ def get_ecmwf_hydrograph_plot(request):
         x=std_dev_lower_df.index,
         y=std_dev_lower_df.values,
         fill='tonexty',
-        fillcolor='rgba(152, 251, 152)',
         mode='lines',
         line=dict(
-            color='rgb(34, 139, 34)',
+            color='rgb(152, 251, 152)',
+            width=0,
         )
     )
 
@@ -475,6 +476,7 @@ def get_ecmwf_hydrograph_plot(request):
         fill='tonexty',
         mode='lines',
         line=dict(
+            width=0,
             color='rgb(34, 139, 34)',
         )
     )
