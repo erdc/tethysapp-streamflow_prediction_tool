@@ -17,12 +17,16 @@ from tethys_sdk.gizmos import (Button, MessageBox, SelectInput,
 
 # local imports
 from .app import StreamflowPredictionTool as app
+from .controllers_functions import (render_manage_data_store_pages,
+                                    render_manage_geoserver_pages,
+                                    render_manage_watershed_groups_pages)
 from .model import (DataStore, DataStoreType, GeoServer,
                     Watershed, WatershedGroup)
 from .functions import (get_ecmwf_valid_forecast_folder_list,
                         format_watershed_title,
                         redirect_with_message,
-                        user_permission_test)
+                        user_permission_test,
+                        get_sorted_watershed_list)
 
 
 @require_GET
@@ -561,16 +565,6 @@ def manage_watersheds(request):
     """
     Controller for the app manage_watersheds page.
     """
-    # initialize session
-    session_maker = app.get_persistent_store_database('main_db',
-                                                      as_sessionmaker=True)
-    session = session_maker()
-    watersheds = session.query(Watershed) \
-        .order_by(Watershed.watershed_name,
-                  Watershed.subbasin_name) \
-        .all()
-    session.close()
-
     edit_modal = MessageBox(name='edit_watershed_modal',
                             title='Edit Watershed',
                             message='Loading ...',
@@ -580,7 +574,7 @@ def manage_watersheds(request):
                             width=500)
 
     context = {
-        'watersheds': watersheds,
+        'watersheds': get_sorted_watershed_list(),
         'edit_modal': edit_modal,
     }
 
@@ -594,19 +588,6 @@ def manage_watersheds_table(request):
     """
     Controller for the app manage_watersheds page.
     """
-    # initialize session
-    session_maker = app.get_persistent_store_database('main_db',
-                                                      as_sessionmaker=True)
-    session = session_maker()
-
-    # Query DB for watersheds
-    watersheds = session.query(Watershed) \
-        .order_by(Watershed.watershed_name,
-                  Watershed.subbasin_name) \
-        .all()
-
-    session.close()
-
     shp_upload_toggle_switch = ToggleSwitch(name='shp-upload-toggle',
                                             on_label='Yes',
                                             off_label='No',
@@ -615,7 +596,7 @@ def manage_watersheds_table(request):
                                             initial=False, )
 
     context = {
-        'watersheds': watersheds,
+        'watersheds': get_sorted_watershed_list(),
         'shp_upload_toggle_switch': shp_upload_toggle_switch,
     }
 
@@ -847,28 +828,8 @@ def manage_data_stores(request):
     """
     Controller for the app manage_data_stores page.
     """
-    # initialize session
-    session_maker = app.get_persistent_store_database('main_db',
-                                                      as_sessionmaker=True)
-    session = session_maker()
+    return render_manage_data_store_pages(request, 'manage_data_stores.html')
 
-    data_stores = session.query(DataStore) \
-                         .filter(DataStore.id > 1) \
-                         .order_by(DataStore.name) \
-                         .all()
-
-    context = {
-        'data_stores': data_stores,
-    }
-
-    table_html = \
-        render(request,
-               'streamflow_prediction_tool/manage_data_stores.html',
-               context)
-    # in order to close the session, the request needed to be rendered first
-    session.close()
-
-    return table_html
 
 @require_GET
 @user_passes_test(user_permission_test)
@@ -876,28 +837,8 @@ def manage_data_stores_table(request):
     """
     Controller for the app manage_data_stores page.
     """
-    # initialize session
-    session_maker = app.get_persistent_store_database('main_db',
-                                                      as_sessionmaker=True)
-    session = session_maker()
-
-    data_stores = session.query(DataStore) \
-                         .filter(DataStore.id > 1) \
-                         .order_by(DataStore.name) \
-                         .all()
-
-    context = {
-        'data_stores': data_stores,
-    }
-
-    table_html = \
-        render(request,
-               'streamflow_prediction_tool/manage_data_stores_table.html',
-               context)
-    # in order to close the session, the request needed to be rendered first
-    session.close()
-
-    return table_html
+    return render_manage_data_store_pages(request,
+                                          'manage_data_stores_table.html')
 
 
 @require_GET
@@ -946,22 +887,7 @@ def manage_geoservers(request):
     """
     Controller for the app manage_geoservers page.
     """
-    # initialize session
-    session_maker = app.get_persistent_store_database('main_db',
-                                                      as_sessionmaker=True)
-    session = session_maker()
-    geoservers = session.query(GeoServer) \
-                        .order_by(GeoServer.name, GeoServer.url) \
-                        .all()
-    context = {
-        'geoservers': geoservers,
-    }
-
-    session.close()
-
-    return render(request,
-                  'streamflow_prediction_tool/manage_geoservers.html',
-                  context)
+    return render_manage_geoserver_pages(request, 'manage_geoservers.html')
 
 
 @require_GET
@@ -970,22 +896,8 @@ def manage_geoservers_table(request):
     """
     Controller for the app manage_geoservers page.
     """
-    # initialize session
-    session_maker = app.get_persistent_store_database('main_db',
-                                                      as_sessionmaker=True)
-    session = session_maker()
-    geoservers = session.query(GeoServer) \
-                        .order_by(GeoServer.name, GeoServer.url) \
-                        .all()
-    context = {
-        'geoservers': geoservers,
-    }
-
-    session.close()
-
-    return render(request,
-                  'streamflow_prediction_tool/manage_geoservers_table.html',
-                  context)
+    return render_manage_geoserver_pages(request,
+                                         'manage_geoservers_table.html')
 
 
 @require_GET
@@ -1046,31 +958,8 @@ def manage_watershed_groups(request):
     """
     Controller for the app manage_watershed_groups page.
     """
-    # initialize session
-    session_maker = app.get_persistent_store_database('main_db',
-                                                      as_sessionmaker=True)
-    session = session_maker()
-    watershed_groups = session.query(WatershedGroup) \
-                              .order_by(WatershedGroup.name) \
-                              .all()
-
-    watersheds = session.query(Watershed) \
-        .order_by(Watershed.watershed_name,
-                  Watershed.subbasin_name) \
-        .all()
-
-    context = {
-        'watershed_groups': watershed_groups,
-        'watersheds': watersheds,
-    }
-
-    page_html = \
-        render(request,
-               'streamflow_prediction_tool/manage_watershed_groups.html',
-               context)
-    session.close()
-
-    return page_html
+    return render_manage_watershed_groups_pages(request,
+                                                'manage_watershed_groups.html')
 
 
 @require_GET
@@ -1079,32 +968,8 @@ def manage_watershed_groups_table(request):
     """
     Controller for the app manage_watershed_groups page.
     """
-    # initialize session
-    session_maker = app.get_persistent_store_database('main_db',
-                                                      as_sessionmaker=True)
-    session = session_maker()
-    # Query DB for data store types
-    watershed_groups = session.query(WatershedGroup) \
-                              .order_by(WatershedGroup.name) \
-                              .all()
-
-    watersheds = session.query(Watershed) \
-        .order_by(Watershed.watershed_name,
-                  Watershed.subbasin_name) \
-        .all()
-
-    context = {
-        'watershed_groups': watershed_groups,
-        'watersheds': watersheds,
-    }
-
-    table_html = \
-        render(request,
-               'streamflow_prediction_tool/manage_watershed_groups_table.html',
-               context)
-    session.close()
-
-    return table_html
+    return render_manage_watershed_groups_pages(
+        request, 'manage_watershed_groups_table.html')
 
 
 @require_GET
