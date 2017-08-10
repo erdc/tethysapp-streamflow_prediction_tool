@@ -20,7 +20,8 @@ from .exception_handling import (InvalidData, NotFoundError, SettingsError,
                                  rivid_exception_handler)
 
 from .functions import (ecmwf_find_most_current_files,
-                        get_ecmwf_valid_forecast_folder_list)
+                        get_ecmwf_valid_forecast_folder_list,
+                        M3_TO_FT3)
 
 
 def get_ecmwf_avaialable_dates(request):
@@ -68,6 +69,7 @@ def get_ecmwf_forecast_statistics(request):
     get_info = request.GET
     watershed_name, subbasin_name = validate_watershed_info(get_info)
     river_id = validate_rivid_info(get_info)
+    units = get_info.get('units')
 
     forecast_folder = get_info.get('forecast_folder')
     if not forecast_folder:
@@ -128,6 +130,13 @@ def get_ecmwf_forecast_statistics(request):
         if stat_type == "max" or not stat_type:
             return_dict['max'] = merged_ds.max(dim='ensemble')
 
+    for key in list(return_dict):
+        if units == 'english':
+            # convert m3/s to ft3/s
+            return_dict[key] *= M3_TO_FT3
+        # convert to pandas series
+        return_dict[key] = return_dict[key].to_dataframe().Qout
+
     return return_dict
 
 
@@ -135,6 +144,7 @@ def get_return_period_dict(request):
     """
     Returns return period data as dictionary for a river ID in a watershed
     """
+    units = request.GET.get('units')
     return_period_file, river_id =\
         validate_historical_data(request.GET,
                                  "return_period*.nc",
@@ -146,6 +156,12 @@ def get_return_period_dict(request):
         with xarray.open_dataset(return_period_file) \
                 as return_period_nc:
             rpd = return_period_nc.sel(rivid=river_id)
+            if units == 'english':
+                rpd['max_flow'] *= M3_TO_FT3
+                rpd['return_period_20'] *= M3_TO_FT3
+                rpd['return_period_10'] *= M3_TO_FT3
+                rpd['return_period_2'] *= M3_TO_FT3
+
             return_period_data["max"] = str(rpd.max_flow.values)
             return_period_data["twenty"] = str(rpd.return_period_20.values)
             return_period_data["ten"] = str(rpd.return_period_10.values)

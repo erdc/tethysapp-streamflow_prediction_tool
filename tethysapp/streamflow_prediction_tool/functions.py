@@ -20,6 +20,9 @@ from django.shortcuts import redirect
 # local import
 from .model import GeoServerLayer
 
+# GLOBAL
+M3_TO_FT3 = 35.3146667
+
 
 def redirect_with_message(request, url, message, severity="INFO"):
     """
@@ -301,3 +304,13 @@ def user_permission_test(user):
     User needs to be superuser or staff
     """
     return user.is_superuser or user.is_staff
+
+
+def get_units_title(unit_type):
+    """
+    Get the title for units
+    """
+    units_title = "m"
+    if unit_type == 'english':
+        units_title = "ft"
+    return units_title

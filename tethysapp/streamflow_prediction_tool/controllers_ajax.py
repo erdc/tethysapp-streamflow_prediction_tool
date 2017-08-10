@@ -48,9 +48,11 @@ from .controllers_validators import (validate_historical_data,
                                      validate_watershed_info)
 from .functions import (delete_from_database,
                         format_name,
+                        get_units_title,
                         handle_uploaded_file,
                         update_geoserver_layer,
-                        user_permission_test)
+                        user_permission_test,
+                        M3_TO_FT3)
 
 from .model import DataStore, GeoServer, Watershed, WatershedGroup
 
@@ -405,32 +407,37 @@ def get_ecmwf_hydrograph_plot(request):
     # get information from request
     watershed_name, subbasin_name = validate_watershed_info(request.GET)
     river_id = validate_rivid_info(request.GET)
+    units = request.GET.get('units')
 
     # retrieve statistics
     forecast_statistics = \
         get_ecmwf_forecast_statistics(request)
 
+    # ensure lower std dev values limited by the min
+    std_dev_lower_df = \
+        forecast_statistics['std_dev_range_lower']
+    std_dev_lower_df[std_dev_lower_df < forecast_statistics['min']] =\
+        forecast_statistics['min']
+
     # ----------------------------------------------
     # Chart Section
     # ----------------------------------------------
-    avg_df = forecast_statistics['mean'].to_dataframe().Qout
-    datetime_start = avg_df.index[0]
-    datetime_end = avg_df.index[-1]
+    datetime_start = forecast_statistics['mean'].index[0]
+    datetime_end = forecast_statistics['mean'].index[-1]
 
     avg_series = go.Scatter(
         name='Mean',
-        x=avg_df.index,
-        y=avg_df.values,
+        x=forecast_statistics['mean'].index,
+        y=forecast_statistics['mean'].values,
         line=dict(
             color='blue',
         )
     )
 
-    max_df = forecast_statistics['max'].to_dataframe().Qout
     max_series = go.Scatter(
         name='Max',
-        x=max_df.index,
-        y=max_df.values,
+        x=forecast_statistics['max'].index,
+        y=forecast_statistics['max'].values,
         fill='tonexty',
         mode='lines',
         line=dict(
@@ -438,11 +445,10 @@ def get_ecmwf_hydrograph_plot(request):
         )
     )
 
-    min_df = forecast_statistics['min'].to_dataframe().Qout
     min_series = go.Scatter(
         name='Min',
-        x=min_df.index,
-        y=min_df.values,
+        x=forecast_statistics['min'].index,
+        y=forecast_statistics['min'].values,
         fill=None,
         mode='lines',
         line=dict(
@@ -450,10 +456,6 @@ def get_ecmwf_hydrograph_plot(request):
         )
     )
 
-    std_dev_lower_df = \
-        forecast_statistics['std_dev_range_lower'].to_dataframe().Qout
-    # ensure values limited by the min
-    std_dev_lower_df[std_dev_lower_df < min_df] = min_df
     std_dev_lower_series = go.Scatter(
         name='Std. Dev. Lower',
         x=std_dev_lower_df.index,
@@ -466,12 +468,10 @@ def get_ecmwf_hydrograph_plot(request):
         )
     )
 
-    std_dev_upper_df = \
-        forecast_statistics['std_dev_range_upper'].to_dataframe().Qout
     std_dev_upper_series = go.Scatter(
         name='Std. Dev. Upper',
-        x=std_dev_upper_df.index,
-        y=std_dev_upper_df.values,
+        x=forecast_statistics['std_dev_range_upper'].index,
+        y=forecast_statistics['std_dev_range_upper'].values,
         fill='tonexty',
         mode='lines',
         line=dict(
@@ -486,11 +486,10 @@ def get_ecmwf_hydrograph_plot(request):
                    avg_series]
 
     if 'high_res' in forecast_statistics:
-        high_res_df = forecast_statistics['high_res'].to_dataframe().Qout
         plot_series.append(go.Scatter(
             name='HRES',
-            x=high_res_df.index,
-            y=high_res_df.values,
+            x=forecast_statistics['high_res'].index,
+            y=forecast_statistics['high_res'].values,
             line=dict(
                 color='black',
             )
@@ -506,7 +505,7 @@ def get_ecmwf_hydrograph_plot(request):
             title='Date',
         ),
         yaxis=dict(
-            title='Streamflow (m<sup>3</sup>/s)'
+            title='Streamflow ({}<sup>3</sup>/s)'.format(get_units_title(units))
         ),
         shapes=return_shapes,
         annotations=return_annotations
@@ -611,6 +610,7 @@ def era_interim_get_csv(request):
     """""
     # get information from GET request
     daily = request.GET.get('daily') if 'daily' in request.GET else ''
+    units = request.GET.get('units')
     historical_data_file, river_id, watershed_name, subbasin_name =\
         validate_historical_data(request.GET)
 
@@ -623,7 +623,8 @@ def era_interim_get_csv(request):
                 river_id)
 
     writer = csv_writer(response)
-    writer.writerow(['datetime', 'streamflow (m3/s)'])
+
+    writer.writerow(['datetime', 'streamflow ({}3/s)'.format(get_units_title(units))])
 
     # write data to csv stream
     with rivid_exception_handler('ERA Interim', river_id):
@@ -633,6 +634,10 @@ def era_interim_get_csv(request):
             if daily.lower() == 'true':
                 # calculate daily values
                 qout_data = qout_data.resample('D').mean()
+
+            if units == 'english':
+                # convert from m3/s to ft3/s
+                qout_data *= M3_TO_FT3
 
             for row_data in qout_data.iteritems():
                 writer.writerow(row_data)
@@ -662,6 +667,7 @@ def get_historical_hydrograph(request):
     """""
     Returns ERA Interim hydrograph
     """""
+    units = request.GET.get('units')
     historical_data_file, river_id, watershed_name, subbasin_name =\
         validate_historical_data(request.GET)
 
@@ -671,6 +677,10 @@ def get_historical_hydrograph(request):
             qout_data = qout_nc.sel(rivid=river_id).Qout
             qout_values = qout_data.values
             qout_time = qout_data.time.values
+
+    if units == 'english':
+        # convert m3/s to ft3/s
+        qout_values *= M3_TO_FT3
 
     # ----------------------------------------------
     # Chart Section
@@ -692,7 +702,7 @@ def get_historical_hydrograph(request):
             title='Date',
         ),
         yaxis=dict(
-            title='Streamflow (m<sup>3</sup>/s)'
+            title='Streamflow ({}<sup>3</sup>/s)'.format(get_units_title(units))
         ),
         shapes=return_shapes,
         annotations=return_annotations
@@ -719,6 +729,7 @@ def get_daily_seasonal_streamflow_chart(request):
     """
     Returns daily seasonal streamflow chart for unique river ID
     """
+    units = request.GET.get('units')
     seasonal_data_file, river_id, watershed_name, subbasin_name =\
         validate_historical_data(request.GET,
                                  "seasonal_average*.nc",
@@ -741,6 +752,12 @@ def get_daily_seasonal_streamflow_chart(request):
 
             avg_plus_std[avg_plus_std < 0] = 0
             avg_min_std[avg_min_std < 0] = 0
+
+    if units == 'english':
+        # convert from m3/s to ft3/s
+        season_avg *= M3_TO_FT3
+        avg_plus_std *= M3_TO_FT3
+        avg_min_std *= M3_TO_FT3
 
     # generate chart
     avg_scatter = go.Scatter(
@@ -782,7 +799,8 @@ def get_daily_seasonal_streamflow_chart(request):
             title='Day of Year',
             tickformat="%b"),
         yaxis=dict(
-            title='Streamflow (m<sup>3</sup>/s)')
+            title='Streamflow ({}<sup>3</sup>/s)'
+                .format(get_units_title(units)))
     )
 
     chart_obj = PlotlyView(
@@ -810,6 +828,7 @@ def get_monthly_seasonal_streamflow_chart(request):
     """""
     historical_data_file, river_id, watershed_name, subbasin_name =\
         validate_historical_data(request.GET)
+    units = request.GET.get('units')
 
     with rivid_exception_handler('ERA Interim', river_id):
         with xarray.open_dataset(historical_data_file) as qout_nc:
@@ -822,6 +841,12 @@ def get_monthly_seasonal_streamflow_chart(request):
             avg_series = monthly_qout_data.mean().values
             std_series = monthly_qout_data.std().values
             std_plus_series = avg_series + std_series
+
+    if units == 'english':
+        min_series *= M3_TO_FT3
+        max_series *= M3_TO_FT3
+        avg_series *= M3_TO_FT3
+        std_plus_series *= M3_TO_FT3
 
     months_arr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul',
                   'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -876,7 +901,8 @@ def get_monthly_seasonal_streamflow_chart(request):
             title='Month',
             tickformat="%b"),
         yaxis=dict(
-            title='Streamflow (m<sup>3</sup>/s)')
+            title='Streamflow ({}<sup>3</sup>/s)'
+                  .format(get_units_title(units)))
     )
 
     chart_obj = PlotlyView(
@@ -907,6 +933,7 @@ def get_flow_duration_curve(request):
     """
     historical_data_file, river_id, watershed_name, subbasin_name = \
         validate_historical_data(request.GET)
+    units = request.GET.get('units')
 
     with rivid_exception_handler('ERA Interim', river_id):
         with xarray.open_dataset(historical_data_file) as qout_nc:
@@ -923,6 +950,10 @@ def get_flow_duration_curve(request):
     prob = [100*(ranks[i] / (len(sorted_daily_avg) + 1))
             for i in range(len(sorted_daily_avg))]
 
+    if units == 'english':
+        # convert from m3/s to ft3/s
+        sorted_daily_avg *= M3_TO_FT3
+
     flow_duration_sc = go.Scatter(
         x=prob,
         y=sorted_daily_avg,
@@ -933,7 +964,8 @@ def get_flow_duration_curve(request):
                        xaxis=dict(
                            title='Exceedance Probability (%)',),
                        yaxis=dict(
-                           title='Streamflow (m<sup>3</sup>/s)',
+                           title='Streamflow ({}<sup>3</sup>/s)'
+                                 .format(get_units_title(units)),
                            type='log',
                            autorange=True),
                        showlegend=False)
