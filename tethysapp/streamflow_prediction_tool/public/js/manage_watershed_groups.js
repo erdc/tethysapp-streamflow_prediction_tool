@@ -28,7 +28,14 @@ var ERFP_MANAGE_WATERSHED_GROUPS = (function() {
      *                    PRIVATE FUNCTION IMPLEMENTATIONS
      *************************************************************************/
     initializeTableFunctions = function() {
-        $("#watershed_groups_table").DataTable({destroy: true});
+        $("#watershed_groups_table").DataTable({
+            destroy: true,
+            columnDefs: [{
+                orderable: false,
+                targets: [0, 1]
+            }],
+            order: [[ 3, "asc" ]]
+        });
         $(".watershed-select").each(function() {
             $(this).select2({placeholder: "Add Watershed to Group", width: '100%'});
         });
