@@ -565,8 +565,12 @@ def manage_watersheds(request):
     session_maker = app.get_persistent_store_database('main_db',
                                                       as_sessionmaker=True)
     session = session_maker()
-    num_watersheds = session.query(Watershed).count()
+    watersheds = session.query(Watershed) \
+        .order_by(Watershed.watershed_name,
+                  Watershed.subbasin_name) \
+        .all()
     session.close()
+
     edit_modal = MessageBox(name='edit_watershed_modal',
                             title='Edit Watershed',
                             message='Loading ...',
@@ -576,8 +580,7 @@ def manage_watersheds(request):
                             width=500)
 
     context = {
-        'initial_page': 0,
-        'num_watersheds': num_watersheds,
+        'watersheds': watersheds,
         'edit_modal': edit_modal,
     }
 
@@ -597,14 +600,10 @@ def manage_watersheds_table(request):
     session = session_maker()
 
     # Query DB for watersheds
-    results_per_page = 5
-    page = int(request.GET.get('page'))
-    page_slice = slice((page * results_per_page),
-                       ((page + 1) * results_per_page))
     watersheds = session.query(Watershed) \
         .order_by(Watershed.watershed_name,
                   Watershed.subbasin_name) \
-        .all()[page_slice]
+        .all()
 
     session.close()
 
@@ -615,19 +614,9 @@ def manage_watersheds_table(request):
                                             off_style='danger',
                                             initial=False, )
 
-    prev_button = Button(display_text='Previous',
-                         name='prev_button',
-                         attributes={'class': 'nav_button'})
-
-    next_button = Button(display_text='Next',
-                         name='next_button',
-                         attributes={'class': 'nav_button'})
-
     context = {
         'watersheds': watersheds,
         'shp_upload_toggle_switch': shp_upload_toggle_switch,
-        'prev_button': prev_button,
-        'next_button': next_button,
     }
 
     return render(request,
