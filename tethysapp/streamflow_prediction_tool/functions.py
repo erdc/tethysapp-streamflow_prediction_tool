@@ -18,7 +18,8 @@ from django.contrib import messages
 from django.shortcuts import redirect
 
 # local import
-from .model import GeoServerLayer
+from .app import StreamflowPredictionTool as app
+from .model import GeoServerLayer, Watershed
 
 # GLOBAL
 M3_TO_FT3 = 35.3146667
@@ -314,3 +315,19 @@ def get_units_title(unit_type):
     if unit_type == 'english':
         units_title = "ft"
     return units_title
+
+
+def get_sorted_watershed_list():
+    """Returns a list of watersheds from the database
+        sorted by name.
+    """
+    # initialize session
+    session_maker = app.get_persistent_store_database('main_db',
+                                                      as_sessionmaker=True)
+    session = session_maker()
+    watersheds = session.query(Watershed) \
+        .order_by(Watershed.watershed_name,
+                  Watershed.subbasin_name) \
+        .all()
+    session.close()
+    return watersheds

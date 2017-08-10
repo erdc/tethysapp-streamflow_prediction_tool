@@ -12,6 +12,8 @@ import os
 import pandas as pd
 import xarray
 
+from django.shortcuts import render
+
 from .app import StreamflowPredictionTool as app
 from .controllers_validators import (validate_historical_data,
                                      validate_rivid_info,
@@ -22,6 +24,7 @@ from .exception_handling import (InvalidData, NotFoundError, SettingsError,
 from .functions import (ecmwf_find_most_current_files,
                         get_ecmwf_valid_forecast_folder_list,
                         M3_TO_FT3)
+from .model import DataStore, GeoServer, Watershed, WatershedGroup
 
 
 def get_ecmwf_avaialable_dates(request):
@@ -264,3 +267,84 @@ def get_return_period_ploty_info(request, datetime_start, datetime_end):
     ]
 
     return shapes, annotations
+
+
+def render_manage_data_store_pages(request, html_file):
+    """
+    Generate management pages for data_stores.
+    """
+    # initialize session
+    session_maker = app.get_persistent_store_database('main_db',
+                                                      as_sessionmaker=True)
+    session = session_maker()
+
+    data_stores = session.query(DataStore) \
+                         .filter(DataStore.id > 1) \
+                         .order_by(DataStore.name) \
+                         .all()
+
+    context = {
+        'data_stores': data_stores,
+    }
+
+    table_html = \
+        render(request,
+               'streamflow_prediction_tool/{}'.format(html_file),
+               context)
+    # in order to close the session, the request needed to be rendered first
+    session.close()
+
+    return table_html
+
+
+def render_manage_geoserver_pages(request, html_file):
+    """
+    Generates managemement pages for GeoServers.
+    """
+    # initialize session
+    session_maker = app.get_persistent_store_database('main_db',
+                                                      as_sessionmaker=True)
+    session = session_maker()
+    geoservers = session.query(GeoServer) \
+                        .order_by(GeoServer.name, GeoServer.url) \
+                        .all()
+    context = {
+        'geoservers': geoservers,
+    }
+
+    session.close()
+
+    return render(request,
+                  'streamflow_prediction_tool/{}'.format(html_file),
+                  context)
+
+
+def render_manage_watershed_groups_pages(request, html_file):
+    """
+    Generates management pages for WatershedGroups
+    """
+    # initialize session
+    session_maker = app.get_persistent_store_database('main_db',
+                                                      as_sessionmaker=True)
+    session = session_maker()
+    watershed_groups = session.query(WatershedGroup) \
+                              .order_by(WatershedGroup.name) \
+                              .all()
+
+    watersheds = session.query(Watershed) \
+        .order_by(Watershed.watershed_name,
+                  Watershed.subbasin_name) \
+        .all()
+
+    context = {
+        'watershed_groups': watershed_groups,
+        'watersheds': watersheds,
+    }
+
+    page_html = \
+        render(request,
+               'streamflow_prediction_tool/{}'.format(html_file),
+               context)
+    session.close()
+
+    return page_html
