@@ -4,39 +4,29 @@
 <!--  Copyright © 2015-2016 Alan D Snow, Curtis Rae, and Shawn Crawley. All rights reserved. -->
 <!--  License: BSD 3-Clause -->
 
-{% load tethys_gizmos %}
-
-<div>
-    <table class="table table-striped table-condensed">
-        <thead>
+<table id="watershed_table" class="table table-striped table-condensed">
+    <thead>
+        <tr>
             <th>Edit</th>
             <th>Delete</th>
             <th>Watershed Name</th>
             <th>Subbasin Name</th>
-
-        </thead>
-        <tbody>
-        {% for watershed in watersheds %}
-            <tr>
-                <td class="table-button"><div class=" btn-group"><a name="submit-edit-watershed" class="btn btn-warning submit-edit-watershed" data-toggle="modal" data-target="#edit_watershed_modal" role="button">
-                    <span class="glyphicon glyphicon-pencil"></span> Edit </a>
-                    </div>
-                </td>
-                <td class="table-button"><div class=" btn-group"><a name="submit-delete-watershed" class="btn btn-danger submit-delete-watershed" role="button">
-                    <span class="glyphicon glyphicon-remove"></span> Delete </a>
-                    </div>
-                </td>
-                <td class="watershed-name" data-watershed_id="{{watershed.id}}">{{watershed.watershed_name}}</td>
-                <td class="subbasin-name">{{watershed.subbasin_name}}</td>
-             </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-<div class="row" style="margin: auto; padding: 15px">
-    <div style="margin-left: auto;margin-right: auto">
-        <div class="col-md-4" style="text-align:right">{% gizmo button prev_button %}</div>
-        <div class="col-md-3" id="display-info" style="text-align: center"></div>
-        <div class="col-md-5" style="text-align:left">{% gizmo button next_button %}</div>
-    </div>
-</div>
+        </tr>
+    </thead>
+    <tbody>
+    {% for watershed in watersheds %}
+        <tr>
+            <td class="table-button"><div class=" btn-group"><a name="submit-edit-watershed" class="btn btn-warning submit-edit-watershed" data-toggle="modal" data-target="#edit_watershed_modal" role="button">
+                <span class="glyphicon glyphicon-pencil"></span> Edit </a>
+                </div>
+            </td>
+            <td class="table-button"><div class=" btn-group"><a name="submit-delete-watershed" class="btn btn-danger submit-delete-watershed" role="button">
+                <span class="glyphicon glyphicon-remove"></span> Delete </a>
+                </div>
+            </td>
+            <td class="watershed-name" data-watershed_id="{{watershed.id}}">{{watershed.watershed_name}}</td>
+            <td class="subbasin-name">{{watershed.subbasin_name}}</td>
+         </tr>
+    {% endfor %}
+    </tbody>
+</table>

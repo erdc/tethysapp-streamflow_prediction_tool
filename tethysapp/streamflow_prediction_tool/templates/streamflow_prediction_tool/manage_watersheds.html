@@ -10,6 +10,10 @@
 
 {% load tethys_gizmos %}
 
+{% block import_gizmos %}
+    {% import_gizmo_dependency datatable_view %}
+{% endblock %}
+
 {% block styles %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'streamflow_prediction_tool/vendor/select2/v3.5.2/select2.css' %}" type="text/css">
@@ -26,7 +30,9 @@
 {% block app_content %}
     <h3>Manage Watersheds</h3>
     <div id="main_message"></div>
-    <div id="manage_watershed_table" data-page="{{ initial_page }}" data-num_watersheds="{{ num_watersheds }}"></div>
+    <div id="manage_watersheds_table">
+        {% include "streamflow_prediction_tool/manage_watersheds_table.html" with watersheds=watersheds %}
+    </div>
 {% endblock %}
 
 {% block after_app_content %}
