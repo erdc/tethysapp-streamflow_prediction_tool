@@ -56,7 +56,8 @@ def get_ecmwf_forecast(request):
     if stat not in formatted_stat:
         raise InvalidData('Invalid value for stat_type ...')
 
-    startdate = forecast_statistics[stat].index[0].strftime('%Y-%m-%d %H:%M:%S')
+    startdate = forecast_statistics[stat].index[0]\
+                                         .strftime('%Y-%m-%d %H:%M:%S')
     time_series = []
     for date, value in forecast_statistics[stat].iteritems():
         time_series.append({
