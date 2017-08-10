@@ -63,10 +63,10 @@ var ERFP_MAP = (function() {
         getDrainageLineLayer, getWarningPointsLayerGroup,
         dateToUTCString, clearChartSelect2, getChartData, displayHydrograph,
         loadHydrographFromFeature, resetChartSelectMessage,
-        addECMWFSeriesToCharts, addSeriesToCharts, isThereDataToLoad, 
-        checkCleanString, dateToUTCDateTimeString, getValidSeries, 
-        convertValueMetricToEnglish, unbindInputs, loadWarningPoints,
-        updateWarningPoints, determineGeoServerLayerOrGroup,
+        addECMWFSeriesToCharts, addSeriesToCharts, createEmptyForecastChart,
+        isThereDataToLoad, checkCleanString, dateToUTCDateTimeString,
+        getValidSeries, convertValueMetricToEnglish, unbindInputs,
+        loadWarningPoints, updateWarningPoints, determineGeoServerLayerOrGroup,
         updateWarningSlider, isValidRiverSelected, loadFlowDurationChart,
         loadDailySeasonalStreamflowChart, loadMonthlySeasonalStreamflowChart,
         loadHistoricallStreamflowChart;
@@ -145,30 +145,33 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: convert units from english to metric
     convertTimeSeriesEnglishToMetric = function(time_series, series_name) {
-        var new_time_series = [];
+        var series_data = [];
+        var series_dates = [];
         var date_time_value, data_value;
         var conversion_factor = 1;
+        if (m_units == "metric") {
+            conversion_factor = 35.3146667;
+        }
         try {
-            if (m_units == "metric") {
-                conversion_factor = 35.3146667;
-            }
             time_series.map(function(data) {
-               if (series_name=="USGS") {
+               if (series_name == "USGS") {
                    data_value = data.value;
                    date_time_value = data.dateTime;
                } else {
                    date_time_value = data[0];
                    data_value = data[1];
                }
-               new_time_series.push([Date.parse(date_time_value), 
-                                        parseFloat(data_value)/conversion_factor]);
+               series_data.push(parseFloat(data_value)/conversion_factor);
+               series_dates.push(new Date(date_time_value).toISOString().replace("T", " ").replace("Z", ""));
             });
         } catch (e) {
+            console.log(e);
             if (e instanceof TypeError) {
                 appendErrorMessage("Error loading " + series_name + " data.", "load_series_error", "message-error");
             }
         }
-        return new_time_series;
+
+        return {dates: series_dates, data: series_data};
     };
 
     //FUNCTION: cleans sting and returns null if empty
@@ -694,24 +697,52 @@ var ERFP_MAP = (function() {
         }
 
     };
+
     //FUNCTION: converts date to UTC string in the format yyyy-mm-dd
     dateToUTCString = function(date) {
         return datePadString(date.getUTCFullYear()) + "-" +
               datePadString(1 + date.getUTCMonth()) + "-" +
               datePadString(date.getUTCDate());
     };
+
     //FUNCTION: converts date to UTC string in the format yyyy-mm-dd
     dateToUTCDateTimeString = function(date) {
         return dateToUTCString(date) + "T00:00:00";
     };
 
     //FUNCTION: adds data to the chart
-    addSeriesToCharts = function(series){
-        $('#forecast_tab_link').tab('show'); //switch to plot tab
+    addSeriesToCharts = function(series_data){
+        $("#long-term-chart").removeClass('hidden');
+        var existing_chart = $("#long-term-chart .js-plotly-plot");
+        Plotly.addTraces(existing_chart[0], series_data);
+        $(window).resize();
+    };
+
+    //FUNCTION: creates empty forecast chart
+    createEmptyForecastChart = function(){
+        $("#long-term-chart").html('<div><div id="plot_containter"></div></div>');
+        var y_axis_title = "Streamflow (m<sup>3</sup>/s)";
+        if (m_units == "english") {
+            y_axis_title = "Streamflow (ft<sup>3</sup>/s)";
+        }
+
+        var layout = {
+          title: 'Forecast',
+          xaxis: {
+            title: 'Date',
+          },
+          yaxis: {
+            title: y_axis_title,
+          },
+          showlegend: true
+        };
+
+        Plotly.newPlot($("#long-term-chart #plot_containter")[0], [], layout);
     };
 
     //FUNCTION: gets all data for chart
     getChartData = function(from_units_toggle) {
+        $('#long-term-chart').html('');
         from_units_toggle = (typeof from_units_toggle === 'undefined') ? false : from_units_toggle;
 
         if(!isNotLoadingPastRequest()) {
@@ -766,11 +797,13 @@ var ERFP_MAP = (function() {
             if (!from_units_toggle) {
                 $('#forecast_tab_link').tab('show'); //switch to plot tab
             }
+            var ecmwf_deferred = null;
             //get ecmwf data
             if (isValidRiverSelected()) {
+                ecmwf_deferred = $.Deferred();
                 $('#long-term-chart').addClass('hidden');
                 m_downloading_ecmwf_hydrograph = true;
-                var xhr_ecmwf_hydrograph = jQuery.ajax({
+                jQuery.ajax({
                     type: "GET",
                     url: "get-ecmwf-hydrograph-plot",
                     data: {
@@ -780,17 +813,22 @@ var ERFP_MAP = (function() {
                         forecast_folder: m_ecmwf_forecast_folder,
                         units: m_units,
                     },
-                });
-                xhr_ecmwf_hydrograph.done(function (data) {
+                })
+                .done(function (data) {
                     $('.long-term-select').removeClass('hidden');
                     $('#long-term-chart').removeClass('hidden');
                     $('#long-term-chart').html(data);
                     Plotly.Plots.resize($("#long-term-chart .js-plotly-plot")[0]);
+                    ecmwf_deferred.resolve();
                 })
                 .fail(function (request, status, error) {
-                        m_long_term_chart_data_ajax_load_failed = true;
-                        appendErrorMessage(request.responseText, "ecmwf_error", "message-error");
-                        clearChartSelect2('long-term');
+                    $(document).trigger('forecast_chart_ready');
+                    m_long_term_chart_data_ajax_load_failed = true;
+                    appendErrorMessage(request.responseText, "ecmwf_error", "message-error");
+                    clearChartSelect2('long-term');
+
+                    createEmptyForecastChart();
+                    ecmwf_deferred.resolve();
                 })
                 .always(function () {
                     m_downloading_ecmwf_hydrograph = false;
@@ -799,6 +837,10 @@ var ERFP_MAP = (function() {
                         clearInfoMessages();
                     }
                 });
+            }
+            else
+            {
+                createEmptyForecastChart()
             }
 
             //get current dates
@@ -840,7 +882,7 @@ var ERFP_MAP = (function() {
                 if(m_selected_usgs_id.length >= 8) {
                     m_downloading_usgs = true;
                     //get USGS data
-                    var chart_usgs_data_ajax_handle = jQuery.ajax({
+                    jQuery.ajax({
                         type: "GET",
                         url: "https://waterservices.usgs.gov/nwis/iv/",
                         dataType: "json",
@@ -855,19 +897,27 @@ var ERFP_MAP = (function() {
                     .done(function (data) {
                         if (typeof data != 'undefined') {
                             try {
-                                var usgs_series = {
+                                var time_series_data = convertTimeSeriesEnglishToMetric(data.value.timeSeries[0].values[0].value, "USGS");
+                                var usgs_series = [{
                                     name: "USGS (" + m_selected_usgs_id + ")",
-                                    data: convertTimeSeriesEnglishToMetric(data.value.timeSeries[0].values[0].value, "USGS"),
-                                    dashStyle: 'longdash',
-                                    color: Highcharts.getOptions().colors[0]
-                                };
-                                addSeriesToCharts(usgs_series);
+                                    x: time_series_data.dates,
+                                    y: time_series_data.data,
+                                    line: {
+                                            color: 'brown',
+                                            dash: 'dash'
+                                    },
+                                    type: 'scatter'
+                                }];
+
+                                $.when(ecmwf_deferred).done(function() {
+                                    addSeriesToCharts(usgs_series);
+                                });
+
                             } catch (e) {
                                 if (e instanceof TypeError) {
                                     appendErrorMessage("Recent USGS data not found.", "usgs_error", "message-error");
                                 }
                             }
-                            $(window).resize();
                         }
                     })
                     .fail(function (request, status, error) {
@@ -889,7 +939,7 @@ var ERFP_MAP = (function() {
                 //Example URL: http://ua-fews.ua.edu/WaterMlService/waterml?
                 //             request=GetObservation&featureId=ACRT2&observedProperty=QINE 
                 //             &beginPosition=2015-01-01T00:00:00&endPosition=2015-06-22T00:00:00
-                var chart_nws_data_ajax_handle = jQuery.ajax({
+                jQuery.ajax({
                     type: "GET",
                     url: "http://ua-fews.ua.edu/WaterMlService/waterml",
                     data: {
@@ -907,15 +957,19 @@ var ERFP_MAP = (function() {
                         appendErrorMessage("No valid recent data found for AHPS (" + 
                                             m_selected_nws_id + ")", "ahps_error", "message-error");
                     } else {
-                        var ahps_series = {
-                                        name: "AHPS (" + m_selected_nws_id + ")",
-                                        data: series_data[0],
-                                        dashStyle: 'longdash',
-                                        color: Highcharts.getOptions().colors[4],
-                        };
-                    
-                        addSeriesToCharts(ahps_series);
-                        $(window).resize();
+                        var ahps_series = [{
+                            name: "AHPS (" + m_selected_nws_id + ")",
+                            x: series_data[0].dates,
+                            y: series_data[0].data,
+                            line: {
+                                color: '#80cdc1', //light-turquiose
+                                dash: 'dash'
+                            },
+                            type: 'scatter'
+                        }];
+                        $.when(ecmwf_deferred).done(function() {
+                            addSeriesToCharts(ahps_series);
+                        });
                     }
                 })
                 .fail(function(request, status, error) {
@@ -932,7 +986,7 @@ var ERFP_MAP = (function() {
             if(m_selected_hydroserver_url != null) {
                 m_downloading_hydroserver = true;
                 //get WorldWater data
-                var chart_ww_data_ajax_handle = jQuery.ajax({
+                jQuery.ajax({
                     type: "GET",
                     url: m_selected_hydroserver_url,
                     data: {
@@ -945,14 +999,19 @@ var ERFP_MAP = (function() {
                     if(series_data == null) {
                         appendErrorMessage("No data found for WorldWater", "hydro_server_error", "message-error");
                     } else {
-                        var hydro_server_series = {
-                                        name: "HydroServer",
-                                        data: series_data[0],
-                                        dashStyle: 'longdash',
-                                        color: Highcharts.getOptions().colors[5],
-                                    };
-                        addSeriesToCharts(hydro_server_series);
-                        $(window).resize();
+                        var hydro_server_series = [{
+                            name: "HydroServer",
+                            x: series_data[0].dates,
+                            y: series_data[0].data,
+                            line: {
+                                color: 'purple',
+                                dash: 'dash'
+                            },
+                            type: 'scatter'
+                        }];
+                        $.when(ecmwf_deferred).done(function() {
+                            addSeriesToCharts(hydro_server_series);
+                        });
                     }
                 })
                 .fail(function(request, status, error) {
@@ -972,9 +1031,12 @@ var ERFP_MAP = (function() {
 
     //FUNCTION: displays hydrograph at stream segment
     displayHydrograph = function(from_units_toggle) {
-        $('#chart_modal').modal('show');
-        $('#long-term-chart').html('');
+        if ($("#long-term-chart .js-plotly-plot").length)
+        {
+            Plotly.purge($("#long-term-chart .js-plotly-plot")[0]);
+        }
 
+        $('#chart_modal').modal('show');
         //check if old ajax call still running
         if(!isNotLoadingPastRequest()) {
             //updateInfoAlert
@@ -991,7 +1053,6 @@ var ERFP_MAP = (function() {
             //Get chart data
             m_ecmwf_forecast_folder = "most_recent";
             getChartData(from_units_toggle);
-
             //Get available ECMWF Dates
             if (m_selected_ecmwf_watershed != null
                 && m_selected_ecmwf_subbasin != null)
@@ -1704,7 +1765,7 @@ var ERFP_MAP = (function() {
                                 }
                                 else {
                                     console.log("Invalid Predicted Floodmap Layer: ");
-                                    console.log(flood_map_info);
+                                    //console.log(flood_map_info);
                                 }
                                 
                             }

@@ -495,8 +495,12 @@ def get_ecmwf_hydrograph_plot(request):
             )
         ))
 
-    return_shapes, return_annotations = \
-        get_return_period_ploty_info(request, datetime_start, datetime_end)
+    try:
+        return_shapes, return_annotations = \
+            get_return_period_ploty_info(request, datetime_start, datetime_end)
+    except NotFoundError:
+        return_annotations = []
+        return_shapes = []
 
     layout = go.Layout(
         title="Forecast<br><sub>{0} ({1}): {2}</sub>".format(
