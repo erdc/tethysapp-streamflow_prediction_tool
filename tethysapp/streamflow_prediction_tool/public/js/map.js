@@ -57,12 +57,11 @@ var ERFP_MAP = (function() {
      *                    PRIVATE FUNCTION DECLARATIONS
      *************************************************************************/
     var stringToUTCmiliseconds, stringToUTCDate, resizeAppContent, bindInputs, 
-        convertTimeSeriesMetricToEnglish, getCI, 
-        convertTimeSeriesEnglishToMetric, isNotLoadingPastRequest, zoomToAll,
-        zoomToLayer, zoomToFeature, toTitleCase, datePadString, getBaseLayer,
-        getTileLayer, clearAllMessages, clearInfoMessages, clearOldChart,
-        getDrainageLineLayer, getWarningPointsLayerGroup, dateToUTCString,
-        clearChartSelect2, getChartData, displayHydrograph, 
+        getCI, convertTimeSeriesEnglishToMetric, isNotLoadingPastRequest,
+        zoomToAll, zoomToLayer, zoomToFeature, toTitleCase, datePadString,
+        getBaseLayer, getTileLayer, clearAllMessages, clearInfoMessages,
+        getDrainageLineLayer, getWarningPointsLayerGroup,
+        dateToUTCString, clearChartSelect2, getChartData, displayHydrograph,
         loadHydrographFromFeature, resetChartSelectMessage,
         addECMWFSeriesToCharts, addSeriesToCharts, isThereDataToLoad, 
         checkCleanString, dateToUTCDateTimeString, getValidSeries, 
@@ -95,8 +94,6 @@ var ERFP_MAP = (function() {
     }
     //FUNCTION: reset chart and select options
     resetChartSelectMessage = function() {
-        //remove old chart reguardless
-        clearOldChart('long-term');
         $('.long-term-select').addClass('hidden');
         //clear messages
         clearAllMessages();
@@ -144,24 +141,6 @@ var ERFP_MAP = (function() {
             conversion_factor = 35.3146667;
         }
         return data_value * conversion_factor;
-    };
-
-
-    //FUNCTION: convert units from metric to english
-    convertTimeSeriesMetricToEnglish = function(time_series) {
-        var new_time_series = [];
-        var conversion_factor = 1;
-        if(m_units=="english") {
-            conversion_factor = 35.3146667;
-        }
-        time_series.map(function(data_row) {
-            var new_data_array = [data_row[0]];
-            for (var i = 1; i<data_row.length; i++) {
-                new_data_array.push(parseFloat((data_row[i]*conversion_factor).toFixed(5)));
-            }
-            new_time_series.push(new_data_array);
-        });
-        return new_time_series;
     };
 
     //FUNCTION: convert units from english to metric
@@ -706,18 +685,6 @@ var ERFP_MAP = (function() {
         $('#message-error').empty();
     };
 
-    //FUNCTION: removes highchart
-    clearOldChart = function(model_name) {
-       //clear old chart
-        var highcharts_attr = $('#' + model_name + '-chart').attr('data-highcharts-chart');
-        // For some browsers, `attr` is undefined; for others,
-        // `attr` is false.  Check for both.
-        if (typeof highcharts_attr !== typeof undefined && highcharts_attr !== false) {
-            $("#" + model_name +"-chart").highcharts().destroy();
-            $('#' + model_name + '-chart').empty();
-        }
-    };
-
     //FUNCTION: removes chart select2
     clearChartSelect2 = function(model_name) {
         if($('#' + model_name + '-select').data('select2')) {
@@ -744,7 +711,9 @@ var ERFP_MAP = (function() {
     };
 
     //FUNCTION: gets all data for chart
-    getChartData = function() {
+    getChartData = function(from_units_toggle) {
+        from_units_toggle = (typeof from_units_toggle === 'undefined') ? false : from_units_toggle;
+
         if(!isNotLoadingPastRequest()) {
             //updateInfoAlert
             addWarningMessage("Please wait for datasets to download before making another selection.");
@@ -765,32 +734,38 @@ var ERFP_MAP = (function() {
             $('#era_message').addClass('hidden');
             $('#download_interim').removeClass('hidden');
 
-            m_downloaded_historical_streamflow = false;
-            $("#historical_streamflow_data").removeClass('alert alert-info alert-danger')
-                                            .text("");
+            if (!from_units_toggle)
+            {
+                m_downloaded_historical_streamflow = false;
+                $("#historical_streamflow_data").removeClass('alert alert-info alert-danger')
+                                                .text("");
 
-            m_downloaded_flow_duration = false;
-            $("#flow_duration_data").removeClass('alert alert-info alert-danger')
-                                    .text("");
+                m_downloaded_flow_duration = false;
+                $("#flow_duration_data").removeClass('alert alert-info alert-danger')
+                                        .text("");
 
-            m_downloaded_daily_streamflow = false;
-            $("#daily_streamflow_data").removeClass('alert alert-info alert-danger')
-                                       .text("");
+                m_downloaded_daily_streamflow = false;
+                $("#daily_streamflow_data").removeClass('alert alert-info alert-danger')
+                                           .text("");
 
-            m_downloaded_monthly_streamflow = false;
-            $("#monthly_streamflow_data").removeClass('alert alert-info alert-danger')
-                                         .text("");
-            //change download button url
-            $('#submit-download-interim-csv').attr({target: '_blank', 
-                                                    href  : 'era-interim-get-csv?' + jQuery.param( params ) });
-            params.daily = true;
-            //change download button url
-            $('#submit-download-interim-csv-daily').attr({target: '_blank', 
-                                                          href  : 'era-interim-get-csv?' + jQuery.param( params ) });
+                m_downloaded_monthly_streamflow = false;
+                $("#monthly_streamflow_data").removeClass('alert alert-info alert-danger')
+                                             .text("");
+                //change download button url
+                $('#submit-download-interim-csv').attr({target: '_blank',
+                                                        href  : 'era-interim-get-csv?' + jQuery.param( params ) });
+                params.daily = true;
+                //change download button url
+                $('#submit-download-interim-csv-daily').attr({target: '_blank',
+                                                              href  : 'era-interim-get-csv?' + jQuery.param( params ) });
+            }
             //turn off select interaction
             m_map.removeInteraction(m_select_interaction);
+
             addInfoMessage("Retrieving Data ...");
-            $('#forecast_tab_link').tab('show'); //switch to plot tab
+            if (!from_units_toggle) {
+                $('#forecast_tab_link').tab('show'); //switch to plot tab
+            }
             //get ecmwf data
             if (isValidRiverSelected()) {
                 $('#long-term-chart').addClass('hidden');
@@ -803,6 +778,7 @@ var ERFP_MAP = (function() {
                         subbasin_name: m_selected_ecmwf_subbasin,
                         reach_id: m_selected_reach_id,
                         forecast_folder: m_ecmwf_forecast_folder,
+                        units: m_units,
                     },
                 });
                 xhr_ecmwf_hydrograph.done(function (data) {
@@ -995,7 +971,7 @@ var ERFP_MAP = (function() {
     };
 
     //FUNCTION: displays hydrograph at stream segment
-    displayHydrograph = function() {
+    displayHydrograph = function(from_units_toggle) {
         $('#chart_modal').modal('show');
         $('#long-term-chart').html('');
 
@@ -1014,7 +990,7 @@ var ERFP_MAP = (function() {
 
             //Get chart data
             m_ecmwf_forecast_folder = "most_recent";
-            getChartData();
+            getChartData(from_units_toggle);
 
             //Get available ECMWF Dates
             if (m_selected_ecmwf_watershed != null
@@ -1067,7 +1043,7 @@ var ERFP_MAP = (function() {
     };
 
     //FUNCTION: Loads Hydrograph from Selected feature
-    loadHydrographFromFeature = function(selected_feature) {
+    loadHydrographFromFeature = function(selected_feature, from_units_toggle) {
         $('.intro_message').addClass('hidden');
         //check if old ajax call still running
         if(!isNotLoadingPastRequest()) {
@@ -1115,7 +1091,7 @@ var ERFP_MAP = (function() {
                 m_selected_nws_id = nws_id;
                 m_selected_hydroserver_url = hydroserver_url;
 
-                displayHydrograph();
+                displayHydrograph(from_units_toggle);
             } else {
                 appendErrorMessage('The attributes in the file are faulty. Please fix and upload again.',
                                     "file_attr_error",
@@ -1374,18 +1350,17 @@ var ERFP_MAP = (function() {
             url: 'get-historical-hydrograph',
             method: 'GET',
             data: {
-                'watershed_name': m_selected_ecmwf_watershed,
-                'subbasin_name': m_selected_ecmwf_subbasin,
-                'reach_id': m_selected_reach_id,
+                watershed_name: m_selected_ecmwf_watershed,
+                subbasin_name: m_selected_ecmwf_subbasin,
+                reach_id: m_selected_reach_id,
+                units: m_units,
             },
         })
         .done(function(data) {
                 $("#historical_streamflow_data").removeClass('alert alert-info');
-                $('#historical_tab_link').tab('show'); //switch to plot tab
                 $("#historical_streamflow_data").html(data);
         })
         .fail(function (request, status, error) {
-            m_downloaded_historical_streamflow = false;
             addErrorMessage(request.responseText, "historical_streamflow_data");
         });
     };
@@ -1397,14 +1372,14 @@ var ERFP_MAP = (function() {
             url: 'get-flow-duration-curve',
             method: 'GET',
             data: {
-                'watershed_name': m_selected_ecmwf_watershed,
-                'subbasin_name': m_selected_ecmwf_subbasin,
-                'reach_id': m_selected_reach_id,
+                watershed_name: m_selected_ecmwf_watershed,
+                subbasin_name: m_selected_ecmwf_subbasin,
+                reach_id: m_selected_reach_id,
+                units: m_units,
             },
         })
         .done(function(data) {
                 $("#flow_duration_data").removeClass('alert alert-info');
-                $('#flow_duration_link').tab('show'); //switch to plot tab
                 $("#flow_duration_data").html(data);
         })
         .fail(function (request, status, error) {
@@ -1420,14 +1395,14 @@ var ERFP_MAP = (function() {
             url: 'get-daily-seasonal-streamflow-chart',
             method: 'GET',
             data: {
-                'watershed_name': m_selected_ecmwf_watershed,
-                'subbasin_name': m_selected_ecmwf_subbasin,
-                'reach_id': m_selected_reach_id,
+                watershed_name: m_selected_ecmwf_watershed,
+                subbasin_name: m_selected_ecmwf_subbasin,
+                reach_id: m_selected_reach_id,
+                units: m_units,
             },
         })
         .done(function(data) {
                 $("#daily_streamflow_data").removeClass('alert alert-info');
-                $('#daily_tab_link').tab('show'); //switch to plot tab
                 $("#daily_streamflow_data").html(data);
         })
         .fail(function (request, status, error) {
@@ -1443,14 +1418,14 @@ var ERFP_MAP = (function() {
             url: 'get-monthly-seasonal-streamflow-chart',
             method: 'GET',
             data: {
-                'watershed_name': m_selected_ecmwf_watershed,
-                'subbasin_name': m_selected_ecmwf_subbasin,
-                'reach_id': m_selected_reach_id,
+                watershed_name: m_selected_ecmwf_watershed,
+                subbasin_name: m_selected_ecmwf_subbasin,
+                reach_id: m_selected_reach_id,
+                units: m_units,
             },
         })
         .done(function(data) {
                 $("#monthly_streamflow_data").removeClass('alert alert-info');
-                $('#monthly_tab_link').tab('show'); //switch to plot tab
                 $("#monthly_streamflow_data").html(data);
         })
         .fail(function (request, status, error) {
@@ -2089,12 +2064,25 @@ var ERFP_MAP = (function() {
                 m_units = "english";
             }
             if (m_selected_feature != null) {
-                if ($("#daily_streamflow_data").find(".highcharts-container").length)
+                loadHydrographFromFeature(m_selected_feature, true);
+
+                if (m_downloaded_historical_streamflow)
                 {
-                    loadSeasonalStreamflowChart();
+                    loadHistoricallStreamflowChart();
                 }
-                loadHydrographFromFeature(m_selected_feature);
-            }
+                if (m_downloaded_flow_duration)
+                {
+                    loadFlowDurationChart();
+                }
+                if (m_downloaded_daily_streamflow)
+                {
+                    loadDailySeasonalStreamflowChart();
+                }
+                if (m_downloaded_monthly_streamflow)
+                {
+                    loadMonthlySeasonalStreamflowChart();
+                }
+           }
             
         });
 
