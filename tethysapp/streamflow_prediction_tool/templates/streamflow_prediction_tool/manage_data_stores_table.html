@@ -5,10 +5,10 @@
 <!--  License: BSD 3-Clause -->
 
 {% load tethys_gizmos %}
-
-<div class="table-overflow">
-    <table class="table table-striped">
-        <thead>
+{% if data_stores %}
+<table id="data_store_table" class="table table-striped">
+    <thead>
+        <tr>
             <th>Update</th>
             <th>Delete</th>
             <th>ID</th>
@@ -17,7 +17,8 @@
             <th>Type</th>
             <th>API Endpoint</th>
             <th>API Key</th>
-        </thead>
+        </tr>
+    </thead>
     <tbody>
     {% for data_store in data_stores %}
         <tr>
@@ -46,12 +47,7 @@
         </tr>
     {% endfor %}
     </tbody>
-    </table>
-</div>
-<div class="row" style="margin: auto; padding: 15px">
-    <div style="margin-left: auto;margin-right: auto">
-        <div class="col-md-4" style="text-align:right">{% gizmo button prev_button %}</div>
-        <div class="col-md-3" id="display-info" style="text-align: center"></div>
-        <div class="col-md-5" style="text-align:left">{% gizmo button next_button %}</div>
-    </div>
-</div>
+</table>
+{% else %}
+<p>No Data Stores to display. To add one, click <a href="../add-data-store">here</a>.</p>
+{% endif %}
