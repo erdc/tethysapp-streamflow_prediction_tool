@@ -4,6 +4,7 @@
 <!--  Copyright © 2015-2016 Alan D Snow, Curtis Rae, and Shawn Crawley. All rights reserved. -->
 <!--  License: BSD 3-Clause -->
 
+{% if watersheds %}
 <table id="watershed_table" class="table table-striped table-condensed">
     <thead>
         <tr>
@@ -30,3 +31,6 @@
     {% endfor %}
     </tbody>
 </table>
+{% else %}
+<p>No watersheds to display. To add one, click <a href="../add-watershed">here</a>.</p>
+{% endif %}

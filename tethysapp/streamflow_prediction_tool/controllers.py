@@ -1073,15 +1073,27 @@ def manage_watershed_groups(request):
     session_maker = app.get_persistent_store_database('main_db',
                                                       as_sessionmaker=True)
     session = session_maker()
-    num_watershed_groups = session.query(WatershedGroup).count()
-    session.close()
+    watershed_groups = session.query(WatershedGroup) \
+                              .order_by(WatershedGroup.name) \
+                              .all()
+
+    watersheds = session.query(Watershed) \
+        .order_by(Watershed.watershed_name,
+                  Watershed.subbasin_name) \
+        .all()
+
     context = {
-        'initial_page': 0,
-        'num_watershed_groups': num_watershed_groups,
+        'watershed_groups': watershed_groups,
+        'watersheds': watersheds,
     }
-    return render(request,
-                  'streamflow_prediction_tool/manage_watershed_groups.html',
-                  context)
+
+    page_html = \
+        render(request,
+               'streamflow_prediction_tool/manage_watershed_groups.html',
+               context)
+    session.close()
+
+    return page_html
 
 
 @require_GET
@@ -1094,35 +1106,21 @@ def manage_watershed_groups_table(request):
     session_maker = app.get_persistent_store_database('main_db',
                                                       as_sessionmaker=True)
     session = session_maker()
-    results_per_page = 5
-    page = int(request.GET.get('page'))
-
     # Query DB for data store types
-    watershed_group_slice = slice((page * results_per_page),
-                                  ((page + 1) * results_per_page))
     watershed_groups = session.query(WatershedGroup) \
                               .order_by(WatershedGroup.name) \
-                              .all()[watershed_group_slice]
+                              .all()
 
     watersheds = session.query(Watershed) \
         .order_by(Watershed.watershed_name,
                   Watershed.subbasin_name) \
         .all()
 
-    prev_button = Button(display_text='Previous',
-                         name='prev_button',
-                         attributes={'class': 'nav_button'})
-
-    next_button = Button(display_text='Next',
-                         name='next_button',
-                         attributes={'class': 'nav_button'})
-
     context = {
-        'prev_button': prev_button,
-        'next_button': next_button,
         'watershed_groups': watershed_groups,
         'watersheds': watersheds,
     }
+
     table_html = \
         render(request,
                'streamflow_prediction_tool/manage_watershed_groups_table.html',
