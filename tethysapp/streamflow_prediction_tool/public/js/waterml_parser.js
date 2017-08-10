@@ -306,15 +306,16 @@ var WATERML = (function() {
     convertPointUnits = function(series, dimensions, fromUnit, toUnit){
         //dimensions represents the standard dimensional abbreviation (L for length, M for mass, etc.)
         //fromUnit and toUnit can be any synonym listed in the relevant dimensions in wml-property-library.js 
-        var result;
         var conversionFactor = convertUnits(dimensions, fromUnit, toUnit);
-        result = series;
+        var series_data = [];
+        var series_dates = [];
         if (conversionFactor>0){
-            for (var i=0; i<result.length;i++){
-                result[i][1] = isNaN(result[i][1]) ? null : roundToSignificantFigures(result[i][1] * conversionFactor, m_sig_figs);
+            for (var i=0; i<series.length;i++){
+                series_dates.push(new Date(series[i][0]).toISOString().replace("T", " ").replace("Z", ""));
+                series_data.push(isNaN(series[i][1]) ? null : roundToSignificantFigures(series[i][1] * conversionFactor, m_sig_figs));
             }
         }
-        return result;
+        return {dates: series_dates, data: series_data};
     }; 
   
     getWMLVersion = function(xml){
