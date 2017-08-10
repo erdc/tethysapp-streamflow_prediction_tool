@@ -509,7 +509,8 @@ def get_ecmwf_hydrograph_plot(request):
             title='Date',
         ),
         yaxis=dict(
-            title='Streamflow ({}<sup>3</sup>/s)'.format(get_units_title(units))
+            title='Streamflow ({}<sup>3</sup>/s)'
+                  .format(get_units_title(units))
         ),
         shapes=return_shapes,
         annotations=return_annotations
@@ -628,7 +629,8 @@ def era_interim_get_csv(request):
 
     writer = csv_writer(response)
 
-    writer.writerow(['datetime', 'streamflow ({}3/s)'.format(get_units_title(units))])
+    writer.writerow(['datetime', 'streamflow ({}3/s)'
+                                 .format(get_units_title(units))])
 
     # write data to csv stream
     with rivid_exception_handler('ERA Interim', river_id):
@@ -706,7 +708,8 @@ def get_historical_hydrograph(request):
             title='Date',
         ),
         yaxis=dict(
-            title='Streamflow ({}<sup>3</sup>/s)'.format(get_units_title(units))
+            title='Streamflow ({}<sup>3</sup>/s)'
+                  .format(get_units_title(units))
         ),
         shapes=return_shapes,
         annotations=return_annotations
@@ -804,7 +807,7 @@ def get_daily_seasonal_streamflow_chart(request):
             tickformat="%b"),
         yaxis=dict(
             title='Streamflow ({}<sup>3</sup>/s)'
-                .format(get_units_title(units)))
+                  .format(get_units_title(units)))
     )
 
     chart_obj = PlotlyView(
