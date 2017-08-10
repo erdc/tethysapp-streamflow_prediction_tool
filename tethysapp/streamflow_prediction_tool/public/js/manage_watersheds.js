@@ -398,7 +398,14 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
     };
 
     initializeTableFunctions = function() {
-        $("#watershed_table").DataTable({destroy: true});
+        $("#watershed_table").DataTable({
+            destroy: true,
+            columnDefs: [{
+                orderable: false,
+                targets: [0, 1]
+            }],
+            order: [[ 2, "asc" ]]
+        });
 
         //handle the submit edit event
         $('.submit-edit-watershed').off().click(function () {

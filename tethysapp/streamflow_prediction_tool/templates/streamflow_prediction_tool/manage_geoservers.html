@@ -8,14 +8,18 @@
 
 {% load staticfiles %}
 
-{% block styles %}
-  {{ block.super }}
+{% load tethys_gizmos %}
+
+{% block import_gizmos %}
+    {% import_gizmo_dependency datatable_view %}
 {% endblock %}
 
 {% block app_content %}
     <div id="message" class="alert alert-danger hidden" role="alert"></div>
     <h3>Manage Geoservers</h3>
-    <div id="manage_geoservers_table" data-page="{{ initial_page }}" data-num_geoservers="{{ num_geoservers }}"></div>
+    <div id="manage_geoservers_table">
+        {% include "streamflow_prediction_tool/manage_geoservers_table.html" with geoservers=geoservers %}
+    </div>
 {% endblock %}
 
 {% block scripts %}

@@ -957,13 +957,14 @@ def manage_geoservers(request):
     session_maker = app.get_persistent_store_database('main_db',
                                                       as_sessionmaker=True)
     session = session_maker()
-    num_geoservers = session.query(GeoServer).count()
-    session.close()
-
+    geoservers = session.query(GeoServer) \
+                        .order_by(GeoServer.name, GeoServer.url) \
+                        .all()
     context = {
-        'initial_page': 0,
-        'num_geoservers': num_geoservers,
+        'geoservers': geoservers,
     }
+
+    session.close()
 
     return render(request,
                   'streamflow_prediction_tool/manage_geoservers.html',
@@ -980,27 +981,10 @@ def manage_geoservers_table(request):
     session_maker = app.get_persistent_store_database('main_db',
                                                       as_sessionmaker=True)
     session = session_maker()
-    results_per_page = 5
-    page = int(request.GET.get('page'))
-
-    # Query DB for data store types
-    geoserver_slice = slice((page * results_per_page),
-                            ((page + 1) * results_per_page))
     geoservers = session.query(GeoServer) \
                         .order_by(GeoServer.name, GeoServer.url) \
-                        .all()[geoserver_slice]
-
-    prev_button = Button(display_text='Previous',
-                         name='prev_button',
-                         attributes={'class': 'nav_button'}, )
-
-    next_button = Button(display_text='Next',
-                         name='next_button',
-                         attributes={'class': 'nav_button'}, )
-
+                        .all()
     context = {
-        'prev_button': prev_button,
-        'next_button': next_button,
         'geoservers': geoservers,
     }
 
