@@ -10,25 +10,29 @@ the automation of forecast retrievals using programing languages like Python, or
 description of how to use them are shown below.
 
 GetForecast for Forecasts Statistics
-===================================
+====================================
 
-+----------------+--------------------------------------------------+---------------+
-| Parameter      | Description                                      | Example       |
-+================+==================================================+===============+
-| watershed_name | The name of watershed or main area of interest.  | Nepal         |
-+----------------+--------------------------------------------------+---------------+
-| subbasin_name  | The name of the sub basin or sub area.           | Central       |
-+----------------+--------------------------------------------------+---------------+
-| reach_id       | The identifier for the stream reach.             | 5             |
-+----------------+--------------------------------------------------+---------------+
-| forecast_folder| The date of the forecast (YYYYMMDD.HHHH) [*]_.   | 20170110.1200 |
-+----------------+--------------------------------------------------+---------------+
-|                | The selected forecast statistic. (high_res, mean,|               |
-|                |                                                  |               |
-| stat_type      | std_dev_range_upper, std_dev_range_lower,        | mean          |
-|                |                                                  |               |
-|                | max, min).                                       |               |
-+----------------+--------------------------------------------------+---------------+
++----------------+----------------------------------------------------------+---------------+
+| Parameter      | Description                                              | Example       |
++================+==========================================================+===============+
+| watershed_name | The name of watershed or main area of interest.          | Nepal         |
++----------------+----------------------------------------------------------+---------------+
+| subbasin_name  | The name of the sub basin or sub area.                   | Central       |
++----------------+----------------------------------------------------------+---------------+
+| reach_id       | The identifier for the stream reach.                     | 5             |
++----------------+----------------------------------------------------------+---------------+
+| forecast_folder| The date of the forecast (YYYYMMDD.HHHH) [*]_. (Optional)| 20170110.1200 |
++----------------+----------------------------------------------------------+---------------+
+|                | The selected forecast statistic. (high_res, mean,        |               |
+|                |                                                          |               |
+| stat_type      | std_dev_range_upper, std_dev_range_lower,                | mean          |
+|                |                                                          |               |
+|                | max, min).                                               |               |
++----------------+----------------------------------------------------------+---------------+
+| units          | Set to 'english' to get ft3/s. (Optional)                | english       |
++----------------+----------------------------------------------------------+---------------+
+| return_format  | Set to 'csv' to get csv file.  (Optional)                | csv           |
++----------------+----------------------------------------------------------+---------------+
 .. [*] forecast_folder=most_recent will retrieve the most recent date available.
 
 Example
@@ -51,6 +55,10 @@ GetHistoricData (1980 - Present)
 +----------------+--------------------------------------------------+---------------+
 | reach_id       | The identifier for the stream reach.             | 5             |
 +----------------+--------------------------------------------------+---------------+
+| units          | Set to 'english' to get ft3/s. (Optional)        | english       |
++----------------+--------------------------------------------------+---------------+
+| return_format  | Set to 'csv' to get csv file.  (Optional)        | csv           |
++----------------+--------------------------------------------------+---------------+
 
 Example
 -------
@@ -70,6 +78,8 @@ GetReturnPeriods (2, 10, and 20 year return with historical max)
 | subbasin_name  | The name of the sub basin or sub area.           | Central       |
 +----------------+--------------------------------------------------+---------------+
 | reach_id       | The identifier for the stream reach.             | 5             |
++----------------+--------------------------------------------------+---------------+
+| units          | Set to 'english' to get ft3/s. (Optional)        | english       |
 +----------------+--------------------------------------------------+---------------+
 
 Example
