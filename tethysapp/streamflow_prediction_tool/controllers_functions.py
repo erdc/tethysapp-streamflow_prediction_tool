@@ -76,7 +76,7 @@ def get_ecmwf_forecast_statistics(request):
 
     forecast_folder = get_info.get('forecast_folder')
     if not forecast_folder:
-        raise InvalidData('Missing value for forecast_folder.')
+        forecast_folder = 'most_recent'
 
     stat_type = get_info.get('stat_type')
     if stat_type is None:
