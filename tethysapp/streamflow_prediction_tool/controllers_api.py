@@ -47,7 +47,6 @@ def get_ecmwf_forecast(request):
     }
 
     # retrieve statistics
-    # retrieve statistics
     forecast_statistics, watershed_name, subbasin_name, river_id, units = \
         get_ecmwf_forecast_statistics(request)
 

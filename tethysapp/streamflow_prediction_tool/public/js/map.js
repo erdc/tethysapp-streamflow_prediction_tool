@@ -69,7 +69,7 @@ var ERFP_MAP = (function() {
         loadWarningPoints, updateWarningPoints, determineGeoServerLayerOrGroup,
         updateWarningSlider, isValidRiverSelected, loadFlowDurationChart,
         loadDailySeasonalStreamflowChart, loadMonthlySeasonalStreamflowChart,
-        loadHistoricallStreamflowChart;
+        loadHistoricallStreamflowChart, updateDownloadForecastURL;
 
 
     /************************************************************************
@@ -710,6 +710,27 @@ var ERFP_MAP = (function() {
         return dateToUTCString(date) + "T00:00:00";
     };
 
+    //FUNCTION: updates forecast download URL
+    updateDownloadForecastURL = function() {
+        var params = {
+            watershed_name: m_selected_ecmwf_watershed,
+            subbasin_name: m_selected_ecmwf_subbasin,
+            reach_id: m_selected_reach_id,
+            units: m_units,
+        };
+        var sel_data = $('#download-select').select2('data');
+        if (sel_data != null)
+        {
+            params.forecast_folder = sel_data.id;
+        }
+
+        //change download button urls
+        $('#submit-download-forecast').attr({
+            target: '_blank',
+            href: 'get-forecast-streamflow-csv?' + jQuery.param( params )
+        });
+    }
+
     //FUNCTION: adds data to the chart
     addSeriesToCharts = function(series_data){
         $("#long-term-chart").removeClass('hidden');
@@ -756,13 +777,7 @@ var ERFP_MAP = (function() {
         } else {
             resetChartSelectMessage();
             m_long_term_chart_data_ajax_load_failed = false;
-            //UPDATE ERA INTERIM DOWNLOAD BUTTONS
-            var params = { watershed_name: m_selected_ecmwf_watershed,
-                           subbasin_name: m_selected_ecmwf_subbasin,
-                           reach_id: m_selected_reach_id,
-                           daily: false };
-    
-            $('#era_message').addClass('hidden');
+            $('#donwnload_message').addClass('hidden');
             $('#download_interim').removeClass('hidden');
 
             if (!from_units_toggle)
@@ -782,14 +797,32 @@ var ERFP_MAP = (function() {
                 m_downloaded_monthly_streamflow = false;
                 $("#monthly_streamflow_data").removeClass('alert alert-info alert-danger')
                                              .text("");
-                //change download button url
-                $('#submit-download-interim-csv').attr({target: '_blank',
-                                                        href  : 'get-historic-data-csv?' + jQuery.param( params ) });
-                params.daily = true;
-                //change download button url
-                $('#submit-download-interim-csv-daily').attr({target: '_blank',
-                                                              href  : 'get-historic-data-csv?' + jQuery.param( params ) });
+
             }
+
+            //UPDATE DOWNLOAD BUTTONS
+            var params = {
+                watershed_name: m_selected_ecmwf_watershed,
+                subbasin_name: m_selected_ecmwf_subbasin,
+                reach_id: m_selected_reach_id,
+                units: m_units,
+                daily: false
+            };
+
+            //change download button urls
+            updateDownloadForecastURL();
+
+            $('#submit-download-interim-csv').attr({
+                target: '_blank',
+                href: 'get-historic-data-csv?' + jQuery.param( params )
+            });
+
+            params.daily = true;
+            $('#submit-download-interim-csv-daily').attr({
+                target: '_blank',
+                href: 'get-historic-data-csv?' + jQuery.param( params )
+            });
+
             //turn off select interaction
             m_map.removeInteraction(m_select_interaction);
 
@@ -826,6 +859,7 @@ var ERFP_MAP = (function() {
                     m_long_term_chart_data_ajax_load_failed = true;
                     appendErrorMessage(request.responseText, "ecmwf_error", "message-error");
                     clearChartSelect2('long-term');
+                    clearChartSelect2('download');
 
                     createEmptyForecastChart();
                     ecmwf_deferred.resolve();
@@ -1072,12 +1106,20 @@ var ERFP_MAP = (function() {
                     if (!m_long_term_chart_data_ajax_load_failed) {
                         //remove select2 if exists
                         clearChartSelect2('long-term');
+                        clearChartSelect2('download');
+
                         $('.long-term-select').removeClass('hidden');
                         //create new select2
                         $('#long-term-select').select2({
                             data: data.output_directories,
                             placeholder: "Select a Date"
                         });
+
+                        $('#download-select').select2({
+                            data: data.output_directories,
+                            placeholder: "Select a Date"
+                        });
+
                         if (m_downloading_ecmwf_hydrograph) {
                             $('.long-term-select').addClass('hidden');
                         }
@@ -1086,11 +1128,16 @@ var ERFP_MAP = (function() {
                             m_ecmwf_forecast_folder = $(this).select2('data').id;
                             getChartData();
                         });
+                                                //add on change event handler
+                        $('#download-select').on('change.select2', function () {
+                            updateDownloadForecastURL();
+                        });
                     }
                 })
                 .fail(function (request, status, error) {
                     appendErrorMessage(request.responseText, "ecmwf_error", "message-error");
                     clearChartSelect2('long-term');
+                    clearChartSelect2('download');
                 })
                 .always(function () {
                     m_downloading_long_term_select = false;

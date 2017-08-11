@@ -184,19 +184,27 @@
                         <div role="tabpanel" class="tab-pane" id="download">
                             <div class="panel panel-default">
                                 <div class="panel-body">
+                                    <div id="donwnload_message" class="alert alert-info" role="alert">
+                                        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                        Click on a river segment or search by river reach ID before downloading data.
+                                    </div>
+                                    <h6>Download Forecast Data</h6>
+                                    <label class="long-term-select select-label hidden" for="download-select">ECMWF Available Dates</label>
+                                        <div id="download-select" class="hidden long-term-select"></div>
+                                        <div id="download_forecast" class="btn-group hidden long-term-select" role="group">
+                                            <a class="btn btn-success" role="button" id="submit-download-forecast">
+                                                <span class="glyphicon glyphicon-play"></span> Download Forecast
+                                            </a>
+                                        </div>
                                     <h6>Download ERA Interim Data</h6>
-                                        <div id="era_message" class="alert alert-info" role="alert">
-                                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                                            Click on a river segment or search by river reach ID before downloading data.
-                                        </div>
-                                        <div id="download_interim" class="btn-group hidden" role="group">
-                                            <a class="btn btn-warning" role="button" id="submit-download-interim-csv-daily">
-                                                <span class="glyphicon glyphicon-play"></span> Download Daily Interim Data
-                                            </a>
-                                            <a class="btn btn-success" role="button" id="submit-download-interim-csv">
-                                                <span class="glyphicon glyphicon-play"></span> Download Interim Data
-                                            </a>
-                                        </div>
+                                    <div id="download_interim" class="btn-group hidden" role="group">
+                                        <a class="btn btn-warning" role="button" id="submit-download-interim-csv-daily">
+                                            <span class="glyphicon glyphicon-play"></span> Download Daily Interim Data
+                                        </a>
+                                        <a class="btn btn-info" role="button" id="submit-download-interim-csv">
+                                            <span class="glyphicon glyphicon-play"></span> Download Interim Data
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div> <!-- /.tab-pane -->
