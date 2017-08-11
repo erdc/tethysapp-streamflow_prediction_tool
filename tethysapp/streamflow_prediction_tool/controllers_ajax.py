@@ -612,15 +612,15 @@ def generate_warning_points(request):
     if return_period == 20:
         warning_points_file = os.path.join(path_to_output_files,
                                            forecast_folder,
-                                           "return_20_points.txt")
+                                           "return_20_points.geojson")
     elif return_period == 10:
         warning_points_file = os.path.join(path_to_output_files,
                                            forecast_folder,
-                                           "return_10_points.txt")
+                                           "return_10_points.geojson")
     elif return_period == 2:
         warning_points_file = os.path.join(path_to_output_files,
                                            forecast_folder,
-                                           "return_2_points.txt")
+                                           "return_2_points.geojson")
     else:
         raise InvalidData('Invalid return period.')
 
@@ -630,10 +630,19 @@ def generate_warning_points(request):
     with open(warning_points_file, 'rb') as infile:
         warning_points = json_load(infile)
 
-    return JsonResponse({
-        'success': "Warning Points Sucessfully Returned!",
-        'warning_points': warning_points,
-    })
+    if not isinstance(warning_points, dict):
+        warning_points = {
+            'type': 'FeatureCollection',
+            'crs': {
+              'type': 'name',
+              'properties': {
+                'name': 'EPSG:4326'
+              }
+            },
+            'features': warning_points
+        }
+
+    return JsonResponse(warning_points)
 
 
 @require_GET
