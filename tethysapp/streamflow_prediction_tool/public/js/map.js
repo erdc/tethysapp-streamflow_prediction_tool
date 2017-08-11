@@ -191,7 +191,7 @@ var ERFP_MAP = (function() {
     };
 
     //FUNCTION: ol case insensitive get feature property
-    getCI = function(obj,prop){
+    getCI = function(obj, prop){
         prop = prop.toLowerCase();
         for(var key in obj.getProperties()){
             if(prop == key.toLowerCase()){
@@ -657,7 +657,7 @@ var ERFP_MAP = (function() {
                         style = [];
                         for (var i=0; i<size; i++) {
                             style.push(new ol.style.Style({
-                                image: symbols[features[i].get('point_size')]
+                                image: symbols[features[i].getProperties().size]
                               }));
                         }
                     }
@@ -1224,11 +1224,11 @@ var ERFP_MAP = (function() {
             },
         })
         var xhr2 = xhr.done(function (data) {
-            var feature_count = data.warning_points.length;
-            if (feature_count > 0) {
+            var feature_array = (new ol.format.GeoJSON()).readFeatures(data, {featureProjection: 'EPSG:3857'});
+            if (feature_array.length > 0) {
                 $(group_id).parent().removeClass('hidden');
                 var first_layer = null;
-                var feature_dict = {}
+                var feature_dict = {};
                 watershed_layer_group.getLayers().forEach(function(sublayer, j) {
                     var peak_date = stringToUTCDate(datetime_string);
                     peak_date.setUTCDate(peak_date.getUTCDate()+j);
@@ -1239,36 +1239,16 @@ var ERFP_MAP = (function() {
                         first_layer = sublayer;
                     }
                 });
-                var feature_array = [];
-                var geometry, symbol, warning_points_layer;
-                for (var i = 0; i < feature_count; ++i) {
-                    geometry = new ol.geom.Point(ol.proj.transform([data.warning_points[i].lon,
-                                                                   data.warning_points[i].lat],
-                                                                  'EPSG:4326', m_map_projection));
 
-                    if (typeof data.warning_points[i].peak_date == "undefined") {
-                        feature_array.push(new ol.Feature({
-                                                         geometry: geometry,
-                                                         point_size: data.warning_points[i].size,
-                                                        }));
-                    } else {
-                        feature_dict[data.warning_points[i].peak_date].push(new ol.Feature({
-                                                                                            geometry: geometry,
-                                                                                            point_size: data.warning_points[i].size,
-                                                                                           }));
-                    }
+                for (var i = 0; i < feature_array.length; ++i) {
+                    feature_dict[feature_array[i].getProperties().peak_date].push(feature_array[i]);
                 }
-                if (feature_array.length > 0) {
-                    first_layer.getSource().getSource().addFeatures(feature_array);
-                    first_layer.setVisible(true);
-                    watershed_layer_group.set("daily_warnings", false);
-                } else {
-                    watershed_layer_group.getLayers().forEach(function(sublayer, j) {
-                        sublayer.getSource().getSource().addFeatures(feature_dict[sublayer.get('peak_date_str')]);
-                        sublayer.setVisible(true);
-                    });
-                    watershed_layer_group.set("daily_warnings", true);
-                }
+
+                watershed_layer_group.getLayers().forEach(function(sublayer, j) {
+                    sublayer.getSource().getSource().addFeatures(feature_dict[sublayer.get('peak_date_str')]);
+                    sublayer.setVisible(true);
+                });
+                watershed_layer_group.set("daily_warnings", true);
                 m_map.render();
             }
         })
@@ -1598,7 +1578,7 @@ var ERFP_MAP = (function() {
         //create symbols for warnings
         var twenty_symbols = [new ol.style.RegularShape({
                                               points: 3,
-                                              radius: 5,
+                                              radius: 9,
                                               fill: new ol.style.Fill({
                                                 color: 'rgba(128,0,128,0.8)'
                                               }),
@@ -1608,7 +1588,7 @@ var ERFP_MAP = (function() {
                                               }),
                                     }),new ol.style.RegularShape({
                                                               points: 3,
-                                                              radius: 9,
+                                                              radius: 12,
                                                               fill: new ol.style.Fill({
                                                                 color: 'rgba(128,0,128,0.3)'
                                                               }),
@@ -1621,7 +1601,7 @@ var ERFP_MAP = (function() {
         //symbols
         var ten_symbols = [new ol.style.RegularShape({
                                               points: 3,
-                                              radius: 5,
+                                              radius: 9,
                                               fill: new ol.style.Fill({
                                                 color: 'rgba(255,0,0,0.7)'
                                               }),
@@ -1631,7 +1611,7 @@ var ERFP_MAP = (function() {
                                               }),
                         }),new ol.style.RegularShape({
                                                   points: 3,
-                                                  radius: 9,
+                                                  radius: 12,
                                                   fill: new ol.style.Fill({
                                                     color: 'rgba(255,0,0,0.3)'
                                                   }),
@@ -1644,7 +1624,7 @@ var ERFP_MAP = (function() {
         //symbols
         var two_symbols = [new ol.style.RegularShape({
                                               points: 3,
-                                              radius: 5,
+                                              radius: 9,
                                               fill: new ol.style.Fill({
                                                 color: 'rgba(255,255,0,0.7)'
                                               }),
@@ -1654,7 +1634,7 @@ var ERFP_MAP = (function() {
                                               }),
                         }),new ol.style.RegularShape({
                                                   points: 3,
-                                                  radius: 9,
+                                                  radius: 12,
                                                   fill: new ol.style.Fill({
                                                     color: 'rgba(255,255,0,0.3)'
                                                   }),
