@@ -784,11 +784,11 @@ var ERFP_MAP = (function() {
                                              .text("");
                 //change download button url
                 $('#submit-download-interim-csv').attr({target: '_blank',
-                                                        href  : 'era-interim-get-csv?' + jQuery.param( params ) });
+                                                        href  : 'get-historic-data-csv?' + jQuery.param( params ) });
                 params.daily = true;
                 //change download button url
                 $('#submit-download-interim-csv-daily').attr({target: '_blank',
-                                                              href  : 'era-interim-get-csv?' + jQuery.param( params ) });
+                                                              href  : 'get-historic-data-csv?' + jQuery.param( params ) });
             }
             //turn off select interaction
             m_map.removeInteraction(m_select_interaction);

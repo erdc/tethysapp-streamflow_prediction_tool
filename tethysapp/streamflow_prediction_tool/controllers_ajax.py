@@ -41,10 +41,10 @@ from .exception_handling import (DatabaseError, GeoServerError, InvalidData,
 from .app import StreamflowPredictionTool as app
 from .controllers_functions import (get_ecmwf_avaialable_dates,
                                     get_ecmwf_forecast_statistics,
+                                    get_historic_streamflow_series,
                                     get_return_period_dict,
                                     get_return_period_ploty_info)
 from .controllers_validators import (validate_historical_data,
-                                     validate_rivid_info,
                                      validate_watershed_info)
 from .functions import (delete_from_database,
                         format_name,
@@ -404,13 +404,8 @@ def get_ecmwf_hydrograph_plot(request):
     Retrieves 52 ECMWF ensembles analysis with min., max., avg., std. dev.
     as a plotly hydrograph plot.
     """
-    # get information from request
-    watershed_name, subbasin_name = validate_watershed_info(request.GET)
-    river_id = validate_rivid_info(request.GET)
-    units = request.GET.get('units')
-
     # retrieve statistics
-    forecast_statistics = \
+    forecast_statistics, watershed_name, subbasin_name, river_id, units = \
         get_ecmwf_forecast_statistics(request)
 
     # ensure lower std dev values limited by the min
@@ -535,6 +530,39 @@ def get_ecmwf_hydrograph_plot(request):
 @require_GET
 @login_required
 @exceptions_to_http_status
+def get_forecast_streamflow_csv(request):
+    """
+    Retrieve the forecasted streamflow as CSV
+    """
+    # retrieve statistics
+    forecast_statistics, watershed_name, subbasin_name, river_id, units = \
+        get_ecmwf_forecast_statistics(request)
+
+    # prepare to write response for CSV
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = \
+        'attachment; filename=forecasted_streamflow_{0}_{1}_{2}.csv' \
+        .format(watershed_name,
+                subbasin_name,
+                river_id)
+
+    writer = csv_writer(response)
+    forecast_df = pd.DataFrame(forecast_statistics)
+    column_names = (forecast_df.columns.values +
+                    [' ({}3/s)'.format(get_units_title(units))]
+                    ).tolist()
+
+    writer.writerow(['datetime'] + column_names)
+
+    for row_data in forecast_df.itertuples():
+        writer.writerow(row_data)
+
+    return response
+
+
+@require_GET
+@login_required
+@exceptions_to_http_status
 def generate_warning_points(request):
     """
     Controller for getting warning points for user on map
@@ -611,20 +639,22 @@ def generate_warning_points(request):
 @require_GET
 @login_required
 @exceptions_to_http_status
-def era_interim_get_csv(request):
+def get_historic_data_csv(request):
     """""
     Returns ERA Interim data as csv
     """""
     # get information from GET request
-    daily = request.GET.get('daily') if 'daily' in request.GET else ''
     units = request.GET.get('units')
-    historical_data_file, river_id, watershed_name, subbasin_name =\
-        validate_historical_data(request.GET)
+
+    river_id, watershed_name, subbasin_name =\
+        validate_historical_data(request.GET)[1:]
+
+    qout_data = get_historic_streamflow_series(request)
 
     # prepare to write response
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = \
-        'attachment; filename=streamflow_{0}_{1}_{2}.csv' \
+        'attachment; filename=historic_streamflow_{0}_{1}_{2}.csv' \
         .format(watershed_name,
                 subbasin_name,
                 river_id)
@@ -634,21 +664,8 @@ def era_interim_get_csv(request):
     writer.writerow(['datetime', 'streamflow ({}3/s)'
                                  .format(get_units_title(units))])
 
-    # write data to csv stream
-    with rivid_exception_handler('ERA Interim', river_id):
-        with xarray.open_dataset(historical_data_file) as qout_nc:
-            qout_data = qout_nc.sel(rivid=river_id).Qout\
-                               .to_dataframe().Qout
-            if daily.lower() == 'true':
-                # calculate daily values
-                qout_data = qout_data.resample('D').mean()
-
-            if units == 'english':
-                # convert from m3/s to ft3/s
-                qout_data *= M3_TO_FT3
-
-            for row_data in qout_data.iteritems():
-                writer.writerow(row_data)
+    for row_data in qout_data.iteritems():
+        writer.writerow(row_data)
 
     return response
 
