@@ -6,8 +6,24 @@
 """
 from contextlib import contextmanager
 from functools import wraps
+import logging
+import os
 
 from django.http import HttpResponseBadRequest, HttpResponseServerError
+
+
+from .app import StreamflowPredictionTool as app
+
+# setup logging
+LOG_FILE = os.path.join(app.get_app_workspace().path, 'spt_error.log')
+LOGGER = logging.getLogger('streamflow_prediction_tool')
+FILE_HANDLER = logging.handlers.RotatingFileHandler(LOG_FILE,
+                                                    maxBytes=5*1024*1024,
+                                                    backupCount=1)
+FILE_HANDLER.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s:"
+                                            "%(name)s:%(message)s"))
+LOGGER.addHandler(FILE_HANDLER)
+LOGGER.propagate = False
 
 
 class DatabaseError(Exception):
@@ -70,8 +86,7 @@ def exceptions_to_http_status(view_func):
         except UploadError as ex:
             return HttpResponseBadRequest("Upload error: {}".format(ex))
         except Exception:
-            import traceback
-            traceback.print_exc()
+            LOGGER.exception("Internal Server Error.")
             return HttpResponseServerError("Internal Server Error. Please "
                                            "check your input parameters.")
     return inner
@@ -88,7 +103,6 @@ def rivid_exception_handler(file_type, river_id):
         raise NotFoundError('{file_type} river with ID {river_id}.'
                             .format(file_type=file_type, river_id=river_id))
     except Exception:
-        import traceback
-        traceback.print_exc()
+        LOGGER.exception("Internal Server Error.")
         raise InvalidData("Invalid {file_type} file ..."
                           .format(file_type=file_type))
