@@ -54,15 +54,20 @@ class StreamflowPredictionTool(TethysAppBase):
                         'get-return-periods',
                     controller='streamflow_prediction_tool.controllers_ajax'
                                '.get_return_periods'),
-            url_map(name='get_era_interim_csv_ajax',
-                    url='streamflow-prediction-tool/map/era-interim-get-csv',
+            url_map(name='get_historic_data_csv_ajax',
+                    url='streamflow-prediction-tool/map/get-historic-data-csv',
                     controller='streamflow_prediction_tool.controllers_ajax'
-                               '.era_interim_get_csv'),
+                               '.get_historic_data_csv'),
             url_map(name='get_historical_hydrograph_ajax',
                     url='streamflow-prediction-tool/map/'
                         'get-historical-hydrograph',
                     controller='streamflow_prediction_tool.controllers_ajax'
                                '.get_historical_hydrograph'),
+            url_map(name='get_forecast_streamflow_ajax',
+                    url='streamflow-prediction-tool/map/'
+                        'get-forecast-streamflow-csv',
+                    controller='streamflow_prediction_tool.controllers_ajax'
+                               '.get_forecast_streamflow_csv'),
             url_map(name='get_flow_duration_curve_ajax',
                     url='streamflow-prediction-tool/map/'
                         'get-flow-duration-curve',

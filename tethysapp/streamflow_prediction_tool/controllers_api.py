@@ -4,21 +4,22 @@
     Author: Michael Suffront & Alan D. Snow, 2017
     License: BSD 3-Clause
 """
-import xarray
-
 from django.http import JsonResponse
 from django.shortcuts import render_to_response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 
 from .app import StreamflowPredictionTool as app
-from .controllers_ajax import generate_warning_points
+from .controllers_ajax import (get_forecast_streamflow_csv,
+                               get_historic_data_csv,
+                               generate_warning_points)
 from .controllers_functions import (get_ecmwf_avaialable_dates,
                                     get_ecmwf_forecast_statistics,
+                                    get_historic_streamflow_series,
                                     get_return_period_dict)
 from .controllers_validators import validate_historical_data
-from .exception_handling import (InvalidData, exceptions_to_http_status,
-                                 rivid_exception_handler)
+from .exception_handling import InvalidData, exceptions_to_http_status
+from .functions import get_units_title
 from .model import Watershed
 
 
@@ -28,8 +29,14 @@ from .model import Watershed
 def get_ecmwf_forecast(request):
     """
     Controller that will retrieve the ECMWF forecast data
-    in WaterML 1.1 format
+    in WaterML 1.1 or CSV format
     """
+    return_format = request.GET.get('return_format')
+
+    if return_format == 'csv':
+        return get_forecast_streamflow_csv(request)
+
+    # return WaterML
     formatted_stat = {
         'high_res': 'High Resolution',
         'mean': 'Mean',
@@ -40,13 +47,14 @@ def get_ecmwf_forecast(request):
     }
 
     # retrieve statistics
-    forecast_statistics = \
+    # retrieve statistics
+    forecast_statistics, watershed_name, subbasin_name, river_id, units = \
         get_ecmwf_forecast_statistics(request)
 
-    # get information from request
-    watershed_name = request.GET['watershed_name']
-    subbasin_name = request.GET['subbasin_name']
-    reach_id = request.GET['reach_id']
+    units_title = get_units_title(units)
+    units_title_long = 'meters'
+    if units_title == 'ft':
+        units_title_long = 'feet'
 
     try:
         stat = request.GET['stat_type']
@@ -67,14 +75,14 @@ def get_ecmwf_forecast(request):
 
     context = {
         'config': watershed_name,
-        'comid': reach_id,
+        'comid': river_id,
         'stat': formatted_stat[stat],
         'startdate': startdate,
         'site_name': watershed_name + ' ' + subbasin_name,
         'units': {
             'name': 'Flow',
-            'short': 'm^3/s',
-            'long': 'Cubic meters per Second'
+            'short': '{}^3/s'.format(units_title),
+            'long': 'Cubic {} per Second'.format(units_title_long)
         },
         'time_series': time_series,
         'Source': 'ECMWF GloFAS forecast',
@@ -96,21 +104,31 @@ def get_historic_data(request):
     """
     Controller that will show the historic data in WaterML 1.1 format
     """
-    historical_data_file, river_id, watershed_name, subbasin_name =\
-        validate_historical_data(request.GET)
+    return_format = request.GET.get('return_format')
 
-    with rivid_exception_handler("ERA Interim", river_id):
-        with xarray.open_dataset(historical_data_file) as qout_nc:
-            # get information from dataset
-            qout_data = qout_nc.sel(rivid=river_id).Qout.to_dataframe().Qout
-            startdate = qout_data.index[0].strftime('%Y-%m-%d %H:%M:%S')
-            time_series = []
-            for date, value in qout_data.iteritems():
-                time_series.append({
-                    'date': date.strftime('%Y-%m-%dT%H:%M:%S'),
-                    'val': value
-                })
+    if return_format == 'csv':
+        return get_historic_data_csv(request)
 
+    units = request.GET.get('units')
+
+    river_id, watershed_name, subbasin_name =\
+        validate_historical_data(request.GET)[1:]
+
+    qout_data = get_historic_streamflow_series(request)
+
+    # return as WaterML 1.1
+    startdate = qout_data.index[0].strftime('%Y-%m-%d %H:%M:%S')
+    time_series = []
+    for date, value in qout_data.iteritems():
+        time_series.append({
+            'date': date.strftime('%Y-%m-%dT%H:%M:%S'),
+            'val': value
+        })
+
+    units_title = get_units_title(units)
+    units_title_long = 'meters'
+    if units_title == 'ft':
+        units_title_long = 'feet'
     context = {
         'config': watershed_name,
         'comid': river_id,
@@ -119,8 +137,8 @@ def get_historic_data(request):
         'site_name': watershed_name + ' ' + subbasin_name,
         'units': {
             'name': 'Flow',
-            'short': 'm^3/s',
-            'long': 'Cubic meters per Second'
+            'short': '{}^3/s'.format(units_title),
+            'long': 'Cubic {} per Second'.format(units_title_long)
         },
         'time_series': time_series,
         'source': 'ECMWF ERA Interim data',

@@ -140,7 +140,7 @@ def get_ecmwf_forecast_statistics(request):
         # convert to pandas series
         return_dict[key] = return_dict[key].to_dataframe().Qout
 
-    return return_dict
+    return return_dict, watershed_name, subbasin_name, river_id, units
 
 
 def get_return_period_dict(request):
@@ -267,6 +267,31 @@ def get_return_period_ploty_info(request, datetime_start, datetime_end):
     ]
 
     return shapes, annotations
+
+
+def get_historic_streamflow_series(request):
+    """
+    Retireve Pandas series object based on request for ERA Interim data
+    """
+    # get information from GET request
+    daily = request.GET.get('daily') if 'daily' in request.GET else ''
+    units = request.GET.get('units')
+    historical_data_file, river_id =\
+        validate_historical_data(request.GET)[:2]
+
+    # write data to csv stream
+    with rivid_exception_handler('ERA Interim', river_id):
+        with xarray.open_dataset(historical_data_file) as qout_nc:
+            qout_data = qout_nc.sel(rivid=river_id).Qout\
+                               .to_dataframe().Qout
+            if daily.lower() == 'true':
+                # calculate daily values
+                qout_data = qout_data.resample('D').mean()
+
+            if units == 'english':
+                # convert from m3/s to ft3/s
+                qout_data *= M3_TO_FT3
+    return qout_data
 
 
 def render_manage_data_store_pages(request, html_file):
