@@ -18,7 +18,7 @@ from .app import StreamflowPredictionTool as app
 from .controllers_validators import (validate_historical_data,
                                      validate_rivid_info,
                                      validate_watershed_info)
-from .exception_handling import (InvalidData, NotFoundError, SettingsError,
+from .exception_handling import (NotFoundError, SettingsError,
                                  rivid_exception_handler)
 
 from .functions import (ecmwf_find_most_current_files,
