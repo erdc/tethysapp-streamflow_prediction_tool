@@ -630,18 +630,6 @@ def generate_warning_points(request):
     with open(warning_points_file, 'rb') as infile:
         warning_points = json_load(infile)
 
-    if not isinstance(warning_points, dict):
-        warning_points = {
-            'type': 'FeatureCollection',
-            'crs': {
-              'type': 'name',
-              'properties': {
-                'name': 'EPSG:4326'
-              }
-            },
-            'features': warning_points
-        }
-
     return JsonResponse(warning_points)
 
 
