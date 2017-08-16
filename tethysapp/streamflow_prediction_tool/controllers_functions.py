@@ -173,7 +173,8 @@ def get_return_period_dict(request):
     return return_period_data
 
 
-def get_return_period_ploty_info(request, datetime_start, datetime_end):
+def get_return_period_ploty_info(request, datetime_start, datetime_end,
+                                 band_alt_max=-9999):
     """
     Get shapes and annotations for plotly plot
     """
@@ -183,7 +184,6 @@ def get_return_period_ploty_info(request, datetime_start, datetime_end):
     return_20 = float(return_period_data["twenty"])
     return_10 = float(return_period_data["ten"])
     return_2 = float(return_period_data["two"])
-
     # plotly info section
     shapes = [
          # return 20 band
@@ -194,7 +194,7 @@ def get_return_period_ploty_info(request, datetime_start, datetime_end):
              x0=datetime_start,
              y0=return_20,
              x1=datetime_end,
-             y1=return_max,
+             y1=max(return_max, band_alt_max),
              line=dict(width=0),
              fillcolor='rgba(128, 0, 128, 0.3)',
          ),
