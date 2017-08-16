@@ -494,7 +494,9 @@ def get_ecmwf_hydrograph_plot(request):
 
     try:
         return_shapes, return_annotations = \
-            get_return_period_ploty_info(request, datetime_start, datetime_end)
+            get_return_period_ploty_info(
+                request, datetime_start, datetime_end,
+                forecast_statistics['max'].max())
     except NotFoundError:
         return_annotations = []
         return_shapes = []
