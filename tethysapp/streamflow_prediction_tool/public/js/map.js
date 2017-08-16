@@ -2230,6 +2230,13 @@ var ERFP_MAP = (function() {
             });
         };
 
+        //make sure active Plotly plots resize on modal show
+        $('#chart_modal').on('shown.bs.modal', function() {
+            $('#chart_modal .modal-body .tab-pane.active .js-plotly-plot').each(function(){
+                Plotly.Plots.resize($(this)[0]);
+            });
+        });
+
         //init tooltip
         $('.boot_tooltip').tooltip();
 
