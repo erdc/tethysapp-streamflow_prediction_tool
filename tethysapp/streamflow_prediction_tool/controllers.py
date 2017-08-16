@@ -379,7 +379,7 @@ def app_map(request):
                     available_forecast_dates = \
                         available_forecast_dates + \
                         get_ecmwf_valid_forecast_folder_list(
-                            path_to_watershed_files, ".txt")
+                            path_to_watershed_files, ".geojson")
 
     # set up the inputs
     watershed_select = SelectInput(display_text='Select Watershed',
