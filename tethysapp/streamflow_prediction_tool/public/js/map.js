@@ -1235,7 +1235,7 @@ var ERFP_MAP = (function() {
                     peak_date.setUTCDate(peak_date.getUTCDate()+j);
                     sublayer.set('peak_date', peak_date);
                     sublayer.set('peak_date_str', dateToUTCString(peak_date));
-                    feature_dict[dateToUTCString(peak_date)] = []
+                    feature_dict[dateToUTCString(peak_date)] = [];
                     if (first_layer == null) {
                         first_layer = sublayer;
                     }
