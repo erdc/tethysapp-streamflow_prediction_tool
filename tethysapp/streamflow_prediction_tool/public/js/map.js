@@ -1211,6 +1211,7 @@ var ERFP_MAP = (function() {
     //FUNCTION: LOAD WARNING POINTS
     loadWarningPoints = function(watershed_layer_group, group_id, datetime_string) {
         $(group_id).parent().addClass('hidden');
+
         //get warning points for map
         var xhr = jQuery.ajax({
             type: "GET",
@@ -1220,7 +1221,7 @@ var ERFP_MAP = (function() {
                 watershed_name: watershed_layer_group.get('ecmwf_watershed_name'),
                 subbasin_name: watershed_layer_group.get('ecmwf_subbasin_name'),
                 return_period: watershed_layer_group.get('return_period'),
-                forecast_folder: datetime_string,
+                forecast_folder: datetime_string || "",
             },
         })
         var xhr2 = xhr.done(function (data) {
