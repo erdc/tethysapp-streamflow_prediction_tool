@@ -386,7 +386,7 @@ def app_map(request):
                                    name='watershed_select',
                                    options=watershed_list, )
     warning_point_date_select = None
-    warning_point_forecast_folder = None
+    warning_point_forecast_folder = ""
     if available_forecast_dates:
         available_forecast_dates = sorted(available_forecast_dates,
                                           key=lambda k: k['id'], reverse=True)
