@@ -398,6 +398,8 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
     };
 
     initializeTableFunctions = function() {
+        $("#watershed_table").off();
+
         $("#watershed_table").DataTable({
             destroy: true,
             columnDefs: [{
@@ -408,13 +410,13 @@ var ERFP_MANAGE_WATERSHEDS = (function() {
         });
 
         //handle the submit edit event
-        $('.submit-edit-watershed').off().click(function () {
+        $('#watershed_table').on("click", ".submit-edit-watershed", function () {
             getModalHTML($(this).parent().parent().parent().find('.watershed-name').data('watershed_id'));
         });
 
 
         //handle the submit update event
-        $('.submit-delete-watershed').off().click(function () {
+        $('#watershed_table').on("click", ".submit-delete-watershed", function () {
             var data = {
                 watershed_id: $(this).parent().parent().parent().find('.watershed-name').data('watershed_id')
             };
