@@ -28,6 +28,8 @@ var ERFP_MANAGE_WATERSHED_GROUPS = (function() {
      *                    PRIVATE FUNCTION IMPLEMENTATIONS
      *************************************************************************/
     initializeTableFunctions = function() {
+        $("#watershed_groups_table").off();
+
         $("#watershed_groups_table").DataTable({
             destroy: true,
             columnDefs: [{
@@ -36,12 +38,13 @@ var ERFP_MANAGE_WATERSHED_GROUPS = (function() {
             }],
             order: [[ 3, "asc" ]]
         });
+
         $(".watershed-select").each(function() {
             $(this).select2({placeholder: "Add Watershed to Group", width: '100%'});
         });
 
         //handle the submit update event
-        $('.submit-update-watershed-group').off().click(function(){
+        $('#watershed_groups_table').on("click", '.submit-update-watershed-group', function(){
             //scroll back to top
             window.scrollTo(0,0);
             //clear messages
@@ -74,7 +77,7 @@ var ERFP_MANAGE_WATERSHED_GROUPS = (function() {
         });
 
         //handle the submit delete event
-        $('.submit-delete-watershed-group').off().click(function(){
+        $('#watershed_groups_table').on("click", '.submit-delete-watershed-group', function(){
             var data = {
                 watershed_group_id: $(this).parent().parent().parent().find('.watershed-group-id').text()
             };

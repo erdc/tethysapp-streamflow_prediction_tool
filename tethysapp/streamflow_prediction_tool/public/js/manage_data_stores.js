@@ -29,6 +29,8 @@ var ERFP_MANAGE_DATA_STORES = (function() {
      *                    PRIVATE FUNCTION IMPLEMENTATIONS
      *************************************************************************/
     initializeTableFunctions = function() {
+        $("#data_store_table").off();
+
         $("#data_store_table").DataTable({
             destroy: true,
             columnDefs: [{
@@ -39,7 +41,7 @@ var ERFP_MANAGE_DATA_STORES = (function() {
         });
 
         //handle the submit update event
-        $('.submit-update-data-store').off().click(function(){
+        $('#data_store_table').on("click", ".submit-update-data-store", function(){
             //clear messages
             $('#message').addClass('hidden');
             $('#message').empty()
@@ -72,7 +74,7 @@ var ERFP_MANAGE_DATA_STORES = (function() {
         });
         
         //handle the submit delete event
-        $('.submit-delete-data-store').off().click(function(){
+        $('#data_store_table').on("click", '.submit-delete-data-store', function(){
             var data = {
                     data_store_id: $(this).parent().parent().parent()
                                     .find('.data-store-id').text(),

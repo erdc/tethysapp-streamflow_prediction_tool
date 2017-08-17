@@ -30,6 +30,8 @@ var ERFP_MANAGE_GEOSERVERS = (function() {
      *************************************************************************/
 
     initializeTableFunctions = function() {
+        $("#geoserver_table").off();
+
         $("#geoserver_table").DataTable({
             destroy: true,
             columnDefs: [{
@@ -40,7 +42,7 @@ var ERFP_MANAGE_GEOSERVERS = (function() {
         });
 
         //handle the submit update event
-        $('.submit-update-geoserver').off().click(function(){
+        $('#geoserver_table').on("click", ".submit-update-geoserver", function(){
             //scroll back to top
             window.scrollTo(0,0);
             //clear messages
@@ -79,7 +81,7 @@ var ERFP_MANAGE_GEOSERVERS = (function() {
         });
 
         //handle the submit delete event
-        $('.submit-delete-geoserver').click(function(){
+        $('#geoserver_table').on("click", ".submit-delete-geoserver", function(){
         var data = {
             geoserver_id: $(this).parent().parent().parent()
                                 .find('.geoserver-id').text()
