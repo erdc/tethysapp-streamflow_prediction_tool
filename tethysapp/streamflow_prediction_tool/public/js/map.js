@@ -1153,6 +1153,7 @@ var ERFP_MAP = (function() {
     //FUNCTION: Loads Hydrograph from Selected feature
     loadHydrographFromFeature = function(selected_feature, from_units_toggle) {
         $('.intro_message').addClass('hidden');
+        $('#app-content-wrapper #app-content').css('padding-bottom', 0);
         //check if old ajax call still running
         if(!isNotLoadingPastRequest()) {
             //updateInfoAlert
@@ -2235,6 +2236,11 @@ var ERFP_MAP = (function() {
             $('#chart_modal .modal-body .tab-pane.active .js-plotly-plot').each(function(){
                 Plotly.Plots.resize($(this)[0]);
             });
+        });
+
+        //remove space at bottom when message dismissed
+        $("#close_map_intro_message").click(function() {
+            $('#app-content-wrapper #app-content').css('padding-bottom', 0);
         });
 
         //init tooltip
