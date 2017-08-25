@@ -115,7 +115,7 @@ class SetupCrontabCommand(Command):
 
 setup(
     name=RELEASE_PACKAGE,
-    version='1.0.5',
+    version='1.1.0',
     description=('Provides 15-day streamflow predicted estimates by using '
                  'ECMWF (ecmwf.int) runoff predictions routed with the RAPID '
                  '(rapid-hub.org) program. Return period estimates '
