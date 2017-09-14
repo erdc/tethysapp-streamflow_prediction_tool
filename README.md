@@ -5,7 +5,7 @@
 
 [![DOI](https://zenodo.org/badge/19918/erdc-cm/tethysapp-streamflow_prediction_tool.svg)](https://zenodo.org/badge/latestdoi/19918/erdc-cm/tethysapp-streamflow_prediction_tool)
 
-[![Build Status](https://travis-ci.org/erdc-cm/tethysapp-streamflow_prediction_tool.svg?branch=master)](https://travis-ci.org/erdc-cm/tethysapp-streamflow_prediction_tool)
+[![Build Status](https://travis-ci.org/erdc/tethysapp-streamflow_prediction_tool.svg?branch=master)](https://travis-ci.org/erdc/tethysapp-streamflow_prediction_tool)
 
 ## Publications:
 
