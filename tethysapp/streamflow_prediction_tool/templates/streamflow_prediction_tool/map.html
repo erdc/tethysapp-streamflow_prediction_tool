@@ -78,21 +78,21 @@
          xmlns="http://www.w3.org/2000/svg">
                 <polygon points="0 20, 10 0, 20 20" stroke="purple" fill="purple" stroke-width="2"/>
             </svg>
-            20-Year Warnings
+            20-Year Return Period
         </div>
         <div>
             <svg width="20" height="20" viewPort="0 0 20 20" version="1.1"
          xmlns="http://www.w3.org/2000/svg">
                 <polygon points="0 20, 10 0, 20 20" stroke="red" fill="red" stroke-width="2"/>
             </svg>
-            10-Year Warnings
+            10-Year Return Period
         </div>
         <div>
             <svg width="20" height="20" viewPort="0 0 20 20" version="1.1"
          xmlns="http://www.w3.org/2000/svg">
                 <polygon points="0 20, 10 0, 20 20" stroke="yellow" fill="yellow" stroke-width="2"/>
             </svg>
-            2-Year Warnings
+            2-Year Return Period
         </div>
     </div>
 {% endblock %}
@@ -250,7 +250,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title">Warning Points Control Panel</h4>
+            <h4 class="modal-title">Awareness Points Control Panel</h4>
           </div>
           <div class="modal-body">
             {% if warning_point_date_select %}
@@ -377,7 +377,7 @@
                 {% endwith %}
             {% endif%}
                     <li class="dropdown hidden boot_tooltip" data-toggle="tooltip" data-placement="top" title="Severe Flood Warning. This was generated based off of the 20-year return period.">
-                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">20-Year Warnings<span class="caret"></span></a>
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">20-Year Return Period<span class="caret"></span></a>
                         <ul id="layer-{{watershed_layers_info.id}}-20_year_warnings" class="dropdown-menu" role="menu">
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
                             <li><label style="margin-left:15px;">Opacity</label>
@@ -386,7 +386,7 @@
                         </ul>
                     </li>
                     <li class="dropdown hidden boot_tooltip" data-toggle="tooltip" data-placement="top" title="Intermediate Flood Warning. This was generated based off of the 10-year return period.">
-                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">10-Year Warinings<span class="caret"></span></a>
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">10-Year Return Period<span class="caret"></span></a>
                         <ul id="layer-{{watershed_layers_info.id}}-10_year_warnings" class="dropdown-menu" role="menu">
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
                             <li><label style="margin-left:15px;">Opacity</label>
@@ -395,7 +395,7 @@
                         </ul>
                     </li>
                     <li class="dropdown hidden boot_tooltip" data-toggle="tooltip" data-placement="top" title="Moderate Flood Warning. This was generated based off of the 2-year return period.">
-                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">2-Year Warnings<span class="caret"></span></a>
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">2-Year Return Period<span class="caret"></span></a>
                         <ul id="layer-{{watershed_layers_info.id}}-2_year_warnings" class="dropdown-menu" role="menu">
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
                             <li><label style="margin-left:15px;">Opacity</label>
@@ -483,7 +483,7 @@
                     </li>
             {% endif %}
                     <li class="dropdown hidden boot_tooltip" data-toggle="tooltip" data-placement="top" title="Severe Flood Warning. This was generated based off of the 20-year return period.">
-                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">20-Year Warnings<span class="caret"></span></a>
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">20-Year Return Period<span class="caret"></span></a>
                         <ul id="watershed_group-{{watershed_group_info.group_id}}-20_year_warnings" class="dropdown-menu" role="menu">
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
                             <li><label style="margin-left:15px;">Opacity</label>
@@ -492,7 +492,7 @@
                         </ul>
                     </li>
                     <li class="dropdown hidden boot_tooltip" data-toggle="tooltip" data-placement="top" title="Intermediate Flood Warning. This was generated based off of the 10-year return period.">
-                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">10-Year Warinings<span class="caret"></span></a>
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">10-Year Return Period<span class="caret"></span></a>
                         <ul id="watershed_group-{{watershed_group_info.group_id}}-10_year_warnings" class="dropdown-menu" role="menu">
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
                             <li><label style="margin-left:15px;">Opacity</label>
@@ -501,7 +501,7 @@
                         </ul>
                     </li>
                     <li class="dropdown hidden boot_tooltip" data-toggle="tooltip" data-placement="top" title="Moderate Flood Warning. This was generated based off of the 2-year return period.">
-                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">2-Year Warnings<span class="caret"></span></a>
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">2-Year Return Period<span class="caret"></span></a>
                         <ul id="watershed_group-{{watershed_group_info.group_id}}-2_year_warnings" class="dropdown-menu" role="menu">
                             <li><p style="margin-left:20px;"><input class="visible" type="checkbox"> Visibility </p></li>
                             <li><label style="margin-left:15px;">Opacity</label>

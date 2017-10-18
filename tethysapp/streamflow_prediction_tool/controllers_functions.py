@@ -196,7 +196,7 @@ def get_return_period_ploty_info(request, datetime_start, datetime_end,
              x1=datetime_end,
              y1=max(return_max, band_alt_max),
              line=dict(width=0),
-             fillcolor='rgba(128, 0, 128, 0.3)',
+             fillcolor='rgba(128, 0, 128, 0.4)',
          ),
          # return 10 band
          dict(
@@ -208,7 +208,7 @@ def get_return_period_ploty_info(request, datetime_start, datetime_end,
              x1=datetime_end,
              y1=return_20,
              line=dict(width=0),
-             fillcolor='rgba(255, 0, 0, 0.3)',
+             fillcolor='rgba(255, 0, 0, 0.4)',
          ),
          # return 2 band
          dict(
@@ -220,7 +220,7 @@ def get_return_period_ploty_info(request, datetime_start, datetime_end,
              x1=datetime_end,
              y1=return_10,
              line=dict(width=0),
-             fillcolor='rgba(255, 255, 0, 0.3)',
+             fillcolor='rgba(255, 255, 0, 0.4)',
          ),
     ]
     annotations = [

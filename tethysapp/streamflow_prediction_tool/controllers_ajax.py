@@ -508,8 +508,8 @@ def get_ecmwf_hydrograph_plot(request):
             title='Date',
         ),
         yaxis=dict(
-            title='Streamflow ({}<sup>3</sup>/s)'
-                  .format(get_units_title(units))
+            title='Streamflow ({}<sup>3</sup>/s)'.format(get_units_title(units)),
+            range=[0, max(forecast_statistics['max'].values) + max(forecast_statistics['max'].values)/5]
         ),
         shapes=return_shapes,
         annotations=return_annotations
