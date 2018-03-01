@@ -112,7 +112,7 @@ def get_ecmwf_forecast_statistics(request):
         # extract the high res ensemble & time
         try:
             return_dict['high_res'] = merged_ds.sel(ensemble=52).dropna('time')
-        except IndexError:
+        except:
             pass
 
     if stat_type != 'high_res' or not stat_type:
