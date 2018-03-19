@@ -22,6 +22,7 @@ GetForecast for Forecasts Statistics
 | reach_id       | The identifier for the stream reach.                     | 5             |
 +----------------+----------------------------------------------------------+---------------+
 | forecast_folder| The date of the forecast (YYYYMMDD.HHHH) [*]_. (Optional)| 20170110.1200 |
+|                |                          (YYYMMDD.H)                     | 20170110.0    |
 +----------------+----------------------------------------------------------+---------------+
 |                | The selected forecast statistic. (high_res, mean,        |               |
 |                |                                                          |               |
@@ -42,6 +43,39 @@ Example
 >>> request_params = dict(watershed_name='Nepal', subbasin_name='Central', reach_id=5, forecast_folder='most_recent', stat_type='mean')
 >>> request_headers = dict(Authorization='Token asdfqwer1234')
 >>> res = requests.get('[HOST Portal]/apps/streamflow-prediction-tool/api/GetForecast/', params=request_params, headers=request_headers)
+
+GetEnsemble (1 - 52)
+====================
+
++----------------+----------------------------------------------------------+---------------+
+| Parameter      | Description                                              | Example       |
++================+==========================================================+===============+
+| watershed_name | The name of watershed or main area of interest.          | Nepal         |
++----------------+----------------------------------------------------------+---------------+
+| subbasin_name  | The name of the sub basin or sub area.                   | Central       |
++----------------+----------------------------------------------------------+---------------+
+| reach_id       | The identifier for the stream reach.                     | 5             |
++----------------+----------------------------------------------------------+---------------+
+| forecast_folder| The date of the forecast (YYYYMMDD.HHHH) [*]_. (Optional)| 20170110.1200 |
+|                |                          (YYYMMDD.H)                     | 20170110.0    |
++----------------+----------------------------------------------------------+---------------+
+|                | The selected forecast ensemble(s). The value can be a    | Number: 52    |
+|                |                                                          |               |
+| ensemble       | number, a list, or a range. Accepted values go from 1 to | List: 1,3,6,9 |
+|                |                                                          |               |
+|                | 52. Leave empty or ensemble=all for retrieving all.      | Range: 1-15   |
++----------------+----------------------------------------------------------+---------------+
+| units          | Set to 'english' to get ft3/s. (Optional)                | english       |
++----------------+----------------------------------------------------------+---------------+
+.. [*] forecast_folder=most_recent will retrieve the most recent date available.
+
+Example
+-------
+
+>>> import requests
+>>> request_params = dict(watershed_name='Nepal', subbasin_name='Central', reach_id=5, forecast_folder='most_recent', ensemble='52')
+>>> request_headers = dict(Authorization='Token asdfqwer1234')
+>>> res = requests.get('[HOST Portal]/apps/streamflow-prediction-tool/api/GetEnsemble/', params=request_params, headers=request_headers)
 
 GetHistoricData (1980 - Present)
 ================================

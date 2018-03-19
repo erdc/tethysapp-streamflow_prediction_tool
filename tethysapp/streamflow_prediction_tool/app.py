@@ -226,6 +226,10 @@ class StreamflowPredictionTool(TethysAppBase):
                     url='streamflow-prediction-tool/api/GetForecast',
                     controller='streamflow_prediction_tool.controllers_api'
                                '.get_ecmwf_forecast'),
+            url_map(name='waterml',
+                    url='streamflow-prediction-tool/api/GetEnsemble',
+                    controller='streamflow_prediction_tool.controllers_api'
+                               '.get_ecmwf_ensemble_csv'),
             url_map(name='era_interim',
                     url='streamflow-prediction-tool/api/GetHistoricData',
                     controller='streamflow_prediction_tool.controllers_api'

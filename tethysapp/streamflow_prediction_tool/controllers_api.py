@@ -4,7 +4,7 @@
     Author: Michael Suffront & Alan D. Snow, 2017
     License: BSD 3-Clause
 """
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render_to_response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, authentication_classes
@@ -15,12 +15,16 @@ from .controllers_ajax import (get_forecast_streamflow_csv,
                                generate_warning_points)
 from .controllers_functions import (get_ecmwf_avaialable_dates,
                                     get_ecmwf_forecast_statistics,
+                                    get_ecmwf_ensemble,
                                     get_historic_streamflow_series,
                                     get_return_period_dict)
 from .controllers_validators import validate_historical_data
 from .exception_handling import InvalidData, exceptions_to_http_status
 from .functions import get_units_title
 from .model import Watershed
+
+import pandas as pd
+from csv import writer as csv_writer
 
 
 @api_view(['GET'])
@@ -94,6 +98,39 @@ def get_ecmwf_forecast(request):
     xml_response['Content-Type'] = 'application/xml'
 
     return xml_response
+
+
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication,))
+@exceptions_to_http_status
+def get_ecmwf_ensemble_csv(request):
+    """
+    Retrieve the forecasted streamflow as CSV
+    """
+    # retrieve statistics
+    forecast_statistics, watershed_name, subbasin_name, river_id, units = \
+        get_ecmwf_ensemble(request)
+
+    # prepare to write response for CSV
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = \
+        'attachment; filename=forecasted_ensembles_{0}_{1}_{2}.csv' \
+        .format(watershed_name,
+                subbasin_name,
+                river_id)
+
+    writer = csv_writer(response)
+    forecast_df = pd.DataFrame(forecast_statistics)
+    column_names = (forecast_df.columns.values +
+                    [' ({}3/s)'.format(get_units_title(units))]
+                    ).tolist()
+
+    writer.writerow(['datetime'] + column_names)
+
+    for row_data in forecast_df.itertuples():
+        writer.writerow(row_data)
+
+    return response
 
 
 @api_view(['GET'])
