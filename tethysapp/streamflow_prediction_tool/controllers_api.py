@@ -6,7 +6,7 @@
 """
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render_to_response
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 
 from .app import StreamflowPredictionTool as app
@@ -28,7 +28,7 @@ from csv import writer as csv_writer
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_ecmwf_forecast(request):
     """
@@ -101,7 +101,7 @@ def get_ecmwf_forecast(request):
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_ecmwf_ensemble_csv(request):
     """
@@ -134,7 +134,7 @@ def get_ecmwf_ensemble_csv(request):
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_historic_data(request):
     """
@@ -190,7 +190,7 @@ def get_historic_data(request):
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_return_periods_api(request):
     """
@@ -200,7 +200,7 @@ def get_return_periods_api(request):
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_available_dates(request):
     """
@@ -217,7 +217,7 @@ def get_available_dates(request):
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_watershed_list(request):  # pylint: disable=unused-argument
     """
@@ -248,7 +248,7 @@ def get_watershed_list(request):  # pylint: disable=unused-argument
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_warning_points(request):
     """
