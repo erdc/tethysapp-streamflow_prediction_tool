@@ -1,4 +1,3 @@
-
 #app-navigation li {
     list-style-type: none;
 }
@@ -14,11 +13,107 @@
 .table-button {
     width: 60px;
 }
-.screenshots {    
-    width: 700px;    
+.screenshots {
+    width: 700px;
     border: 2px solid black;
 }
 .how-to-steps {
     font-size: 36px;
     color: #666666;
+}
+
+/**Percent table Styling**/
+
+#mytable {
+    display: block;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 90%;
+    margin-left:auto;
+}
+
+#mytable td, #mytable th {
+    border: 1px solid #ddd;
+    text-align: center;
+    padding: 8px;
+    width: auto;
+}
+
+#mytable th {
+    padding: 12px;
+    text-align: center;
+    background-color: #585757;
+    color: white;
+}
+
+.yellowzero {
+    background-color: #FFFFFF;
+}
+
+.yellowtwenty {
+    background-color: #FEFFCC;
+}
+
+.yellowfourty {
+    background-color: #FAFD96;
+}
+
+.yellowsixty {
+    background-color: #FAFE66;
+}
+
+.yelloweighty {
+    background-color: #FAFF34;
+}
+
+.yellowhundred {
+    background-color: #F9FF00;
+}
+
+.redzero {
+    background-color: #FFFFFF;
+}
+
+.redtwenty {
+    background-color: #FED4D4;
+}
+
+.redfourty {
+    background-color: #FFB0B0;
+}
+
+.redsixty {
+    background-color: #FF6D6D;
+}
+
+.redeighty {
+    background-color: #FF3535;
+}
+
+.redhundred {
+    background-color: #FF0000;
+}
+
+.purplezero {
+    background-color: #FFFFFF;
+}
+
+.purpletwenty {
+    background-color: #F1D2FF;
+}
+
+.purplefourty {
+    background-color: #E09FFE;
+}
+
+.purplesixty {
+    background-color: #D371FF;
+}
+
+.purpleeighty {
+    background-color: #C037FD;
+}
+
+.purplehundred {
+    background-color: #B000FF;
 }

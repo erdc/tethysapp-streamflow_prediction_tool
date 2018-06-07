@@ -49,6 +49,11 @@ class StreamflowPredictionTool(TethysAppBase):
                         'get-ecmwf-hydrograph-plot',
                     controller='streamflow_prediction_tool.controllers_ajax'
                                '.get_ecmwf_hydrograph_plot'),
+            url_map(name='get_ecmwf_forecast_probabilities',
+                    url='streamflow-prediction-tool/map/'
+                        'get-ecmwf-forecast-probabilities',
+                    controller='streamflow_prediction_tool.controllers_ajax'
+                               '.get_ecmwf_forecast_probabilities'),
             url_map(name='get_return_periods_ajax',
                     url='streamflow-prediction-tool/map/'
                         'get-return-periods',
