@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """controllers_ajax.py
-
     Created by Alan D. Snow, Curtis Rae, Shawn Crawley 2015.
     License: BSD 3-Clause
 """
@@ -17,6 +16,8 @@ from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import ObjectDeletedError
 import xarray
+
+from .functions import ecmwf_find_most_current_files
 
 # django imports
 from django.contrib.auth.decorators import user_passes_test, login_required
@@ -45,7 +46,8 @@ from .controllers_functions import (get_ecmwf_avaialable_dates,
                                     get_return_period_dict,
                                     get_return_period_ploty_info)
 from .controllers_validators import (validate_historical_data,
-                                     validate_watershed_info)
+                                     validate_watershed_info,
+                                     validate_rivid_info)
 from .functions import (delete_from_database,
                         format_name,
                         get_units_title,
@@ -508,8 +510,8 @@ def get_ecmwf_hydrograph_plot(request):
             title='Date',
         ),
         yaxis=dict(
-            title='Streamflow ({}<sup>3</sup>/s)'
-                  .format(get_units_title(units))
+            title='Streamflow ({}<sup>3</sup>/s)'.format(get_units_title(units)),
+            range=[0, max(forecast_statistics['max'].values) + max(forecast_statistics['max'].values)/5]
         ),
         shapes=return_shapes,
         annotations=return_annotations
@@ -1800,3 +1802,89 @@ def watershed_group_update(request):
     return JsonResponse({
         'success': "Watershed group successfully updated."
     })
+
+
+@require_GET
+@login_required
+@exceptions_to_http_status
+def get_ecmwf_forecast_probabilities(request):
+    """
+    Returns the statistics for the 52 member forecast
+    """
+
+    path_to_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
+    if not os.path.exists(path_to_rapid_output):
+        raise SettingsError('Location of ECMWF forecast files faulty. '
+                            'Please check settings.')
+
+    # get/check information from AJAX request
+    get_info = request.GET
+    watershed_name, subbasin_name = validate_watershed_info(get_info)
+    river_id = validate_rivid_info(get_info)
+
+    forecast_folder = get_info.get('forecast_folder')
+    if not forecast_folder:
+        forecast_folder = 'most_recent'
+
+    # find/check current output datasets
+    path_to_output_files = \
+        os.path.join(path_to_rapid_output,
+                     "{0}-{1}".format(watershed_name, subbasin_name))
+    forecast_nc_list, start_date = \
+        ecmwf_find_most_current_files(path_to_output_files, forecast_folder)
+    if not forecast_nc_list or not start_date:
+        raise NotFoundError('ECMWF forecast for %s (%s).'
+                            % (watershed_name, subbasin_name))
+
+    # combine 52 ensembles
+    qout_datasets = []
+    ensemble_index_list = []
+    with rivid_exception_handler("ECMWF Forecast", river_id):
+        for forecast_nc in forecast_nc_list:
+            if forecast_nc.endswith("52.nc"):
+                continue
+            else:
+                ensemble_index_list.append(
+                    int(os.path.basename(forecast_nc)[:-3].split("_")[-1])
+                )
+                qout_datasets.append(
+                    xarray.open_dataset(forecast_nc, autoclose=True)
+                          .sel(rivid=river_id).Qout
+                )
+
+    merged_ds = xarray.concat(qout_datasets,
+                              pd.Index(ensemble_index_list, name='ensemble'))
+
+    returnperiods = {}
+
+    return_period_data = get_return_period_dict(request)
+
+    returnperiods['two'] = float(return_period_data["two"])
+    returnperiods['ten'] = float(return_period_data["ten"])
+    returnperiods['twenty'] = float(return_period_data["twenty"])
+
+    timelist = merged_ds.time.values
+    datelist = []
+    shortdate = []
+    problist = {'two':[],'ten':[],'twenty':[]}
+
+    for timestep in timelist:
+        x = pd.to_datetime(timestep)
+        if str(x.date()) not in datelist:
+            datelist.append(str(x.date()))
+            shortdate.append(str(x.date())[-5:])
+
+    for date in datelist:
+        mergedtime = merged_ds.sel(time=date)
+        for period in returnperiods:
+            retperflow = float(returnperiods[period])
+            probabilities = xarray.where(mergedtime > retperflow, 1, 0).sum(dim='ensemble').astype(float)/51.0*100.
+            probability = probabilities.max().round(2).values
+            problist[period].append((date,np.asscalar(probability)))
+
+    problist['dates'] = shortdate
+
+    for entries in problist:
+        problist[entries] = problist[entries][:-5 or None]
+
+    return JsonResponse({'success':True, 'percentages':problist})

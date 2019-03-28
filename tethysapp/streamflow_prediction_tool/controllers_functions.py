@@ -112,7 +112,7 @@ def get_ecmwf_forecast_statistics(request):
         # extract the high res ensemble & time
         try:
             return_dict['high_res'] = merged_ds.sel(ensemble=52).dropna('time')
-        except IndexError:
+        except:
             pass
 
     if stat_type != 'high_res' or not stat_type:
@@ -132,6 +132,116 @@ def get_ecmwf_forecast_statistics(request):
             return_dict['min'] = merged_ds.min(dim='ensemble')
         if stat_type == "max" or not stat_type:
             return_dict['max'] = merged_ds.max(dim='ensemble')
+
+    for key in list(return_dict):
+        if units == 'english':
+            # convert m3/s to ft3/s
+            return_dict[key] *= M3_TO_FT3
+        # convert to pandas series
+        return_dict[key] = return_dict[key].to_dataframe().Qout
+
+    return return_dict, watershed_name, subbasin_name, river_id, units
+
+
+def get_ecmwf_ensemble(request):
+    """
+    Returns the statistics for the 52 member forecast
+    """
+    path_to_rapid_output = app.get_custom_setting('ecmwf_forecast_folder')
+    if not os.path.exists(path_to_rapid_output):
+        raise SettingsError('Location of ECMWF forecast files faulty. '
+                            'Please check settings.')
+
+    # get/check information from AJAX request
+    get_info = request.GET
+    watershed_name, subbasin_name = validate_watershed_info(get_info)
+    river_id = validate_rivid_info(get_info)
+    units = get_info.get('units')
+
+    forecast_folder = get_info.get('forecast_folder')
+    if not forecast_folder:
+        forecast_folder = 'most_recent'
+
+    ensemble_number = get_info.get('ensemble')
+    if ensemble_number is None:
+        ensemble_number = "all"
+
+    # find/check current output datasets
+    path_to_output_files = \
+        os.path.join(path_to_rapid_output,
+                     "{0}-{1}".format(watershed_name, subbasin_name))
+    forecast_nc_list, start_date = \
+        ecmwf_find_most_current_files(path_to_output_files, forecast_folder)
+    if not forecast_nc_list or not start_date:
+        raise NotFoundError('ECMWF forecast for %s (%s).'
+                            % (watershed_name, subbasin_name))
+    # combine 52 ensembles
+    qout_datasets = []
+    ensemble_index_list = []
+    with rivid_exception_handler("ECMWF Forecast", river_id):
+        for forecast_nc in forecast_nc_list:
+            ensemble_index_list.append(
+                int(os.path.basename(forecast_nc)[:-3].split("_")[-1])
+            )
+            qout_datasets.append(
+                xarray.open_dataset(forecast_nc, autoclose=True)
+                      .sel(rivid=river_id).Qout
+            )
+
+    merged_ds = xarray.concat(qout_datasets,
+                              pd.Index(ensemble_index_list, name='ensemble'))
+
+    return_dict = {}
+    if ensemble_number == 'all' or ensemble_number == '':
+        # extract the ensembles & time
+        try:
+            for i in range(1,53):
+                if len(str(i)) == 1:
+                    ens = '0{0}'.format(str(i))
+                else:
+                    ens = str(i)
+                return_dict['ensemble_{0}'.format(ens)] = merged_ds.sel(ensemble=i).dropna('time')
+        except:
+            pass
+    elif '-' in ensemble_number:
+        # extract the ensembles & time
+        start = int(ensemble_number.split('-')[0])
+        stop = int(ensemble_number.split('-')[1])
+        try:
+            for i in range(start,stop+1):
+                if len(str(i)) == 1:
+                    ens = '0{0}'.format(str(i))
+                else:
+                    ens = str(i)
+                return_dict['ensemble_{0}'.format(ens)] = merged_ds.sel(ensemble=i).dropna('time')
+        except:
+            pass
+    elif ',' in ensemble_number:
+        # extract the ensembles & time
+        ens_list = ensemble_number.replace(' ', '').split(',')
+        try:
+            for i in ens_list:
+                if len(str(i)) == 1:
+                    ens = '0{0}'.format(str(i))
+                else:
+                    ens = str(i)
+                return_dict['ensemble_{0}'.format(ens)] = merged_ds.sel(ensemble=int(i)).dropna('time')
+        except:
+            pass
+    else:
+        # extract the ensemble & time
+        try:
+            if len(str(ensemble_number)) == 1:
+                ens = '0{0}'.format(str(ensemble_number))
+            else:
+                ens = str(ensemble_number)
+            return_dict['ensemble_{0}'.format(ens)] = merged_ds.sel(ensemble=int(ens)).dropna('time')
+        except:
+            pass
+
+    if ensemble_number != 'all':
+        # analyze data to get statistic bands
+        merged_ds = merged_ds.dropna('time')
 
     for key in list(return_dict):
         if units == 'english':
@@ -196,7 +306,7 @@ def get_return_period_ploty_info(request, datetime_start, datetime_end,
              x1=datetime_end,
              y1=max(return_max, band_alt_max),
              line=dict(width=0),
-             fillcolor='rgba(128, 0, 128, 0.3)',
+             fillcolor='rgba(128, 0, 128, 0.4)',
          ),
          # return 10 band
          dict(
@@ -208,7 +318,7 @@ def get_return_period_ploty_info(request, datetime_start, datetime_end,
              x1=datetime_end,
              y1=return_20,
              line=dict(width=0),
-             fillcolor='rgba(255, 0, 0, 0.3)',
+             fillcolor='rgba(255, 0, 0, 0.4)',
          ),
          # return 2 band
          dict(
@@ -220,7 +330,7 @@ def get_return_period_ploty_info(request, datetime_start, datetime_end,
              x1=datetime_end,
              y1=return_10,
              line=dict(width=0),
-             fillcolor='rgba(255, 255, 0, 0.3)',
+             fillcolor='rgba(255, 255, 0, 0.4)',
          ),
     ]
     annotations = [

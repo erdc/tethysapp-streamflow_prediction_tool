@@ -4,9 +4,9 @@
     Author: Michael Suffront & Alan D. Snow, 2017
     License: BSD 3-Clause
 """
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render_to_response
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 
 from .app import StreamflowPredictionTool as app
@@ -15,6 +15,7 @@ from .controllers_ajax import (get_forecast_streamflow_csv,
                                generate_warning_points)
 from .controllers_functions import (get_ecmwf_avaialable_dates,
                                     get_ecmwf_forecast_statistics,
+                                    get_ecmwf_ensemble,
                                     get_historic_streamflow_series,
                                     get_return_period_dict)
 from .controllers_validators import validate_historical_data
@@ -22,9 +23,12 @@ from .exception_handling import InvalidData, exceptions_to_http_status
 from .functions import get_units_title
 from .model import Watershed
 
+import pandas as pd
+from csv import writer as csv_writer
+
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_ecmwf_forecast(request):
     """
@@ -97,7 +101,40 @@ def get_ecmwf_forecast(request):
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@exceptions_to_http_status
+def get_ecmwf_ensemble_csv(request):
+    """
+    Retrieve the forecasted streamflow as CSV
+    """
+    # retrieve statistics
+    forecast_statistics, watershed_name, subbasin_name, river_id, units = \
+        get_ecmwf_ensemble(request)
+
+    # prepare to write response for CSV
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = \
+        'attachment; filename=forecasted_ensembles_{0}_{1}_{2}.csv' \
+        .format(watershed_name,
+                subbasin_name,
+                river_id)
+
+    writer = csv_writer(response)
+    forecast_df = pd.DataFrame(forecast_statistics)
+    column_names = (forecast_df.columns.values +
+                    [' ({}3/s)'.format(get_units_title(units))]
+                    ).tolist()
+
+    writer.writerow(['datetime'] + column_names)
+
+    for row_data in forecast_df.itertuples():
+        writer.writerow(row_data)
+
+    return response
+
+
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_historic_data(request):
     """
@@ -153,7 +190,7 @@ def get_historic_data(request):
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_return_periods_api(request):
     """
@@ -163,7 +200,7 @@ def get_return_periods_api(request):
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_available_dates(request):
     """
@@ -180,7 +217,7 @@ def get_available_dates(request):
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_watershed_list(request):  # pylint: disable=unused-argument
     """
@@ -211,7 +248,7 @@ def get_watershed_list(request):  # pylint: disable=unused-argument
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
 @exceptions_to_http_status
 def get_warning_points(request):
     """
