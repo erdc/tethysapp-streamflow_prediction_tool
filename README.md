@@ -18,4 +18,4 @@ Snow, Alan Dee, "A New Global Forecasting Model to Produce High-Resolution Strea
 
 ## Documentation:
 
-See: http://streamflow-prediction-tool.readthedocs.io
+See: https://byu-streamflow-prediction-tool.readthedocs.io/en/latest/
