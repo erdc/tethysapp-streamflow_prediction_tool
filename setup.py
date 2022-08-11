@@ -124,7 +124,7 @@ setup(
     keywords='ECMWF, RAPID, Streamflow Prediction, Forecast',
     author='Alan D. Snow',
     author_email='alan.d.snow@usace.army.mil',
-    url='https://github.com/erdc-cm/tethysapp-streamflow_prediction_tool',
+    url='https://github.com/erdc/tethysapp-streamflow_prediction_tool',
     license='BSD 3-Clause',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     namespace_packages=['tethysapp', 'tethysapp.' + APP_PACKAGE],

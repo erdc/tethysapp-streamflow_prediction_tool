@@ -48,12 +48,12 @@ Prerequisites:
 Install RAPIDpy:
 ~~~~~~~~~~~~~~~~
 
-For instructions, go to: https://github.com/erdc-cm/RAPIDpy.
+For instructions, go to: https://github.com/erdc/RAPIDpy.
 
 Install spt_dataset_manager:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For instructions, go to: https://github.com/erdc-cm/spt_dataset_manager.
+For instructions, go to: https://github.com/erdc/spt_dataset_manager.
 
 
 Installation:
@@ -63,7 +63,7 @@ Clone the app into the directory you want:
 
 ::
 
-    $ git clone https://github.com/erdc-cm/tethysapp-streamflow_prediction_tool.git
+    $ git clone https://github.com/erdc/tethysapp-streamflow_prediction_tool.git
     $ cd tethysapp-streamflow_prediction_tool
 
 Then install the app in Tethys Platform.
@@ -164,6 +164,6 @@ example, I am using a folder named /tethys
     # restorecon -Rv /tethys
 
 .. |License (3-Clause BSD)| image:: https://img.shields.io/badge/license-BSD%203--Clause-yellow.svg
-   :target: https://github.com/erdc-cm/tethysapp-streamflow_prediction_tool/blob/master/LICENSE
-.. |DOI| image:: https://zenodo.org/badge/19918/erdc-cm/tethysapp-streamflow_prediction_tool.svg
-   :target: https://zenodo.org/badge/latestdoi/19918/erdc-cm/tethysapp-streamflow_prediction_tool
+   :target: https://github.com/erdc/tethysapp-streamflow_prediction_tool/blob/master/LICENSE
+.. |DOI| image:: https://zenodo.org/badge/19918/erdc/tethysapp-streamflow_prediction_tool.svg
+   :target: https://zenodo.org/badge/latestdoi/19918/erdc/tethysapp-streamflow_prediction_tool

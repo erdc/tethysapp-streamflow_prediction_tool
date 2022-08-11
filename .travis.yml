@@ -33,7 +33,7 @@ before_install:
 - conda install netcdf4 pandas scipy xarray
 # install spt_dataset_services
 - cd ..
-- git clone https://github.com/erdc-cm/spt_dataset_manager.git
+- git clone https://github.com/erdc/spt_dataset_manager.git
 - cd spt_dataset_manager
 - python setup.py install
 
